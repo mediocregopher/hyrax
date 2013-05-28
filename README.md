@@ -28,11 +28,12 @@ Hyrax is a layer in between the world and redis. As such almost all redis comman
 Most redis commands take the form of `command key [ value ... ]`. The translated form would look like:
 
 ```json
-{ "command":"____", "payload":[ { "domain":"____", "id":"____", "values":[ "____","...." ]} ]}
+{ "command":"____", "payload":[ { "domain":"____", "id":"____", "secret":"____", "values":[ "____","...." ]} ]}
 ```
 
 Values can be empty (or ommitted), and the values in it can be either strings or numbers, depending on
-what's called for by the command. The payload can contain multiple key/val items as well.
+what's called for by the command. Secrets can also be ommitted if the command doesn't actually alter
+anything. The payload can contain multiple key/val items as well.
 
 ### Command syntax examples
 
@@ -53,14 +54,14 @@ Mget:
 
 Set:
 ```json
-{ "command":"set", "payload":[ { "domain":"td","id":"tid","values":["tv"] } ]}
+{ "command":"set", "payload":[ { "domain":"td","id":"tid","secret":"lotsahex","values":["tv"] } ]}
 { "command":"set", "return":[ 1 ]}
 ```
 
 Mset:
 ```json
-{ "command":"mset", "payload":[ { "domain":"td1","id":"tid1","values":["tv1"] },
-                                { "domain":"td2","id":"tid2","values":["tv2"] } ]}
+{ "command":"mset", "payload":[ { "domain":"td1","id":"tid1","secret":"lotsahex1","values":["tv1"] },
+                                { "domain":"td2","id":"tid2","secret":"lotsahex1","values":["tv2"] } ]}
 { "command":"mset", "return":[ 1,1 ]}
 ```
 
