@@ -61,7 +61,7 @@ Set:
 Mset:
 ```json
 { "command":"mset", "payload":[ { "domain":"td1","id":"tid1","secret":"lotsahex1","values":["tv1"] },
-                                { "domain":"td2","id":"tid2","secret":"lotsahex1","values":["tv2"] } ]}
+                                { "domain":"td2","id":"tid2","secret":"lotsahex2","values":["tv2"] } ]}
 { "command":"mset", "return":[ 1,1 ]}
 ```
 
