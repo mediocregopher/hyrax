@@ -1,21 +1,8 @@
 # Hyrax
 
-A key-val store which send out updates in real-time
+A key-val store which sends out updates in real-time
 
-## Syntax
-
-Sent:
-```json
-{ "command":"____", "params":{"key":"value"} }
-```
-
-Response:
-```json
-{ "command":"____", "result":{"____":"____"} }
-```
-All messages to and from hyrax will be appended with a newline to delimit the end of the message.
-
-## Keys/vals
+## Keys
 
 All keys in hyrax actually have two parts to their name: their domain and identifier. Both are strings
 of any kind.
@@ -35,47 +22,49 @@ the sha512 output of the domain and one of the secret keys on the server.
 This allows an external service (such as an api) to authenticate everything that your connected
 clients are allowed to do.
 
-## Commands
+## Syntax
 
-### get
+Hyrax is a layer in between the world and redis. As such almost all redis commands are available for usage.
+Most redis commands take the form of `command key [ value ... ]`. The translated form would look like:
 
-Any key can be gotten by anyone.
-
-Sent:
 ```json
-{ "command":"get", "params":{ "key":{"domain":"____","id":"____"}}}
+{ "command":"____", "payload":[ { "domain":"____", "id":"____", "values":[ "____","...." ]} ]}
 ```
 
-Received:
+Values can be empty (or ommitted), and the values in it can be either strings or numbers, depending on
+what's called for by the command. The payload can contain multiple key/val items as well.
+
+### Command syntax examples
+
+The following are examples of commands (and what they return)
+
+Get:
 ```json
-{ "command":"get", "result":{ "value":"____"}}
+{ "command":"get", "payload":[ { "domain":"td","id":"tid" } ]}
+{ "command":"get", "return":[ "Ohaithar" ]}
 ```
 
-Or if there is an error:
-Received:
+Mget:
 ```json
-{ "command":"get", "result":{ "error":"____" }}
+{ "command":"mget", "payload":[ { "domain":"td1","id":"tid1" },
+                                { "domain":"td2","id":"tid2" } ]}
+{ "command":"mget", "return":[ "Ohaithar",null ]}
 ```
 
-An example of an error would be ```key_dne```
-
-### set
-
-A key can be set to any string of your choosing (and only a string!).
-
-Sent:
+Set:
 ```json
-{ "command":"set", "params":{ "key":{"domain":"____","id":"____"}, "value":"____", "secret":"____" }}
+{ "command":"set", "payload":[ { "domain":"td","id":"tid","values":["tv"] } ]}
+{ "command":"set", "return":[ 1 ]}
 ```
 
-Received:
+Mset:
 ```json
-{ "command":"set", "result":{ "success":true }}
+{ "command":"mset", "payload":[ { "domain":"td1","id":"tid1","values":["tv1"] },
+                                { "domain":"td2","id":"tid2","values":["tv2"] } ]}
+{ "command":"mset", "return":[ 1,1 ]}
 ```
 
-Or if there is an error:
-Received:
+Getrange:
 ```json
-{ "command":"set", "result":{ "success":false, "error":"____" }}
+{ "command":"getrange", "payload":[ { "domain":"td","id":"tid","values":[0,-4]} ]}
 ```
-
