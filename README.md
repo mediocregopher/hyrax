@@ -1,7 +1,13 @@
 # Hyrax
 
-A key-val store which sends out updates in real-time. Hyrax is for short-term, ephemeral data storage.
-If you want something more concrete and long-term, this is not the correct service for you.
+A distributed key-val store which sends out updates in real-time. Hyrax is for short-term, ephemeral
+data storage. If you want something more concrete and long-term, this is not the correct service for you.
+
+## Requirements
+
+Each node in the hyrax cluster needs to have a copy of hyrax running and a local redis running. The local
+redis instances don't need to (and probably should not) write anything to disk, and any data in them will
+be cleared on restart of a node (maybe, it's possible this won't be true).
 
 ## Keys
 
