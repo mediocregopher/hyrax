@@ -1,6 +1,7 @@
 # Hyrax
 
-A key-val store which sends out updates in real-time
+A key-val store which sends out updates in real-time. Hyrax is for short-term, ephemeral data storage.
+If you want something more concrete and long-term, this is not the correct service for you.
 
 ## Keys
 
