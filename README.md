@@ -13,6 +13,24 @@ of any kind.
 Anyone connected to hyrax has the ability to `get` or `sub` to the value of any key, but only those
 who have properly authenticated to the key's domain have the ability to change the key.
 
+## Distribution
+
+Hyrax is a distributed storage system, wherein the keys that have been set are distributed
+amongst multiple nodes (the pool). Each key's actual location (which node it's actually on) is decided
+based on the hash of its name combined with a virtual bucket system. This allows admins to add and
+remove nodes without having to lose any data. When a node is added data is automatically moved to it,
+and when it is removed all data will be automatically moved away. If a node dies then all data on it
+is lost, but the other nodes will continue on without interruption.
+
+A hyrax client doesn't have to actually know where the keys are located, data transfer is done
+transparently. The client can connect to any node regardless of what it's doing.
+
+There is also the idea of out-of-pool nodes to consider. These are nodes that aren't in the pool,
+meaning they have no critical data stored locally, but are in the cluster. These nodes will still
+operate normally and the client doesn't have to treat them any different, but they have the added
+benefit of being completely disposable. If an out-of-pool node crashes or becomes unresponsive it
+won't affect the rest of the pool in the slightest. This makes them useful as front-end nodes for hyrax.
+
 ## Auth
 
 Hyrax is set up with a list of secret keys. When you send a command which requires authentication to a
