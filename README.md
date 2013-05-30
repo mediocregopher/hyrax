@@ -178,3 +178,11 @@ separate push alert for each value added. Here's an example of what a monitored 
 ```json
 { "command":"mon-push", "return":{ "key":{"domain":"td","id":"tid","name":"joseph"}, "values":[], "command":"disconnect" }}
 ```
+
+There are other commands that can be used to get information about existing ekg's. These don't require any signing
+of any kind since they do not alter any state. The commands are:
+* `ecard`: Get the number of connections currently being monitored by the ekg
+* `eismember`: Given a `name` returns whether that name is being monitored by the ekg
+* `emembers`: Returns all the names attached to the ekg
+
+These commands mimic the syntax of their analagous set commands, and their return values are analagous as well.
