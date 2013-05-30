@@ -163,7 +163,7 @@ The syntax for ekg-altering commands is different from previous ones due the nee
 ekg value. The syntax looks like this:
 ```json
 { "command":"eadd", "payload":[ { "domain":"td1","id":"tid1","name":"joseph","secret":"lotsahex" } ]}
-{ "command":"eadd", "result": [ 1 ]}
+{ "command":"eadd", "return":[ 1 ]}
 ```
 
 (If the ekg already has that value added by another connection the return will be `0` and there will be no change)
@@ -186,3 +186,56 @@ of any kind since they do not alter any state. The commands are:
 * `emembers`: Returns all the names attached to the ekg
 
 These commands mimic the syntax of their analagous set commands, and their return values are analagous as well.
+
+### Admin
+
+In the hyrax config there's the ability to assign certain ips, or ranges of ips, to have "sudo" access. Having "sudo"
+access allows you to call commands that deal with the administration of hyrax.
+
+#### get-secret-keys
+
+Returns the list of secret keys currently in use.
+```json
+{ "command":"get-secret-keys", "payload":[] }
+{ "command":"get-secret-keys", "return":[ "key1","key2","key3","..." ]}
+```
+
+#### add-secret-keys
+
+Adds keys to the list of secret keys currently in use.
+```json
+{ "command":"add-secret-keys", "payload":[ { "secret":"secrettoadd1" },{ "secret":"secrettoadd2" } ]}
+{ "command":"add-secret-keys", "return":[ 1,1 ]}
+```
+
+#### rem-secret-keys
+
+Removes keys from the list of secret keys currently in use.
+```json
+{ "command":"rem-secret-keys", "payload":[ { "secret":"secrettoremove1" },{ "secret":"secrettoremove2" } ]}
+{ "command":"rem-secret-keys", "return":[ 1,1 ]}
+```
+
+#### get-nodes
+
+Returns the list of nodes in the pool.
+```json
+{ "command":"get-nodes", "payload":[] }
+{ "command":"get-nodes", "return":[ "node1","node2","..." ]}
+```
+
+#### add-nodes
+
+Adds nodes to the pool.
+```json
+{ "command":"add-nodes", "payload":[ { "name":"newnode1" },{ "name":"newnode2" } ]}
+{ "command":"add-nodes", "return":[ 1,1 ]}
+```
+
+#### rem-nodes
+
+Removes nodes from the pool.
+```json
+{ "command":"rem-nodes", "payload":[ { "name":"oldnode1" },{ "name":"oldnodes2" } ]}
+{ "command":"rem-nodes", "return":[ 1,1 ]}
+```
