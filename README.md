@@ -74,7 +74,9 @@ Mget:
 ```json
 { "command":"mget", "payload":[ { "domain":"td1","id":"tid1" },
                                 { "domain":"td2","id":"tid2" } ]}
-{ "command":"mget", "return":[ "Ohaithar",null ]}
+{ "command":"mget", "return":[ "Ohaithar","" ]}
+
+(Empty string means no value set)
 ```
 
 Set:
@@ -92,7 +94,7 @@ Mset:
 
 Getrange:
 ```json
-{ "command":"getrange", "payload":[ { "domain":"td","id":"tid","values":[0,-4]} ]}
+{ "command":"getrange", "payload":[ { "domain":"td","id":"tid","values":["0","-4"]} ]}
 ```
 
 ## Non-redis command syntax
@@ -126,7 +128,7 @@ key hasn't been set yet):
 mon:
 ```json
 { "command":"mon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"mon", "return":[ "foo", null ]}
+{ "command":"mon", "return":[ "foo", "" ]}
 ```
 
 hmon:
