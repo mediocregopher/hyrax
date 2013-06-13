@@ -1,4 +1,4 @@
-package main
+package dispatch
 
 import (
     "encoding/json"
@@ -17,35 +17,21 @@ type Command struct {
     Payload []CommandPart `json:"payload"`
 }
 
-const (
-    STRING = iota
-    INT
-    FLOAT
-    LIST
-    MAP
-)
-
-type ReturnString []string
-type ReturnInt    []int64
-type ReturnFloat  []float64
-type ReturnList   [][]string
-type ReturnMap    []map[string]string
-
-type MessageWrap struct {
+type messageWrap struct {
     Command string        `json:"command"`
     Return  interface{}   `json:"return"`
 }
 
-type ErrorMessage struct {
+type errorMessage struct {
     Error string `json:"error"`
 }
 
 func EncodeMessage(command string, ret interface{}) ([]byte,error) {
-    return json.Marshal(MessageWrap{ command, ret })
+    return json.Marshal(messageWrap{ command, ret })
 }
 
 func EncodeError(err string) ([]byte,error) {
-    return json.Marshal(ErrorMessage{err})
+    return json.Marshal(errorMessage{err})
 }
 
 func DecodeCommand(b []byte) (*Command,error) {
