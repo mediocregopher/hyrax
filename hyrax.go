@@ -1,10 +1,10 @@
 package main
 
 import (
-    "fmt"
-    "hyrax/dispatch"
+    //"fmt"
+    "hyrax/config"
 )
 
 func main() {
-    fmt.Println(dispatch.STRING)
+    config.LoadConfig()
 }
