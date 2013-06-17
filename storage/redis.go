@@ -15,7 +15,7 @@ func RedisConnect() error {
     return err
 }
 
-func Cmd(cmd string, args ...interface{}) (interface{},error) {
+func Cmd(cmd string, args []interface{}) (interface{},error) {
     r := conn.Cmd(cmd,args...)
     switch r.Type {
         case redis.StatusReply:
@@ -54,4 +54,8 @@ func RedisListToMap(l []string) (map[string]string,error) {
     }
 
     return m,nil
+}
+
+func CreateKey(domain,id string) string {
+    return domain+":"+id
 }
