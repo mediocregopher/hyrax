@@ -12,9 +12,8 @@ func main() {
     err := storage.RedisConnect()
     if err != nil { panic(err); }
 
-    cmd(`{"command":"hgetall","payload":[{"domain":"t1","id":"m1"}]}`)
-    cmd(`{"command":"hset","payload":[{"domain":"t1","id":"m1","values":["b","a"]}]}`)
-    cmd(`{"command":"hgetall","payload":[{"domain":"t1","id":"m1"}]}`)
+    cmd(`{"command":"set","payload":[{"domain":"t2","id":"k1","values":["012345"]}]}`)
+    cmd(`{"command":"getrange","payload":[{"domain":"t2","id":"k1","values":["0","2"]}]}`)
 }
 
 func cmd(c string) {

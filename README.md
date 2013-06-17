@@ -56,9 +56,9 @@ Most redis commands take the form of `command key [ value ... ]`. The translated
 { "command":"____", "payload":[ { "domain":"____", "id":"____", "secret":"____", "values":[ "____","...." ]} ]}
 ```
 
-Values can be empty (or ommitted), and the values in it can be either strings or numbers, depending on
-what's called for by the command. Secrets can also be ommitted if the command doesn't actually alter
-anything. The payload can contain multiple key/val items as well.
+`values` can be empty (or ommitted), and the values in it must be strings.  Secrets can also be ommitted if the
+command doesn't actually alter anything. The payload can contain multiple key/val items as well, if the command
+allows for multiple keys (ex: `mget`) or multiple key/val sets (ex: `mset`)
 
 ### Command syntax examples
 
@@ -67,7 +67,7 @@ The following are examples of commands (and what they return)
 Get:
 ```json
 { "command":"get", "payload":[ { "domain":"td","id":"tid" } ]}
-{ "command":"get", "return":[ "Ohaithar" ]}
+{ "command":"get", "return":"Ohaithar"}
 ```
 
 Mget:
@@ -75,26 +75,25 @@ Mget:
 { "command":"mget", "payload":[ { "domain":"td1","id":"tid1" },
                                 { "domain":"td2","id":"tid2" } ]}
 { "command":"mget", "return":[ "Ohaithar","" ]}
-
-(Empty string means no value set)
 ```
 
 Set:
 ```json
 { "command":"set", "payload":[ { "domain":"td","id":"tid","secret":"lotsahex","values":["tv"] } ]}
-{ "command":"set", "return":[ 1 ]}
+{ "command":"set", "return":"OK"}
 ```
 
 Mset:
 ```json
 { "command":"mset", "payload":[ { "domain":"td1","id":"tid1","secret":"lotsahex1","values":["tv1"] },
                                 { "domain":"td2","id":"tid2","secret":"lotsahex2","values":["tv2"] } ]}
-{ "command":"mset", "return":[ 1,1 ]}
+{ "command":"mset", "return":"OK"}
 ```
 
 Getrange:
 ```json
 { "command":"getrange", "payload":[ { "domain":"td","id":"tid","values":["0","-4"]} ]}
+{ "command":"getrange", "return":"0123" }
 ```
 
 ## Non-redis command syntax
