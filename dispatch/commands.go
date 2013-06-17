@@ -66,7 +66,7 @@ var commandMap = map[string]*commandInfo{
     "hdel":             &commandInfo{ WRITE_DIRECT, INT,    false },
     "hexists":          &commandInfo{ READ_DIRECT,  INT,    false },
     "hget":             &commandInfo{ READ_DIRECT,  STRING, false },
-    "hgetall":          &commandInfo{ READ_DIRECT,  LIST,   false },
+    "hgetall":          &commandInfo{ READ_DIRECT,  MAP,    false },
     "hincrby":          &commandInfo{ WRITE_DIRECT, INT,    false },
     "hincrbyfloat":     &commandInfo{ WRITE_DIRECT, STRING, false },
     "hkeys":            &commandInfo{ READ_DIRECT,  LIST,   false },

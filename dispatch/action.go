@@ -47,5 +47,12 @@ func doCommandWrap(cmd *Command) (interface{},error) {
         }
     }
 
-    return storage.Cmd(cmd.Command,args)
+    r,err := storage.Cmd(cmd.Command,args)
+    if err != nil { return nil,err }
+
+    if cmdInfo.ReturnType == MAP {
+        return storage.RedisListToMap(r.([]string))
+    }
+
+    return r,nil
 }
