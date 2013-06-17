@@ -1,8 +1,8 @@
 package dispatch
 
-//ActionType
+type ActionType int
 const (
-    READ_DIRECT = iota
+    READ_DIRECT ActionType = iota
     //READ_DIRECT_BLOCKING
     WRITE_DIRECT
     READ_CUSTOM
@@ -10,8 +10,9 @@ const (
 )
 
 //ReturnType
+type ReturnType int
 const (
-    STRING = iota
+    STRING ReturnType = iota
     INT
     FLOAT
     LIST
@@ -19,7 +20,8 @@ const (
 )
 
 type commandInfo struct {
-    ActionType, ReturnType int
+    ActionType ActionType
+    ReturnType ReturnType
 }
 
 var commandMap = map[string]*commandInfo{
