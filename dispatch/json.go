@@ -17,6 +17,9 @@ type Command struct {
     Payload []CommandPart `json:"payload"`
 }
 
+//messageWrap and errorMessage are messages
+type message interface{}
+
 type messageWrap struct {
     Command string        `json:"command"`
     Return  interface{}   `json:"return"`
