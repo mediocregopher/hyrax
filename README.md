@@ -17,7 +17,7 @@ of any kind.
 { "domain":"____", "id":"____" }
 ```
 
-Anyone connected to hyrax has the ability to `get` or `sub` to the value of any key, but only those
+Anyone connected to hyrax has the ability to `get` or `mon` the value of any key, but only those
 who have properly authenticated to the key's domain have the ability to change the key.
 
 ## Distribution
@@ -57,8 +57,7 @@ Most redis commands take the form of `command key [ value ... ]`. The translated
 ```
 
 `values` can be empty (or ommitted), and the values in it must be strings.  Secrets can also be ommitted if the
-command doesn't actually alter anything. The payload can contain multiple key/val items as well, if the command
-allows for multiple keys (ex: `mget`) or multiple key/val sets (ex: `mset`)
+command doesn't actually alter anything.
 
 ### Command syntax examples
 
@@ -70,24 +69,10 @@ Get:
 { "command":"get", "return":"Ohaithar"}
 ```
 
-Mget:
-```json
-{ "command":"mget", "payload":[ { "domain":"td1","id":"tid1" },
-                                { "domain":"td2","id":"tid2" } ]}
-{ "command":"mget", "return":[ "Ohaithar","" ]}
-```
-
 Set:
 ```json
 { "command":"set", "payload":[ { "domain":"td","id":"tid","secret":"lotsahex","values":["tv"] } ]}
 { "command":"set", "return":"OK"}
-```
-
-Mset:
-```json
-{ "command":"mset", "payload":[ { "domain":"td1","id":"tid1","secret":"lotsahex1","values":["tv1"] },
-                                { "domain":"td2","id":"tid2","secret":"lotsahex2","values":["tv2"] } ]}
-{ "command":"mset", "return":"OK"}
 ```
 
 Getrange:
@@ -118,7 +103,7 @@ on the changes to the key: `amon`
 
 Push messages about keys that you're monitoring will merely contain the command used to update them. For example:
 ```json
-{ "command":"mon-push", "return":{ "key":{"domain":"td","id":"tid"}, "values":["whatever"], "command":"set" }}
+{ "command":"mon-push", "return":{ "domain":"td","id":"tid", "values":["whatever"], "command":"set" }}
 ```
 
 Here's some examples of the individual *mon* commands and what they return (note, for all these examples the second
