@@ -22,6 +22,15 @@ func doCommandWrap(cmd *Command) (interface{},error) {
         return nil,errors.New("Unsupported command")
     }
 
+    if CommandModifies(&cmd.Command) {
+        for i := range(cmd.Payload) {
+            if !CheckAuth(&cmd.Payload[i]) {
+                return nil,errors.New("cannot auth for domain:"+cmd.Payload[i].Domain+
+                                                     " id:"+cmd.Payload[i].Id)
+            }
+        }
+    }
+
     if len(cmd.Payload) == 0 {
         return nil,errors.New("empty payload")
     }
