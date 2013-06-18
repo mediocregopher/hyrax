@@ -28,7 +28,6 @@ type commandInfo struct {
 var commandMap = map[string]*commandInfo{
 
     //Keys
-    "del":              &commandInfo{ WRITE_DIRECT, INT,    true  },
     "exists":           &commandInfo{ READ_DIRECT,  INT,    false },
     "expire":           &commandInfo{ WRITE_DIRECT, INT,    false },
     "expireat":         &commandInfo{ WRITE_DIRECT, INT,    false },
@@ -51,9 +50,6 @@ var commandMap = map[string]*commandInfo{
     "incr":             &commandInfo{ WRITE_DIRECT, INT,    false },
     "incrby":           &commandInfo{ WRITE_DIRECT, INT,    false },
     "incrbyfloat":      &commandInfo{ WRITE_DIRECT, STRING, false },
-    "mget":             &commandInfo{ READ_DIRECT,  LIST,   true  },
-    "mset":             &commandInfo{ WRITE_DIRECT, STRING, true  },
-    "msetnx":           &commandInfo{ WRITE_DIRECT, INT,    true  },
     "psetex":           &commandInfo{ WRITE_DIRECT, STRING, false },
     "set":              &commandInfo{ WRITE_DIRECT, STRING, false },
     "setbit":           &commandInfo{ WRITE_DIRECT, INT,    false },
@@ -72,7 +68,6 @@ var commandMap = map[string]*commandInfo{
     "hkeys":            &commandInfo{ READ_DIRECT,  LIST,   false },
     "hlen":             &commandInfo{ READ_DIRECT,  INT,    false },
     "hmget":            &commandInfo{ READ_DIRECT,  LIST,   false },
-    "hmset":            &commandInfo{ WRITE_DIRECT, STRING, true  },
     "hset":             &commandInfo{ WRITE_DIRECT, INT,    false },
     "hsetnx":           &commandInfo{ WRITE_DIRECT, INT,    false },
     "hvals":            &commandInfo{ READ_DIRECT,  LIST,   false },
