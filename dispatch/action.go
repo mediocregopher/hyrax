@@ -18,17 +18,12 @@ func DoCommand(rawJson []byte) ([]byte,error) {
 }
 
 func doCommandWrap(cmd *Command) (interface{},error) {
-    cmdInfo,ok := commandMap[cmd.Command]
-    if !ok {
+    if !CommandExists(&cmd.Command) {
         return nil,errors.New("Unsupported command")
     }
 
     if len(cmd.Payload) == 0 {
         return nil,errors.New("empty payload")
-    }
-
-    if !cmdInfo.MultipleKeys && len(cmd.Payload) > 1 {
-        return nil,errors.New("this command only supports a single payload object")
     }
 
     numArgs := 0
@@ -50,7 +45,7 @@ func doCommandWrap(cmd *Command) (interface{},error) {
     r,err := storage.Cmd(cmd.Command,args)
     if err != nil { return nil,err }
 
-    if cmdInfo.ReturnType == MAP {
+    if CommandReturnsMap(&cmd.Command) {
         return storage.RedisListToMap(r.([]string))
     }
 

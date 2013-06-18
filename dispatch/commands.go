@@ -1,116 +1,118 @@
 package dispatch
 
-type ActionType int
+type commandInfo int
 const (
-    READ_DIRECT ActionType = iota
-    //READ_DIRECT_BLOCKING
-    WRITE_DIRECT
-    READ_CUSTOM
-    WRITE_CUSTOM
+    CUSTOM commandInfo = 2^iota
+    MODIFY
+    RETURNS_MAP
 )
 
-//ReturnType
-type ReturnType int
-const (
-    STRING ReturnType = iota
-    INT
-    FLOAT
-    LIST
-    MAP
-)
-
-type commandInfo struct {
-    ActionType ActionType
-    ReturnType ReturnType
-    MultipleKeys bool
+func CommandExists(cmd *string) bool {
+    _,ok := commandMap[*cmd]
+    return ok
 }
 
-var commandMap = map[string]*commandInfo{
+func CommandIsCustom(cmd *string) bool {
+    n := commandMap[*cmd]
+    return n & CUSTOM > 0
+}
+
+func CommandModifies(cmd *string) bool {
+    n := commandMap[*cmd]
+    return n & MODIFY > 0
+}
+
+func CommandReturnsMap(cmd *string) bool {
+    n := commandMap[*cmd]
+    return n & RETURNS_MAP > 0
+}
+
+var commandMap = map[string]commandInfo{
 
     //Keys
-    "exists":           &commandInfo{ READ_DIRECT,  INT,    false },
-    "expire":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "expireat":         &commandInfo{ WRITE_DIRECT, INT,    false },
-    "persist":          &commandInfo{ WRITE_DIRECT, INT,    false },
-    "pexpire":          &commandInfo{ WRITE_DIRECT, INT,    false },
-    "pexpireat":        &commandInfo{ WRITE_DIRECT, INT,    false },
-    "pttl":             &commandInfo{ READ_DIRECT,  INT,    false },
-    "ttl":              &commandInfo{ READ_DIRECT,  INT,    false },
-    "type":             &commandInfo{ READ_DIRECT,  STRING, false },
+    "exists":           0,
+    "expire":           MODIFY,
+    "expireat":         MODIFY,
+    "persist":          MODIFY,
+    "pexpire":          MODIFY,
+    "pexpireat":        MODIFY,
+    "pttl":             0,
+    "ttl":              0,
+    "type":             0,
 
     //Strings
-    "append":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "bitcount":         &commandInfo{ READ_DIRECT,  INT,    false },
-    "decr":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "decrby":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "get":              &commandInfo{ READ_DIRECT,  STRING, false },
-    "getbit":           &commandInfo{ READ_DIRECT,  INT,    false },
-    "getrange":         &commandInfo{ READ_DIRECT,  STRING, false },
-    "getset":           &commandInfo{ WRITE_DIRECT, STRING, false },
-    "incr":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "incrby":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "incrbyfloat":      &commandInfo{ WRITE_DIRECT, STRING, false },
-    "psetex":           &commandInfo{ WRITE_DIRECT, STRING, false },
-    "set":              &commandInfo{ WRITE_DIRECT, STRING, false },
-    "setbit":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "setex":            &commandInfo{ WRITE_DIRECT, STRING, false },
-    "setnx":            &commandInfo{ WRITE_DIRECT, INT,    false },
-    "setrange":         &commandInfo{ WRITE_DIRECT, INT,    false },
-    "strlen":           &commandInfo{ READ_DIRECT,  INT,    false },
+    "append":           MODIFY,
+    "bitcount":         0,
+    "decr":             MODIFY,
+    "decrby":           MODIFY,
+    "get":              0,
+    "getbit":           0,
+    "getrange":         0,
+    "getset":           MODIFY,
+    "incr":             MODIFY,
+    "incrby":           MODIFY,
+    "incrbyfloat":      MODIFY,
+    "psetex":           MODIFY,
+    "set":              MODIFY,
+    "setbit":           MODIFY,
+    "setex":            MODIFY,
+    "setnx":            MODIFY,
+    "setrange":         MODIFY,
+    "strlen":           0,
 
     //Hashes
-    "hdel":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "hexists":          &commandInfo{ READ_DIRECT,  INT,    false },
-    "hget":             &commandInfo{ READ_DIRECT,  STRING, false },
-    "hgetall":          &commandInfo{ READ_DIRECT,  MAP,    false },
-    "hincrby":          &commandInfo{ WRITE_DIRECT, INT,    false },
-    "hincrbyfloat":     &commandInfo{ WRITE_DIRECT, STRING, false },
-    "hkeys":            &commandInfo{ READ_DIRECT,  LIST,   false },
-    "hlen":             &commandInfo{ READ_DIRECT,  INT,    false },
-    "hmget":            &commandInfo{ READ_DIRECT,  LIST,   false },
-    "hset":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "hsetnx":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "hvals":            &commandInfo{ READ_DIRECT,  LIST,   false },
+    "hdel":             MODIFY,
+    "hexists":          0,
+    "hget":             0,
+    "hgetall":          RETURNS_MAP,
+    "hincrby":          MODIFY,
+    "hincrbyfloat":     MODIFY,
+    "hkeys":            0,
+    "hlen":             0,
+    "hmget":            0,
+    "hset":             MODIFY,
+    "hsetnx":           MODIFY,
+    "hvals":            0,
 
     //Lists
     //blpop
     //brpop
-    "lindex":           &commandInfo{ READ_DIRECT,  STRING, false },
-    "linsert":          &commandInfo{ WRITE_DIRECT, INT,    false },
-    "llen":             &commandInfo{ READ_DIRECT,  INT,    false },
-    "lpop":             &commandInfo{ WRITE_DIRECT, STRING, false },
-    "lpush":            &commandInfo{ WRITE_DIRECT, INT,    false },
-    "lpushx":           &commandInfo{ WRITE_DIRECT, INT,    false },
-    "lrange":           &commandInfo{ READ_DIRECT,  LIST,   false },
-    "lrem":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "lset":             &commandInfo{ WRITE_DIRECT, STRING, false },
-    "ltrim":            &commandInfo{ WRITE_DIRECT, STRING, false },
-    "rpop":             &commandInfo{ WRITE_DIRECT, STRING, false },
-    "rpush":            &commandInfo{ WRITE_DIRECT, INT,    false },
-    "rpushx":           &commandInfo{ WRITE_DIRECT, INT,    false },
+    "lindex":           0,
+    "linsert":          MODIFY,
+    "llen":             0,
+    "lpop":             MODIFY,
+    "lpush":            MODIFY,
+    "lpushx":           MODIFY,
+    "lrange":           0,
+    "lrem":             MODIFY,
+    "lset":             MODIFY,
+    "ltrim":            MODIFY,
+    "rpop":             MODIFY,
+    "rpush":            MODIFY,
+    "rpushx":           MODIFY,
 
     //Sets
-    "sadd":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "scard":            &commandInfo{ READ_DIRECT,  INT,    false },
-    "sismember":        &commandInfo{ READ_DIRECT,  INT,    false },
-    "smembers":         &commandInfo{ READ_DIRECT,  LIST,   false },
-    "spop":             &commandInfo{ WRITE_DIRECT, STRING, false },
-    "srandmember":      &commandInfo{ READ_DIRECT,  STRING, false },
-    "srem":             &commandInfo{ WRITE_DIRECT, INT,    false },
+    "sadd":             MODIFY,
+    "scard":            0,
+    "sismember":        0,
+    "smembers":         0,
+    "spop":             MODIFY,
+    "srandmember":      0,
+    "srem":             MODIFY,
 
     //Sorted Sets
-    "zadd":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "zcard":            &commandInfo{ READ_DIRECT,  INT,    false },
-    "zcount":           &commandInfo{ READ_DIRECT,  INT,    false },
-    "zincrby":          &commandInfo{ WRITE_DIRECT, STRING, false },
-    "zrange":           &commandInfo{ READ_DIRECT,  LIST,   false },
-    "zrangebyscore":    &commandInfo{ READ_DIRECT,  LIST,   false },
-    "zrank":            &commandInfo{ READ_DIRECT,  INT,    false }, //TODO two different return values?
-    "zrem":             &commandInfo{ WRITE_DIRECT, INT,    false },
-    "zremrangebyrank":  &commandInfo{ WRITE_DIRECT, INT,    false },
-    "zremrangebyscore": &commandInfo{ WRITE_DIRECT, INT,    false },
-    "zrevrange":        &commandInfo{ READ_DIRECT,  LIST,   false },
-    "zrevrangebyscore": &commandInfo{ READ_DIRECT,  LIST,   false },
-    "zrevrank":         &commandInfo{ READ_DIRECT,  INT,    false }, //TODO two different return values?
-    "zscore":           &commandInfo{ READ_DIRECT,  STRING, false },
+    "zadd":             MODIFY,
+    "zcard":            0,
+    "zcount":           0,
+    "zincrby":          MODIFY,
+    "zrange":           0,
+    "zrangebyscore":    0,
+    "zrank":            0, //TODO two different return values?
+    "zrem":             MODIFY,
+    "zremrangebyrank":  MODIFY,
+    "zremrangebyscore": MODIFY,
+    "zrevrange":        0,
+    "zrevrangebyscore": 0,
+    "zrevrank":         0, //TODO two different return values?
+    "zscore":           0,
 }
