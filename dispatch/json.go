@@ -14,7 +14,7 @@ type Payload struct {
 
 type Command struct {
     Command string        `json:"command"`
-    Payload Payload `json:"payload"`
+    Payload Payload       `json:"payload"`
 }
 
 type messageWrap struct {

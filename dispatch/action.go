@@ -7,7 +7,9 @@ import (
 
 func DoCommand(rawJson []byte) ([]byte,error) {
     cmd,err := DecodeCommand(rawJson)
-    if err != nil { return nil,err }
+    if err != nil {
+        return EncodeError(err.Error())
+    }
 
     ret,err := doCommandWrap(cmd)
     if err != nil {
