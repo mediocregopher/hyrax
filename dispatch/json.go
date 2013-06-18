@@ -4,7 +4,7 @@ import (
     "encoding/json"
 )
 
-type CommandPart struct {
+type Payload struct {
     Domain string   `json:"domain"`
     Id     string   `json:"id"`
     Name   string   `json:"name"`
@@ -14,7 +14,7 @@ type CommandPart struct {
 
 type Command struct {
     Command string        `json:"command"`
-    Payload []CommandPart `json:"payload"`
+    Payload Payload `json:"payload"`
 }
 
 type messageWrap struct {

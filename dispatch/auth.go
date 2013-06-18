@@ -15,7 +15,7 @@ func GetSecretKeys() []string {
     return secretkeys
 }
 
-func CheckAuth(cmdP *CommandPart) bool {
+func CheckAuth(cmdP *Payload) bool {
     h := sha1.New()
     for i := range secretkeys {
         h.Write( []byte(cmdP.Domain+cmdP.Name+secretkeys[i]) )

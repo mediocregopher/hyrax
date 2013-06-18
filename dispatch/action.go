@@ -18,37 +18,29 @@ func DoCommand(rawJson []byte) ([]byte,error) {
 }
 
 func doCommandWrap(cmd *Command) (interface{},error) {
+    pay := &cmd.Payload
+
     if !CommandExists(&cmd.Command) {
         return nil,errors.New("Unsupported command")
     }
 
     if CommandModifies(&cmd.Command) {
-        for i := range(cmd.Payload) {
-            if !CheckAuth(&cmd.Payload[i]) {
-                return nil,errors.New("cannot auth for domain:"+cmd.Payload[i].Domain+
-                                                     " id:"+cmd.Payload[i].Id)
-            }
+        if !CheckAuth(pay) {
+            return nil,errors.New("cannot authenticate with key "+pay.Secret)
         }
     }
 
-    if len(cmd.Payload) == 0 {
-        return nil,errors.New("empty payload")
+    if pay.Id == "" {
+        return nil,errors.New("missing key id")
     }
 
-    numArgs := 0
-    for i:=0; i<len(cmd.Payload); i++ {
-        numArgs++
-        numArgs += len(cmd.Payload[i].Values)
-    }
+    numArgs := len(pay.Values)+1
 
     args := make([]interface{},0,numArgs)
-    for i:=0; i<len(cmd.Payload); i++ {
-        pay := &cmd.Payload[i]
-        strKey := storage.CreateKey(pay.Domain,pay.Id)
-        args = append(args,strKey)
-        for j:=0; j<len(pay.Values); j++ {
-            args = append(args,pay.Values[j])
-        }
+    strKey := storage.CreateKey(pay.Domain,pay.Id)
+    args = append(args,strKey)
+    for j:=0; j<len(pay.Values); j++ {
+        args = append(args,pay.Values[j])
     }
 
     r,err := storage.Cmd(cmd.Command,args)

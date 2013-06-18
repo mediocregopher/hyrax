@@ -53,7 +53,7 @@ Hyrax is a layer in between the world and redis. As such almost all redis comman
 Most redis commands take the form of `command key [ value ... ]`. The translated form would look like:
 
 ```json
-{ "command":"____", "payload":[ { "domain":"____", "id":"____", "secret":"____", "values":[ "____","...." ]} ]}
+{ "command":"____", "payload":{ "domain":"____", "id":"____", "secret":"____", "values":[ "____","...." ]} }
 ```
 
 `values` can be empty (or ommitted), and the values in it must be strings.  Secrets can also be ommitted if the
@@ -65,19 +65,19 @@ The following are examples of commands (and what they return)
 
 Get:
 ```json
-{ "command":"get", "payload":[ { "domain":"td","id":"tid" } ]}
+{ "command":"get", "payload":{ "domain":"td","id":"tid" } }
 { "command":"get", "return":"Ohaithar"}
 ```
 
 Set:
 ```json
-{ "command":"set", "payload":[ { "domain":"td","id":"tid","secret":"lotsahex","values":["tv"] } ]}
+{ "command":"set", "payload":{ "domain":"td","id":"tid","secret":"lotsahex","values":["tv"] } }
 { "command":"set", "return":"OK"}
 ```
 
 Getrange:
 ```json
-{ "command":"getrange", "payload":[ { "domain":"td","id":"tid","values":["0","-4"]} ]}
+{ "command":"getrange", "payload":{ "domain":"td","id":"tid","values":["0","-4"]} }
 { "command":"getrange", "return":"0123" }
 ```
 
