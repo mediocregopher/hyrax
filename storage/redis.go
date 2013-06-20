@@ -4,6 +4,7 @@ import (
     "errors"
     "hyrax/config"
     "github.com/fzzy/radix/redis"
+    "strconv"
 )
 
 var conn *redis.Client
@@ -13,6 +14,10 @@ func RedisConnect() error {
     addr := config.GetStr("redis-addr")
     conn, err = redis.Dial("tcp",addr)
     return err
+}
+
+func CmdPretty(cmd string, args... interface{}) (interface{},error) {
+    return Cmd(cmd,args)
 }
 
 func Cmd(cmd string, args []interface{}) (interface{},error) {
@@ -40,6 +45,7 @@ func Cmd(cmd string, args []interface{}) (interface{},error) {
     return nil,nil
 }
 
+//For converting the return of a HGETALL to a hash
 func RedisListToMap(l []string) (map[string]string,error) {
     llen := len(l)
     if llen%2 != 0 {
@@ -56,6 +62,20 @@ func RedisListToMap(l []string) (map[string]string,error) {
     return m,nil
 }
 
-func CreateKey(domain,id string) string {
-    return domain+":"+id
+//For converting the return of a ZRANGE .. .. WITHSCORES to a hash
+func RedisListToIntMap(l []string) (map[string]int,error) {
+    llen := len(l)
+    if llen%2 != 0 {
+        return nil,errors.New("list has uneven number of elements")
+    }
+
+    m := map[string]int{}
+
+    halfllen := llen/2
+    for i := 0; i<halfllen; i++ {
+        score,_ := strconv.Atoi(l[i*2+1])
+        m[l[i*2]] = score
+    }
+
+    return m,nil
 }

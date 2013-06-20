@@ -1,8 +1,13 @@
 package dispatch
 
-type commandInfo int
+import (
+    "hyrax/types"
+    "hyrax/custom"
+)
+
+type commandInfo uint
 const (
-    CUSTOM commandInfo = 2^iota
+    CUSTOM commandInfo = 1 << iota
     MODIFY
     RETURNS_MAP
 )
@@ -115,4 +120,22 @@ var commandMap = map[string]commandInfo{
     "zrevrangebyscore": 0,
     "zrevrank":         0, //TODO two different return values?
     "zscore":           0,
+
+    //Monitors
+    "mon":              CUSTOM,
+    "hmon":             CUSTOM,
+    "lmon":             CUSTOM,
+    "smon":             CUSTOM,
+    "zmon":             CUSTOM,
+    "amon":             CUSTOM,
+    "emon":             CUSTOM,
+}
+
+var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{},error){
+    "amon":             custom.AMon,
+    "mon":              custom.Mon,
+    "hmon":             custom.HMon,
+    "lmon":             custom.LMon,
+    "smon":             custom.SMon,
+    "zmon":             custom.ZMon,
 }

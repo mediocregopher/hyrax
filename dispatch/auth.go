@@ -3,6 +3,7 @@ package dispatch
 import (
     "crypto/sha1"
     "encoding/hex"
+    "hyrax/types"
 )
 
 var secretkeys []string
@@ -15,7 +16,7 @@ func GetSecretKeys() []string {
     return secretkeys
 }
 
-func CheckAuth(cmdP *Payload) bool {
+func CheckAuth(cmdP *types.Payload) bool {
     h := sha1.New()
     for i := range secretkeys {
         h.Write( []byte(cmdP.Domain+cmdP.Name+secretkeys[i]) )

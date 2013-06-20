@@ -2,6 +2,7 @@ package net
 
 import (
     "sync"
+    . "hyrax/types" //Import all cause we're gonna need ConnId alot!
 )
 
 type MessageType int
@@ -18,7 +19,6 @@ func (m *PushMessage) Type() MessageType { return PUSH }
 
 /////////////////////////////////////////////////////////
 
-type ConnId uint64
 type allocatedConn struct{ cid ConnId; ch chan Message }
 var cidCh = make(chan *allocatedConn)
 

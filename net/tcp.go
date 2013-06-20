@@ -6,6 +6,7 @@ import (
     "bytes"
     "io"
     "hyrax/dispatch"
+    "hyrax/types"
 )
 
 func TcpListen(addr string) error {
@@ -36,7 +37,7 @@ type tcpReadChRet struct {
     err error
 }
 
-func TcpClient(conn net.Conn, cid ConnId, cmdCh chan Message) {
+func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
 
     workerReadCh  := make(chan *tcpReadChRet)
     readMore := true
@@ -94,7 +95,7 @@ func TcpClient(conn net.Conn, cid ConnId, cmdCh chan Message) {
                         }
                         break
                     } else {
-                        r,err := dispatch.DoCommand(fullMsg)
+                        r,err := dispatch.DoCommand(cid,fullMsg)
                         if err != nil {
                             log.Println("Go error from dispatch.DoCommand",err)
                             continue
@@ -110,7 +111,7 @@ func TcpClient(conn net.Conn, cid ConnId, cmdCh chan Message) {
     }
 }
 
-func TcpClose(conn net.Conn, cid ConnId, cmdCh chan Message) {
+func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
     conn.Close()
     CleanId(cid)
 }

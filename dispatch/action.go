@@ -2,16 +2,17 @@ package dispatch
 
 import (
     "hyrax/storage"
+    "hyrax/types"
     "errors"
 )
 
-func DoCommand(rawJson []byte) ([]byte,error) {
+func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
     cmd,err := DecodeCommand(rawJson)
     if err != nil {
         return EncodeError(err.Error())
     }
 
-    ret,err := doCommandWrap(cmd)
+    ret,err := doCommandWrap(cid,cmd)
     if err != nil {
         return EncodeError(err.Error())
     }
@@ -19,7 +20,7 @@ func DoCommand(rawJson []byte) ([]byte,error) {
     return EncodeMessage(cmd.Command,ret)
 }
 
-func doCommandWrap(cmd *Command) (interface{},error) {
+func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
     pay := &cmd.Payload
 
     if !CommandExists(&cmd.Command) {
@@ -36,10 +37,14 @@ func doCommandWrap(cmd *Command) (interface{},error) {
         return nil,errors.New("missing key id")
     }
 
+    if CommandIsCustom(&cmd.Command) {
+        return doCustomCommand(cid,cmd)
+    }
+
     numArgs := len(pay.Values)+1
 
     args := make([]interface{},0,numArgs)
-    strKey := storage.CreateKey(pay.Domain,pay.Id)
+    strKey := storage.DirectKey(pay.Domain,pay.Id)
     args = append(args,strKey)
     for j:=0; j<len(pay.Values); j++ {
         args = append(args,pay.Values[j])
@@ -53,4 +58,11 @@ func doCommandWrap(cmd *Command) (interface{},error) {
     }
 
     return r,nil
+}
+
+func doCustomCommand(cid types.ConnId, cmd *types.Command) (interface{},error) {
+    f,ok := customCommandMap[cmd.Command]
+    if !ok { return nil,errors.New("Command in main map not listed in custom map") }
+
+    return f(cid,&cmd.Payload)
 }

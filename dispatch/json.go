@@ -2,20 +2,8 @@ package dispatch
 
 import (
     "encoding/json"
+    "hyrax/types"
 )
-
-type Payload struct {
-    Domain string   `json:"domain"`
-    Id     string   `json:"id"`
-    Name   string   `json:"name"`
-    Secret string   `json:"secret"`
-    Values []string `json:"values"`
-}
-
-type Command struct {
-    Command string        `json:"command"`
-    Payload Payload       `json:"payload"`
-}
 
 type messageWrap struct {
     Command string        `json:"command"`
@@ -34,8 +22,8 @@ func EncodeError(err string) ([]byte,error) {
     return json.Marshal(errorMessage{err})
 }
 
-func DecodeCommand(b []byte) (*Command,error) {
-    var c Command
+func DecodeCommand(b []byte) (*types.Command,error) {
+    var c types.Command
     err := json.Unmarshal(b,&c)
     return &c,err
 }
