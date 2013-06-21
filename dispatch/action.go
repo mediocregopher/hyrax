@@ -3,21 +3,23 @@ package dispatch
 import (
     "hyrax/storage"
     "hyrax/types"
+    "hyrax/parse"
+    "hyrax/custom"
     "errors"
 )
 
 func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
-    cmd,err := DecodeCommand(rawJson)
+    cmd,err := parse.DecodeCommand(rawJson)
     if err != nil {
-        return EncodeError(err.Error())
+        return parse.EncodeError(err.Error())
     }
 
     ret,err := doCommandWrap(cid,cmd)
     if err != nil {
-        return EncodeError(err.Error())
+        return parse.EncodeError(err.Error())
     }
 
-    return EncodeMessage(cmd.Command,ret)
+    return parse.EncodeMessage(cmd.Command,ret)
 }
 
 func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
@@ -31,6 +33,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
         if !CheckAuth(pay) {
             return nil,errors.New("cannot authenticate with key "+pay.Secret)
         }
+        custom.MonMakeAlert(cmd)
     }
 
     if pay.Id == "" {

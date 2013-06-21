@@ -7,6 +7,7 @@ import (
     "io"
     "hyrax/dispatch"
     "hyrax/types"
+    "hyrax/router"
 )
 
 func TcpListen(addr string) error {
@@ -23,7 +24,7 @@ func TcpListen(addr string) error {
                     continue
                 }
 
-                cid,ch := AllocateId()
+                cid,ch := router.AllocateId()
                 go TcpClient(conn,cid,ch)
             }
         }()
@@ -37,7 +38,7 @@ type tcpReadChRet struct {
     err error
 }
 
-func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
+func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 
     workerReadCh  := make(chan *tcpReadChRet)
     readMore := true
@@ -69,8 +70,8 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
         //If we pull a command off we decode it and act accordingly
         case command := <-cmdCh:
             switch command.Type() {
-            case PUSH:
-                conn.Write(*command.(*PushMessage))
+            case router.PUSH:
+                conn.Write(*command.(*router.PushMessage))
             }
 
 
@@ -111,7 +112,7 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
     }
 }
 
-func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan Message) {
+func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
     conn.Close()
-    CleanId(cid)
+    router.CleanId(cid)
 }
