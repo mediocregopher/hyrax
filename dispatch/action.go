@@ -5,6 +5,7 @@ import (
     "hyrax/types"
     "hyrax/parse"
     "hyrax/custom"
+    "hyrax/router"
     "errors"
 )
 
@@ -68,4 +69,9 @@ func doCustomCommand(cid types.ConnId, cmd *types.Command) (interface{},error) {
     if !ok { return nil,errors.New("Command in main map not listed in custom map") }
 
     return f(cid,&cmd.Payload)
+}
+
+func DoCleanup(cid types.ConnId) error {
+    router.CleanId(cid)
+    return custom.CleanConnMon(cid)
 }

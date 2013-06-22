@@ -18,6 +18,8 @@ func main() {
 
     err := storage.RedisConnect()
     if err != nil { panic(err); }
+    _,err = storage.CmdPretty("FLUSHALL")
+    if err != nil { panic(err); }
 
     port := strconv.Itoa(config.GetInt("port"))
     addr := ":"+port

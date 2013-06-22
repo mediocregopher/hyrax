@@ -7,13 +7,19 @@ import (
     "hyrax/parse"
     "strconv"
     "log"
+    "errors"
 )
 
 
 func AMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
+    connmonkey := storage.ConnMonKey(cid)
+    connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
 
     _,err := storage.CmdPretty("SADD",monkey,cid)
+    if err != nil { return nil,err }
+
+    _,err = storage.CmdPretty("SADD",connmonkey,connmonval)
     return "OK",err
 }
 
@@ -62,6 +68,24 @@ func ZMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
 
 //TODO emon
 
+func CleanConnMon(cid types.ConnId) error {
+    connmonkey := storage.ConnMonKey(cid)
+    r,err := storage.CmdPretty("SMEMBERS",connmonkey)
+    if err != nil { return err }
+
+    mons := r.([]string)
+
+    for i := range mons {
+        domain,id := storage.DeconstructConnMonVal(mons[i])
+        monkey := storage.MonKey(domain,id)
+        _,err = storage.CmdPretty("SREM",monkey,cid)
+        if err != nil { return err }
+    }
+
+    _,err = storage.CmdPretty("DEL",connmonkey)
+    return err
+}
+
 var monCh chan *types.Command
 
 type MonPushPayload struct {
@@ -91,14 +115,12 @@ func MonHandleAlert(cmd *types.Command) error {
     for i := range idstrs {
         id,err := strconv.Atoi(idstrs[i])
         if err != nil {
-            log.Printf("Got %s when converting %s to int\n",err.Error(),idstrs[i])
-            continue
+            return errors.New(err.Error()+" when converting "+idstrs[i]+" to int")
         }
 
         msg,err := parse.EncodeMessage("mon-push",pay)
         if err != nil {
-            log.Printf("Got %s when encoding mon push message\n",err.Error())
-            continue
+            return errors.New(err.Error()+" when encoding mon push message")
         }
 
         router.SendPushMessage(types.ConnId(id),msg)
@@ -114,9 +136,11 @@ func init() {
     for i:=0; i<10; i++ {
         go func(){
             for {
-                //TODO proper error capture
                 cmd := <-monCh
-                MonHandleAlert(cmd)
+                err := MonHandleAlert(cmd)
+                if err != nil {
+                    log.Printf("%s when calling MonHandleAlert(%v)\n",err.Error(),cmd)
+                }
             }
         }()
     }

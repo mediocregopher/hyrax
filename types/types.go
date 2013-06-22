@@ -1,6 +1,13 @@
 package types
 
+import (
+    "strconv"
+)
+
 type ConnId uint64
+func (cid *ConnId) Serialize() string {
+    return strconv.Itoa(int(*cid))
+}
 
 type Payload struct {
     Domain string   `json:"domain"`

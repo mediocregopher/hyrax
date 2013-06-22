@@ -114,5 +114,6 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 
 func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
     conn.Close()
-    router.CleanId(cid)
+    err := dispatch.DoCleanup(cid)
+    if err != nil { log.Println("Error during cleanup of",cid,":",err.Error()) }
 }
