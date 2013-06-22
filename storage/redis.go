@@ -5,17 +5,40 @@ import (
     "hyrax/config"
     "github.com/fzzy/radix/redis"
     "strconv"
-    "sync"
 )
 
-var conn *redis.Client
-var connLock sync.Mutex
+const NUM_CONNS = 10
+
+type redisCmd struct {
+    cmd *string
+    args []interface{}
+    ret chan *redis.Reply
+}
+
+var conns [NUM_CONNS]*redis.Client
+var cmdCh chan *redisCmd
+
+func init() {
+    cmdCh = make(chan *redisCmd)
+    for i := range conns {
+        go func(i int){
+            for {
+                cmd := <-cmdCh
+                cmd.ret <- conns[i].Cmd( *cmd.cmd, cmd.args )
+            }
+        }(i)
+    }
+}
 
 func RedisConnect() error {
-    var err error
     addr := config.GetStr("redis-addr")
-    conn, err = redis.Dial("tcp",addr)
-    return err
+
+    for i := range conns {
+        conn, err := redis.Dial("tcp",addr)
+        if err != nil { return err }
+        conns[i] = conn
+    }
+    return nil
 }
 
 func CmdPretty(cmd string, args... interface{}) (interface{},error) {
@@ -23,9 +46,9 @@ func CmdPretty(cmd string, args... interface{}) (interface{},error) {
 }
 
 func Cmd(cmd string, args []interface{}) (interface{},error) {
-    connLock.Lock()
-    r := conn.Cmd(cmd,args...)
-    connLock.Unlock()
+    rCmd := redisCmd{ &cmd, args, make(chan *redis.Reply) }
+    cmdCh <- &rCmd
+    r := <-rCmd.ret
 
     switch r.Type {
         case redis.StatusReply:
