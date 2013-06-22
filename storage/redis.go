@@ -5,9 +5,11 @@ import (
     "hyrax/config"
     "github.com/fzzy/radix/redis"
     "strconv"
+    "sync"
 )
 
 var conn *redis.Client
+var connLock sync.Mutex
 
 func RedisConnect() error {
     var err error
@@ -21,7 +23,10 @@ func CmdPretty(cmd string, args... interface{}) (interface{},error) {
 }
 
 func Cmd(cmd string, args []interface{}) (interface{},error) {
+    connLock.Lock()
     r := conn.Cmd(cmd,args...)
+    connLock.Unlock()
+
     switch r.Type {
         case redis.StatusReply:
             return r.Str()
