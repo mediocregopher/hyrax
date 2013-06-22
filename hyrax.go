@@ -18,6 +18,8 @@ func main() {
 
     err := storage.RedisConnect()
     if err != nil { panic(err); }
+
+    //BUG(mediocregopher): proper cleanup
     _,err = storage.CmdPretty("FLUSHALL")
     if err != nil { panic(err); }
 

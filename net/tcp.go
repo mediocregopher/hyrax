@@ -60,7 +60,6 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
                 } else if bcount > 0 {
                     ret = tcpReadChRet{buf,nil}
                 } else {
-                    //TODO does this ever happen?
                     ret = tcpReadChRet{nil,nil}
                 }
                 workerReadCh <- &ret

@@ -24,8 +24,7 @@ func init() {
     cmdCh = make(chan *redisCmd)
     for i := range conns {
         go func(i int){
-            for {
-                cmd := <-cmdCh
+            for cmd := range cmdCh {
                 cmd.ret <- conns[i].Cmd( *cmd.cmd, cmd.args )
             }
         }(i)
