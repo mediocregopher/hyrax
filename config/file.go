@@ -9,6 +9,8 @@ import (
     "strings"
 )
 
+// dumpExampleConfig returns the string representation of a configuration file
+// with all parameters filled in with their default values
 func dumpExampleConfig() string {
     var buffer bytes.Buffer
 
@@ -34,6 +36,9 @@ func dumpExampleConfig() string {
     return buffer.String()
 }
 
+// readConfig returns a map of the key/values found in a given configuration file.
+// Note: these key/values don't have to actually correspond to expected parameters,
+// that parsing is done elsewhere
 func readConfig(file string) (map[string]string,error) {
     fi,err := os.Open(file)
     if err != nil { return nil,err }

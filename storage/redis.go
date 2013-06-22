@@ -18,6 +18,8 @@ type redisCmd struct {
 var conns [NUM_CONNS]*redis.Client
 var cmdCh chan *redisCmd
 
+// init sets up NUM_CONNS routines that will each
+// handle incoming commands for their channel
 func init() {
     cmdCh = make(chan *redisCmd)
     for i := range conns {
@@ -30,6 +32,7 @@ func init() {
     }
 }
 
+// RedisConnect creates all the connections for redis
 func RedisConnect() error {
     addr := config.GetStr("redis-addr")
 
@@ -41,10 +44,17 @@ func RedisConnect() error {
     return nil
 }
 
+// CmdPretty is a wrapper around Cmd, it takes in a command and a variadic
+// list of arguments for that command. Used for commands defined directly
+// in hyrax's code, where Cmd is used for commands that are being invoked
+// by a client (generally)
 func CmdPretty(cmd string, args... interface{}) (interface{},error) {
     return Cmd(cmd,args)
 }
 
+// Cmd takes in a command and a list of arguments for that command. It then
+// determines the type of the return, decoding it, as well figuring out if there's
+// been an error
 func Cmd(cmd string, args []interface{}) (interface{},error) {
     rCmd := redisCmd{ &cmd, args, make(chan *redis.Reply) }
     cmdCh <- &rCmd
@@ -73,7 +83,7 @@ func Cmd(cmd string, args []interface{}) (interface{},error) {
     return nil,nil
 }
 
-//For converting the return of a HGETALL to a hash
+// RedisListToMap is used for converting the return of a HGETALL to a hash
 func RedisListToMap(l []string) (map[string]string,error) {
     llen := len(l)
     if llen%2 != 0 {
@@ -90,7 +100,8 @@ func RedisListToMap(l []string) (map[string]string,error) {
     return m,nil
 }
 
-//For converting the return of a ZRANGE .. .. WITHSCORES to a hash
+// RedisListToIntMap is used for converting the return of
+// a ZRANGE .. .. WITHSCORES to a hash
 func RedisListToIntMap(l []string) (map[string]int,error) {
     llen := len(l)
     if llen%2 != 0 {

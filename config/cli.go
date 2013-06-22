@@ -10,18 +10,24 @@ import (
 var configInt = map[string]int{}
 var configStr = map[string]string{}
 
+// GetInt looks for a configuration parameter of the given name and
+// returns its value (assuming the parameter is an integer)
 func GetInt(name string) int {
     val,ok := configInt[name]
     if !ok { panic("attempted to access non-int-parameter "+name) }
     return val
 }
 
+// GetInt looks for a configuration parameter of the given name and
+// returns its value (assuming the parameter is a string)
 func GetStr(name string) string {
     val,ok := configStr[name]
     if !ok { panic("attempted to access non-str-parameter "+name) }
     return val
 }
 
+// LoadConfig loads hyrax's runtime configuration, using both command-line arguments
+// and a possible configuration file
 func LoadConfig() {
 
     //Load cli into its own set of config maps

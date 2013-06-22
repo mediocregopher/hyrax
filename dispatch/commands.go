@@ -12,26 +12,38 @@ const (
     RETURNS_MAP
 )
 
+// CommandExists returns back whether or not
+// a command is actually avaible for clients to use
 func CommandExists(cmd *string) bool {
     _,ok := commandMap[*cmd]
     return ok
 }
 
+// CommandIsCustom returns back whether or not
+// a command is a "custom" command, i.e: if the
+// command is implemented in hyrax and isn't passed right
+// through to redis.
 func CommandIsCustom(cmd *string) bool {
     n := commandMap[*cmd]
     return n & CUSTOM > 0
 }
 
+// CommandModifies returns back whether or not a command
+// modifies and existing value.
 func CommandModifies(cmd *string) bool {
     n := commandMap[*cmd]
     return n & MODIFY > 0
 }
 
+// CommandReturnsMap returns back whether or not a command
+// is expected to return back a string->string map from redis
 func CommandReturnsMap(cmd *string) bool {
     n := commandMap[*cmd]
     return n & RETURNS_MAP > 0
 }
 
+// commandMap is a map of commands to their bitmasks, where
+// the bitmask describes the attributes of the command.
 var commandMap = map[string]commandInfo{
 
     //Keys
@@ -131,6 +143,8 @@ var commandMap = map[string]commandInfo{
     "emon":             CUSTOM,
 }
 
+// customCommandMap is a map of custom commands to their appropriate
+// built-in funcions.
 var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{},error){
     "amon":             custom.AMon,
     "mon":              custom.Mon,
