@@ -22,10 +22,10 @@ func AMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
 
-    _,err := storage.CmdPretty("SADD",monkey,cid)
+    _,err := storage.CmdPretty("SADD",connmonkey,connmonval)
     if err != nil { return nil,err }
 
-    _,err = storage.CmdPretty("SADD",connmonkey,connmonval)
+    _,err = storage.CmdPretty("SADD",monkey,cid)
     return "OK",err
 }
 
@@ -69,20 +69,28 @@ func SMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     return storage.CmdPretty("SMEMBERS",dirkey)
 }
 
-// SMon sets up monitoring on a value and returns it, assuming it's a
+// ZMon sets up monitoring on a value and returns it, assuming it's a
 // sorted set
 func ZMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     _,err := AMon(cid,pay)
     if err != nil { return nil,err }
     dirkey := storage.DirectKey(pay.Domain,pay.Id)
 
+    // BUG(mediocregopher): what is this I don't even? SMEMBERS /= sorted set
     r,err := storage.CmdPretty("SMEMBERS",dirkey)
     if err != nil { return nil,err }
 
     return storage.RedisListToIntMap(r.([]string))
 }
 
-//TODO emon
+// EMon sets up monitoring on a value and returns it, assuming it's an
+// ekg
+func EMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
+    _,err := AMon(cid,pay)
+    if err != nil { return nil,err }
+
+    return EMembers(cid,pay)
+}
 
 // CleanConnMon takes in a connection id and cleans up all of its
 // monitors, and the set which keeps track of those monitors
