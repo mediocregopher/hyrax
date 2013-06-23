@@ -10,6 +10,12 @@ func (cid *ConnId) Serialize() string {
     return strconv.Itoa(int(*cid))
 }
 
+func ConnIdDeserialize(s string) (ConnId,error) {
+    i,err := strconv.Atoi(s)
+    if err != nil { return 0,err }
+    return ConnId(i),nil
+}
+
 // Command (and subsequently Payload) are populated by json from the client and
 // contain all relevant information about a command, so they're passed around a
 // lot
