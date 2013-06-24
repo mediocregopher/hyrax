@@ -18,12 +18,12 @@ import (
 func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
     cmd,err := parse.DecodeCommand(rawJson)
     if err != nil {
-        return parse.EncodeError(err.Error())
+        return parse.EncodeError("",err.Error())
     }
 
     ret,err := doCommandWrap(cid,cmd)
     if err != nil {
-        return parse.EncodeError(err.Error())
+        return parse.EncodeError(cmd.Command,err.Error())
     }
 
     return parse.EncodeMessage(cmd.Command,ret)

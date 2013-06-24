@@ -11,7 +11,8 @@ type messageWrap struct {
 }
 
 type errorMessage struct {
-    Error string `json:"error"`
+    Command string `json:"command"`
+    Error   string `json:"error"`
 }
 
 // EncodeMessage takes a return value from a given command,
@@ -21,9 +22,8 @@ func EncodeMessage(command string, ret interface{}) ([]byte,error) {
 }
 
 // EncodeError takes in an error and returns the raw json for it
-// BUG(mediocregopher): This should take in the command as well
-func EncodeError(err string) ([]byte,error) {
-    return json.Marshal(errorMessage{err})
+func EncodeError(command,err string) ([]byte,error) {
+    return json.Marshal(errorMessage{command,err})
 }
 
 // DecodeCommand takes in raw json and tries to decode it into
