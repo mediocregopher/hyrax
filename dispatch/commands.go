@@ -132,13 +132,13 @@ var commandMap = map[string]commandInfo{
     "zincrby":          MODIFY,
     "zrange":           0,
     "zrangebyscore":    0,
-    "zrank":            0, //TODO two different return values?
+    "zrank":            0,
     "zrem":             MODIFY,
     "zremrangebyrank":  MODIFY,
     "zremrangebyscore": MODIFY,
     "zrevrange":        0,
     "zrevrangebyscore": 0,
-    "zrevrank":         0, //TODO two different return values?
+    "zrevrank":         0,
     "zscore":           0,
 
     //Monitors
