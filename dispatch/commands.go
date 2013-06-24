@@ -9,6 +9,7 @@ type commandInfo uint
 const (
     CUSTOM commandInfo = 1 << iota
     MODIFY
+    QUIET
     RETURNS_MAP
 )
 
@@ -33,6 +34,13 @@ func CommandIsCustom(cmd *string) bool {
 func CommandModifies(cmd *string) bool {
     n := commandMap[*cmd]
     return n & MODIFY > 0
+}
+
+// CommandIsQuiet returns back if a command which modifies
+// a value should remain quiet and not generate an alert
+func CommandIsQuiet(cmd *string) bool {
+    n := commandMap[*cmd]
+    return n & QUIET > 0
 }
 
 // CommandReturnsMap returns back whether or not a command
@@ -141,15 +149,33 @@ var commandMap = map[string]commandInfo{
     "zmon":             CUSTOM,
     "amon":             CUSTOM,
     "emon":             CUSTOM,
+
+    //EKGs
+    "eadd":             MODIFY | CUSTOM,
+    "eaddq":            MODIFY | CUSTOM | QUIET,
+    "erem":             MODIFY | CUSTOM,
+    "eremq":            MODIFY | CUSTOM | QUIET,
+    "emembers":         CUSTOM,
 }
 
 // customCommandMap is a map of custom commands to their appropriate
 // built-in funcions.
 var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{},error){
+
+    //Monitors
     "amon":             custom.AMon,
     "mon":              custom.Mon,
     "hmon":             custom.HMon,
     "lmon":             custom.LMon,
     "smon":             custom.SMon,
     "zmon":             custom.ZMon,
+    "emon":             custom.EMon,
+
+    //EKGs
+    "eadd":             custom.EAdd,
+    "eaddq":            custom.EAdd,
+    "erem":             custom.ERem,
+    "eremq":            custom.ERem,
+    "emembers":         custom.EMembers,
+
 }

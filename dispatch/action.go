@@ -32,6 +32,9 @@ func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
 func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
     pay := &cmd.Payload
 
+    // BUG(mediocregopher): All these Command* functions do a lot of redundant. Better if
+    // command.go just had a method to return a struct with all the relevant data
+
     if !CommandExists(&cmd.Command) {
         return nil,errors.New("Unsupported command")
     }
@@ -40,7 +43,9 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
         if !CheckAuth(pay) {
             return nil,errors.New("cannot authenticate with key "+pay.Secret)
         }
-        custom.MonMakeAlert(cmd)
+        if !CommandIsQuiet(&cmd.Command) {
+            custom.MonMakeAlert(cmd)
+        }
     }
 
     if pay.Id == "" {
@@ -83,5 +88,7 @@ func doCustomCommand(cid types.ConnId, cmd *types.Command) (interface{},error) {
 // may have accumulated during its life (entry in router map, monitors, etc...)
 func DoCleanup(cid types.ConnId) error {
     router.CleanId(cid)
-    return custom.CleanConnMon(cid)
+    err := custom.CleanConnMon(cid)
+    if err != nil { return err }
+    return custom.CleanConnEkg(cid)
 }

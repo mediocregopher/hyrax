@@ -114,9 +114,13 @@ func CleanConnMon(cid types.ConnId) error {
 
 var monCh chan *types.Command
 
+// monPushPayload is the payload for push notifications. It is basically
+// the standard payload object but without the secret, and with a command
+// string field instead
 type monPushPayload struct {
     Domain  string   `json:"domain"`
     Id      string   `json:"id"`
+    Name    string   `json:"name"`
     Command string   `json:"command"`
     Values  []string `json:"values"`
 }
@@ -139,6 +143,7 @@ func monHandleAlert(cmd *types.Command) error {
     var pay monPushPayload
     pay.Domain = cmd.Payload.Domain
     pay.Id = cmd.Payload.Id
+    pay.Name = cmd.Payload.Name
     pay.Command = cmd.Command
     pay.Values = cmd.Payload.Values
 

@@ -74,6 +74,7 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
             switch command.Type() {
             case router.PUSH:
                 conn.Write(*command.(*router.PushMessage))
+                conn.Write([]byte{'\n'})
             }
 
 

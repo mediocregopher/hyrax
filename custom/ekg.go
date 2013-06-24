@@ -31,7 +31,7 @@ func ERem(cid types.ConnId, pay *types.Payload) (interface{},error) {
 
     connekgkey := storage.ConnEkgKey(cid)
     connekgval := storage.ConnEkgVal(pay.Domain,pay.Id,pay.Name)
-    _,err = storage.CmdPretty("SADD",connekgkey,connekgval)
+    _,err = storage.CmdPretty("SREM",connekgkey,connekgval)
     return "OK",err
 }
 
