@@ -17,6 +17,10 @@ func DirectKey(domain,id string) string {
     return createKey("direct",domain,id)
 }
 
+////////////////////////////////////////////////////////////////////////
+// Mon
+////////////////////////////////////////////////////////////////////////
+
 // MonKey returns the key that will be used to store the set of
 // connection ids that are monitoring a value
 func MonKey(domain,id string) string {
@@ -41,6 +45,17 @@ func DeconstructConnMonVal(connmonval string) (string,string) {
     s := strings.Split(connmonval,SEP)
     return s[0],s[1]
 }
+
+// MonWildcards returns the list of wildcarded keys that will cover
+// all Mon related data in redis
+func MonWildcards() []string {
+    return []string{ createKey("mon","*"),
+                     createKey("conn","mon","*") }
+}
+
+////////////////////////////////////////////////////////////////////////
+// EKG
+////////////////////////////////////////////////////////////////////////
 
 // EkgKey returns the key that will be used to store the set
 // of connection id/names being monitored by the ekg
@@ -79,4 +94,34 @@ func ConnEkgVal(domain, id, name string) string {
 func DeconstructConnEkgVal(connekgval string) (string,string,string) {
     s := strings.Split(connekgval,SEP)
     return s[0],s[1],s[2]
+}
+
+// EkgWildcards returns the list of wildcarded keys that will cover
+// all Ekg related data in redis
+func EkgWildcards() []string {
+    return []string{ createKey("ekg","*"),
+                     createKey("conn","ekg","*") }
+}
+
+////////////////////////////////////////////////////////////////////////
+// Util
+////////////////////////////////////////////////////////////////////////
+
+// AllWildcards returns the list of wildcarded keys that will cover
+// all "transient" data (aka, all data related to connections that would
+// become invalid on a server restart)
+func AllWildcards() []string {
+    mon := MonWildcards()
+    ekg := EkgWildcards()
+    ret := make([]string,0,len(mon)+len(ekg))
+
+    for i := range mon {
+        ret = append(ret,mon[i])
+    }
+
+    for i := range ekg {
+        ret = append(ret,ekg[i])
+    }
+
+    return ret
 }
