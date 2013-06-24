@@ -76,8 +76,7 @@ func ZMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     if err != nil { return nil,err }
     dirkey := storage.DirectKey(pay.Domain,pay.Id)
 
-    // BUG(mediocregopher): what is this I don't even? SMEMBERS /= sorted set
-    r,err := storage.CmdPretty("SMEMBERS",dirkey)
+    r,err := storage.CmdPretty("ZRANGE",dirkey,0,-1,"WITHSCORES")
     if err != nil { return nil,err }
 
     return storage.RedisListToIntMap(r.([]string))
