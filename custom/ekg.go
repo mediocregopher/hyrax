@@ -80,7 +80,6 @@ func EMembers(cid types.ConnId, pay *types.Payload) (interface{},error) {
 
     members := r.([]string)
     for i := range members {
-        // BUG(mediocregopher): this will probably crash if you call it on a non-ekg
         _,name := storage.DeconstructEkgVal(members[i])
         members[i] = name
     }
