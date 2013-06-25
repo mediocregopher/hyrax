@@ -11,12 +11,12 @@ import (
 )
 
 
-// Mon adds the connection's id to the set of connections that
+// MAdd adds the connection's id to the set of connections that
 // are monitoring the domain/id in redis (so it can receive alerts)
 // and adds the domain/id to the set of domain/ids that the
 // connection is monitoring in redis (so it can clean up when the connection
 // closes).
-func Mon(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func MAdd(cid types.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
@@ -28,11 +28,11 @@ func Mon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     return "OK",err
 }
 
-// RMon removes the connection's id form the set of connections that
+// MRem removes the connection's id form the set of connections that
 // are monitoring the domain/id in redis, and removes the domain/id
 // from the set of domain/ids that the connection is monitoring in
 // redis
-func RMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func MRem(cid types.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
