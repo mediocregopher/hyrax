@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "strings"
     "strconv"
     "hyrax/config"
@@ -27,9 +26,6 @@ func main() {
     err = net.TcpListen(addr)
     if err != nil { panic(err); }
 
-    //cmd(`{"command":"amon","payload":{"domain":"a","id":"k1"}}`)
-    //cmd(`{"command":"set","payload":{"domain":"a","id":"k1","secret":"dea83285cb755ddb47e2b24b68b5321f394e3641","values":["ohai"]}}`)
-
     select {}
 }
 
@@ -50,9 +46,4 @@ func CleanupTransientData() error {
     }
 
     return nil
-}
-
-func cmd(c string) {
-    r,err := dispatch.DoCommand(0,[]byte(c))
-    fmt.Println(string(r),err)
 }
