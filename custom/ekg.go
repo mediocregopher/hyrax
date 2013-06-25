@@ -47,9 +47,6 @@ func CleanConnEkg(cid types.ConnId) error {
     ekgs := r.([]string)
 
     for i := range ekgs {
-        // BUG(mediocregopher): If another connection was to start monitoring this ekg right as
-        // this is happening, could the get a name in the members list but then not get the alert
-        // for it?
         domain,id,name := storage.DeconstructConnEkgVal(ekgs[i])
         ekgkey := storage.EkgKey(domain,id)
         ekgval := storage.EkgVal(cid,name)

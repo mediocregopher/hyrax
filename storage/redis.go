@@ -4,7 +4,6 @@ import (
     "errors"
     "hyrax/config"
     "github.com/fzzy/radix/redis"
-    "strconv"
 )
 
 const NUM_CONNS = 10
@@ -94,25 +93,6 @@ func RedisListToMap(l []string) (map[string]string,error) {
     halfllen := llen/2
     for i := 0; i<halfllen; i++ {
         m[l[i*2]] = l[i*2+1]
-    }
-
-    return m,nil
-}
-
-// RedisListToIntMap is used for converting the return of
-// a ZRANGE .. .. WITHSCORES to a hash
-func RedisListToIntMap(l []string) (map[string]int,error) {
-    llen := len(l)
-    if llen%2 != 0 {
-        return nil,errors.New("list has uneven number of elements")
-    }
-
-    m := map[string]int{}
-
-    halfllen := llen/2
-    for i := 0; i<halfllen; i++ {
-        score,_ := strconv.Atoi(l[i*2+1])
-        m[l[i*2]] = score
     }
 
     return m,nil

@@ -143,12 +143,7 @@ var commandMap = map[string]commandInfo{
 
     //Monitors
     "mon":              CUSTOM,
-    "hmon":             CUSTOM,
-    "lmon":             CUSTOM,
-    "smon":             CUSTOM,
-    "zmon":             CUSTOM,
-    "amon":             CUSTOM,
-    "emon":             CUSTOM,
+    "rmon":             CUSTOM,
 
     //EKGs
     "eadd":             MODIFY | CUSTOM,
@@ -163,13 +158,8 @@ var commandMap = map[string]commandInfo{
 var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{},error){
 
     //Monitors
-    "amon":             custom.AMon,
     "mon":              custom.Mon,
-    "hmon":             custom.HMon,
-    "lmon":             custom.LMon,
-    "smon":             custom.SMon,
-    "zmon":             custom.ZMon,
-    "emon":             custom.EMon,
+    "rmon":             custom.RMon,
 
     //EKGs
     "eadd":             custom.EAdd,

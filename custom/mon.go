@@ -11,13 +11,12 @@ import (
 )
 
 
-// AMon is available publicly as a command, but is also used internally, as
-// all other *Mon commands wrap around it. It adds the connection's id to the
-// set of connections that are monitoring the domain/id in redis (so it can
-// receive alerts) and adds the domain/id to the set of domain/ids that the
+// Mon adds the connection's id to the set of connections that
+// are monitoring the domain/id in redis (so it can receive alerts)
+// and adds the domain/id to the set of domain/ids that the
 // connection is monitoring in redis (so it can clean up when the connection
 // closes).
-func AMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func Mon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
@@ -29,66 +28,20 @@ func AMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
     return "OK",err
 }
 
-// Mon sets up monitoring on a value and returns it, assuming it's a
-// string
-func Mon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-    dirkey := storage.DirectKey(pay.Domain,pay.Id)
-    return storage.CmdPretty("GET",dirkey)
-}
+// RMon removes the connection's id form the set of connections that
+// are monitoring the domain/id in redis, and removes the domain/id
+// from the set of domain/ids that the connection is monitoring in
+// redis
+func RMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
+    monkey := storage.MonKey(pay.Domain,pay.Id)
+    connmonkey := storage.ConnMonKey(cid)
+    connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
 
-// HMon sets up monitoring on a value and returns it, assuming it's a
-// hash
-func HMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-    dirkey := storage.DirectKey(pay.Domain,pay.Id)
-
-    r,err := storage.CmdPretty("HGETALL",dirkey)
+    _,err := storage.CmdPretty("SREM",connmonkey,connmonval)
     if err != nil { return nil,err }
 
-    return storage.RedisListToMap(r.([]string))
-}
-
-// LMon sets up monitoring on a value and returns it, assuming it's a
-// list
-func LMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-    dirkey := storage.DirectKey(pay.Domain,pay.Id)
-    return storage.CmdPretty("LRANGE",dirkey,0,-1)
-}
-
-// SMon sets up monitoring on a value and returns it, assuming it's a
-// set
-func SMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-    dirkey := storage.DirectKey(pay.Domain,pay.Id)
-    return storage.CmdPretty("SMEMBERS",dirkey)
-}
-
-// ZMon sets up monitoring on a value and returns it, assuming it's a
-// sorted set
-func ZMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-    dirkey := storage.DirectKey(pay.Domain,pay.Id)
-
-    r,err := storage.CmdPretty("ZRANGE",dirkey,0,-1,"WITHSCORES")
-    if err != nil { return nil,err }
-
-    return storage.RedisListToIntMap(r.([]string))
-}
-
-// EMon sets up monitoring on a value and returns it, assuming it's an
-// ekg
-func EMon(cid types.ConnId, pay *types.Payload) (interface{},error) {
-    _,err := AMon(cid,pay)
-    if err != nil { return nil,err }
-
-    return EMembers(cid,pay)
+    _,err = storage.CmdPretty("SREM",monkey,cid)
+    return "OK",err
 }
 
 // CleanConnMon takes in a connection id and cleans up all of its
