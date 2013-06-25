@@ -31,19 +31,17 @@ func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
 
 func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
     pay := &cmd.Payload
+    cinfo,cexists := GetCommandInfo(&cmd.Command)
 
-    // BUG(mediocregopher): All these Command* functions do a lot of redundant. Better if
-    // command.go just had a method to return a struct with all the relevant data
-
-    if !CommandExists(&cmd.Command) {
+    if cexists {
         return nil,errors.New("Unsupported command")
     }
 
-    if CommandModifies(&cmd.Command) {
+    if cinfo.Modifies {
         if !CheckAuth(pay) {
             return nil,errors.New("cannot authenticate with key "+pay.Secret)
         }
-        if !CommandIsQuiet(&cmd.Command) {
+        if !cinfo.IsQuiet {
             custom.MonMakeAlert(cmd)
         }
     }
@@ -52,7 +50,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
         return nil,errors.New("missing key id")
     }
 
-    if CommandIsCustom(&cmd.Command) {
+    if cinfo.IsQuiet {
         return doCustomCommand(cid,cmd)
     }
 
@@ -68,7 +66,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
     r,err := storage.Cmd(cmd.Command,args)
     if err != nil { return nil,err }
 
-    if CommandReturnsMap(&cmd.Command) {
+    if cinfo.ReturnsMap {
         return storage.RedisListToMap(r.([]string))
     }
 

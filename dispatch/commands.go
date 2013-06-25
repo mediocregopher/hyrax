@@ -5,152 +5,116 @@ import (
     "hyrax/custom"
 )
 
-type commandInfo uint
-const (
-    CUSTOM commandInfo = 1 << iota
-    MODIFY
-    QUIET
-    RETURNS_MAP
-)
-
-// CommandExists returns back whether or not
-// a command is actually avaible for clients to use
-func CommandExists(cmd *string) bool {
-    _,ok := commandMap[*cmd]
-    return ok
+// CommandInfo is a struct which is tied to a command,
+// and describes various of the command. All properties
+// are false be default.
+type CommandInfo struct {
+    IsCustom,
+    Modifies,
+    IsQuiet,
+    ReturnsMap bool
 }
 
-// CommandIsCustom returns back whether or not
-// a command is a "custom" command, i.e: if the
-// command is implemented in hyrax and isn't passed right
-// through to redis.
-func CommandIsCustom(cmd *string) bool {
-    n := commandMap[*cmd]
-    return n & CUSTOM > 0
-}
-
-// CommandModifies returns back whether or not a command
-// modifies and existing value.
-func CommandModifies(cmd *string) bool {
-    n := commandMap[*cmd]
-    return n & MODIFY > 0
-}
-
-// CommandIsQuiet returns back if a command which modifies
-// a value should remain quiet and not generate an alert
-func CommandIsQuiet(cmd *string) bool {
-    n := commandMap[*cmd]
-    return n & QUIET > 0
-}
-
-// CommandReturnsMap returns back whether or not a command
-// is expected to return back a string->string map from redis
-func CommandReturnsMap(cmd *string) bool {
-    n := commandMap[*cmd]
-    return n & RETURNS_MAP > 0
-}
-
-// commandMap is a map of commands to their bitmasks, where
-// the bitmask describes the attributes of the command.
-var commandMap = map[string]commandInfo{
+// commandMap is a map of commands to their info structs
+var commandMap = map[string]*CommandInfo{
 
     //Keys
-    "exists":           0,
-    "expire":           MODIFY,
-    "expireat":         MODIFY,
-    "persist":          MODIFY,
-    "pexpire":          MODIFY,
-    "pexpireat":        MODIFY,
-    "pttl":             0,
-    "ttl":              0,
-    "type":             0,
+    "exists":           &CommandInfo{},
+    "expire":           &CommandInfo{Modifies:true},
+    "expireat":         &CommandInfo{Modifies:true},
+    "persist":          &CommandInfo{Modifies:true},
+    "pexpire":          &CommandInfo{Modifies:true},
+    "pexpireat":        &CommandInfo{Modifies:true},
+    "pttl":             &CommandInfo{},
+    "ttl":              &CommandInfo{},
+    "type":             &CommandInfo{},
 
     //Strings
-    "append":           MODIFY,
-    "bitcount":         0,
-    "decr":             MODIFY,
-    "decrby":           MODIFY,
-    "get":              0,
-    "getbit":           0,
-    "getrange":         0,
-    "getset":           MODIFY,
-    "incr":             MODIFY,
-    "incrby":           MODIFY,
-    "incrbyfloat":      MODIFY,
-    "psetex":           MODIFY,
-    "set":              MODIFY,
-    "setbit":           MODIFY,
-    "setex":            MODIFY,
-    "setnx":            MODIFY,
-    "setrange":         MODIFY,
-    "strlen":           0,
+    "append":           &CommandInfo{Modifies:true},
+    "bitcount":         &CommandInfo{},
+    "decr":             &CommandInfo{Modifies:true},
+    "decrby":           &CommandInfo{Modifies:true},
+    "get":              &CommandInfo{},
+    "getbit":           &CommandInfo{},
+    "getrange":         &CommandInfo{},
+    "getset":           &CommandInfo{Modifies:true},
+    "incr":             &CommandInfo{Modifies:true},
+    "incrby":           &CommandInfo{Modifies:true},
+    "incrbyfloat":      &CommandInfo{Modifies:true},
+    "psetex":           &CommandInfo{Modifies:true},
+    "set":              &CommandInfo{Modifies:true},
+    "setbit":           &CommandInfo{Modifies:true},
+    "setex":            &CommandInfo{Modifies:true},
+    "setnx":            &CommandInfo{Modifies:true},
+    "setrange":         &CommandInfo{Modifies:true},
+    "strlen":           &CommandInfo{},
 
     //Hashes
-    "hdel":             MODIFY,
-    "hexists":          0,
-    "hget":             0,
-    "hgetall":          RETURNS_MAP,
-    "hincrby":          MODIFY,
-    "hincrbyfloat":     MODIFY,
-    "hkeys":            0,
-    "hlen":             0,
-    "hmget":            0,
-    "hset":             MODIFY,
-    "hsetnx":           MODIFY,
-    "hvals":            0,
+    "hdel":             &CommandInfo{Modifies:true},
+    "hexists":          &CommandInfo{},
+    "hget":             &CommandInfo{},
+    "hgetall":          &CommandInfo{ReturnsMap:true},
+    "hincrby":          &CommandInfo{Modifies:true},
+    "hincrbyfloat":     &CommandInfo{Modifies:true},
+    "hkeys":            &CommandInfo{},
+    "hlen":             &CommandInfo{},
+    "hmget":            &CommandInfo{},
+    "hset":             &CommandInfo{Modifies:true},
+    "hsetnx":           &CommandInfo{Modifies:true},
+    "hvals":            &CommandInfo{},
 
     //Lists
     //blpop
     //brpop
-    "lindex":           0,
-    "linsert":          MODIFY,
-    "llen":             0,
-    "lpop":             MODIFY,
-    "lpush":            MODIFY,
-    "lpushx":           MODIFY,
-    "lrange":           0,
-    "lrem":             MODIFY,
-    "lset":             MODIFY,
-    "ltrim":            MODIFY,
-    "rpop":             MODIFY,
-    "rpush":            MODIFY,
-    "rpushx":           MODIFY,
+    "lindex":           &CommandInfo{},
+    "linsert":          &CommandInfo{Modifies:true},
+    "llen":             &CommandInfo{},
+    "lpop":             &CommandInfo{Modifies:true},
+    "lpush":            &CommandInfo{Modifies:true},
+    "lpushx":           &CommandInfo{Modifies:true},
+    "lrange":           &CommandInfo{},
+    "lrem":             &CommandInfo{Modifies:true},
+    "lset":             &CommandInfo{Modifies:true},
+    "ltrim":            &CommandInfo{Modifies:true},
+    "rpop":             &CommandInfo{Modifies:true},
+    "rpush":            &CommandInfo{Modifies:true},
+    "rpushx":           &CommandInfo{Modifies:true},
 
     //Sets
-    "sadd":             MODIFY,
-    "scard":            0,
-    "sismember":        0,
-    "smembers":         0,
-    "spop":             MODIFY,
-    "srandmember":      0,
-    "srem":             MODIFY,
+    "sadd":             &CommandInfo{Modifies:true},
+    "scard":            &CommandInfo{},
+    "sismember":        &CommandInfo{},
+    "smembers":         &CommandInfo{},
+    "spop":             &CommandInfo{Modifies:true},
+    "srandmember":      &CommandInfo{},
+    "srem":             &CommandInfo{Modifies:true},
 
     //Sorted Sets
-    "zadd":             MODIFY,
-    "zcard":            0,
-    "zcount":           0,
-    "zincrby":          MODIFY,
-    "zrange":           0,
-    "zrangebyscore":    0,
-    "zrank":            0,
-    "zrem":             MODIFY,
-    "zremrangebyrank":  MODIFY,
-    "zremrangebyscore": MODIFY,
-    "zrevrange":        0,
-    "zrevrangebyscore": 0,
-    "zrevrank":         0,
-    "zscore":           0,
+    "zadd":             &CommandInfo{Modifies:true},
+    "zcard":            &CommandInfo{},
+    "zcount":           &CommandInfo{},
+    "zincrby":          &CommandInfo{Modifies:true},
+    "zrange":           &CommandInfo{},
+    "zrangebyscore":    &CommandInfo{},
+    "zrank":            &CommandInfo{},
+    "zrem":             &CommandInfo{Modifies:true},
+    "zremrangebyrank":  &CommandInfo{Modifies:true},
+    "zremrangebyscore": &CommandInfo{Modifies:true},
+    "zrevrange":        &CommandInfo{},
+    "zrevrangebyscore": &CommandInfo{},
+    "zrevrank":         &CommandInfo{},
+    "zscore":           &CommandInfo{},
 
     //Monitors
-    "madd":             CUSTOM,
-    "mrem":             CUSTOM,
+    "madd":             &CommandInfo{IsCustom:true},
+    "mrem":             &CommandInfo{IsCustom:true},
 
     //EKGs
-    "eadd":             MODIFY | CUSTOM,
-    "eaddq":            MODIFY | CUSTOM | QUIET,
-    "erem":             MODIFY | CUSTOM,
-    "eremq":            MODIFY | CUSTOM | QUIET,
-    "emembers":         CUSTOM,
+    "eadd":             &CommandInfo{IsCustom:true,Modifies:true},
+    "eaddq":            &CommandInfo{IsCustom:true,Modifies:true,IsQuiet:true},
+    "erem":             &CommandInfo{IsCustom:true,Modifies:true},
+    "eremq":            &CommandInfo{IsCustom:true,Modifies:true,IsQuiet:true},
+    "emembers":         &CommandInfo{IsCustom:true},
 }
 
 // customCommandMap is a map of custom commands to their appropriate
@@ -168,4 +132,9 @@ var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{}
     "eremq":            custom.ERem,
     "emembers":         custom.EMembers,
 
+}
+
+func GetCommandInfo(cmd *string) (*CommandInfo,bool) {
+    cinfo,ok := commandMap[*cmd]
+    return cinfo,ok
 }
