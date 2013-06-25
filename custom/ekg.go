@@ -3,6 +3,7 @@ package custom
 import (
     "hyrax/types"
     "hyrax/storage"
+    "errors"
 )
 
 // EAdd adds the connection's id (and name) to an ekg's set of things it's
@@ -82,4 +83,30 @@ func EMembers(cid types.ConnId, pay *types.Payload) (interface{},error) {
     }
 
     return members,nil
+}
+
+// ECard returns the number of connection/name combinations being monitored
+func ECard(cid types.ConnId, pay *types.Payload) (interface{},error) {
+    ekgkey := storage.EkgKey(pay.Domain,pay.Id)
+    return storage.CmdPretty("SCARD",ekgkey)
+}
+
+// EIsMember returns whether or not the given name is being monitored by the ekg
+func EIsMember(cid types.ConnId, pay *types.Payload) (interface{},error) {
+
+    if !(len(pay.Values) > 0) {
+        return nil,errors.New("ERR wrong number of arguments for 'eismember' command")
+    }
+
+    ekgkey := storage.EkgKey(pay.Domain,pay.Id)
+    r,err := storage.CmdPretty("SMEMBERS",ekgkey)
+    if err != nil { return nil,err }
+
+    members := r.([]string)
+    for i := range members {
+        _,name := storage.DeconstructEkgVal(members[i])
+        if name == pay.Values[0] { return 1,nil }
+    }
+
+    return 0,nil
 }

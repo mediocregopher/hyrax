@@ -33,7 +33,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
     pay := &cmd.Payload
     cinfo,cexists := GetCommandInfo(&cmd.Command)
 
-    if cexists {
+    if !cexists {
         return nil,errors.New("Unsupported command")
     }
 
@@ -50,7 +50,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
         return nil,errors.New("missing key id")
     }
 
-    if cinfo.IsQuiet {
+    if cinfo.IsCustom {
         return doCustomCommand(cid,cmd)
     }
 

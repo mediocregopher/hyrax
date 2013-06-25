@@ -115,6 +115,8 @@ var commandMap = map[string]*CommandInfo{
     "erem":             &CommandInfo{IsCustom:true,Modifies:true},
     "eremq":            &CommandInfo{IsCustom:true,Modifies:true,IsQuiet:true},
     "emembers":         &CommandInfo{IsCustom:true},
+    "ecard":            &CommandInfo{IsCustom:true},
+    "eismember":        &CommandInfo{IsCustom:true},
 }
 
 // customCommandMap is a map of custom commands to their appropriate
@@ -131,6 +133,8 @@ var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{}
     "erem":             custom.ERem,
     "eremq":            custom.ERem,
     "emembers":         custom.EMembers,
+    "ecard":            custom.ECard,
+    "eismember":        custom.EIsMember,
 
 }
 
