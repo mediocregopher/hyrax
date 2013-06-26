@@ -42,7 +42,7 @@ won't affect the rest of the pool in the slightest. This makes them useful as fr
 
 Hyrax is set up with a list of secret keys. When you send a command which requires authentication to a
 particular domain you will also be sending a key in that command which must be the hex string form of
-the sha512 output of the concatenation of the domain and one of the secret keys on the server.
+the sha1 output of the concatenation of the domain and one of the secret keys on the server.
 
 This allows an external service (such as an api) to authenticate everything that your connected
 clients are allowed to do.
@@ -88,73 +88,23 @@ here
 
 ### Monitor
 
-Monitor a list of keys, and receive updates when those keys change. The command's immediate return includes
-the current values of those keys, or an empty value if the key hasn't been set. There is a separate monitor command
-for each redis data-type:
-* `mon`: For normal strings (`get`,`set`,etc...)
-* `hmon`: For hashes (`hget`,`hset`,etc...)
-* `lmon`: For lists (`lindex`,`lset`,etc...)
-* `smon`: For sets (`sadd`,`sismember`,etc...)
-* `zmon`: For sorted sets (`zadd`,`zismemberq,etc...)
-* `emon`: For an ekg (see below)
+Monitor a key to receive updates to that key.
 
-There is also a generic monitor, which doesn't return the current value of the key, but will keep you updated
-on the changes to the key: `amon`
+* `madd`: Add a monitor for a key
+* `mrem`: Remove a monitor for a key
 
 Push messages about keys that you're monitoring will merely contain the command used to update them. For example:
 ```json
-{ "command":"mon-push", "return":{ "domain":"td","id":"tid", "values":["whatever"], "command":"set" }}
+{ "command":"mon-push", "return":{ "domain":"td", "id":"tid", "name":"", "values":["whatever"], "command":"set" }}
 ```
 
-Here's some examples of the individual *mon* commands and what they return (note, for all these examples the second
-key hasn't been set yet):
-
-mon:
+Here's an example of an actual `madd` command:
 ```json
-{ "command":"mon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"mon", "return":[ "foo", "" ]}
+{ "command":"madd", "payload":{ "domain":"td1","id":"tid1" } }
+{ "command":"madd", "return":"OK" }
 ```
 
-hmon:
-```json
-{ "command":"hmon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"hmon", "return":[ { "a":"foo","b":"bar","c":"baz"}, {} ]}
-```
-
-lmon:
-```json
-{ "command":"lmon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"lmon", "return":[ ["a","b","c"], [] ]}
-```
-
-
-smon:
-```json
-{ "command":"smon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"smon", "return":[ ["a","b","c"], [] ]}
-```
-
-zmon (the return is a map of values to their weight as an integer. It's not exactly pretty since it
-basically unorders the set, but that's json for you):
-```json
-{ "command":"zmon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"zmon", "return":[ {"a":1,"b":2,"c":3}, {} ]}
-```
-
-amon:
-```json
-{ "command":"amon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"amon", "return":[ 1,1 ] }
-```
-
-emon:
-```json
-{ "command":"emon", "payload":[ { "domain":"td1","id":"tid1" }, { "domain":"td2","id":"tid2" } ]}
-{ "command":"emon", "return":[ ["mathew","mark","luke","john"], [] ]}
-```
-
-For all of the above commands (except `amon`) if you try to monitor a key the contains a different
-type then the one associated with your *mon command the return for that key will be an empty value.
+`mrem` looks the same.
 
 ### EKG
 
@@ -187,14 +137,16 @@ disconnects. If the same connection has added multiple different values to the s
 separate push alert for each value added. Here's an example of what a monitored ekg would send out on a disconnect:
 
 ```json
-{ "command":"mon-push", "return":{ "key":{"domain":"td","id":"tid","name":"joseph"}, "values":[], "command":"disconnect" }}
+{ "command":"mon-push", "return":{ "domain":"td", "id":"tid", "name":"joseph", "values":[], "command":"disconnect" }}
 ```
 
 There are other commands that can be used to get information about existing ekg's. These don't require any signing
 of any kind since they do not alter any state. The commands are:
 * `ecard`: Get the number of connections currently being monitored by the ekg
-* `eismember`: Given a `name` returns whether that name is being monitored by the ekg
 * `emembers`: Returns all the names attached to the ekg
+* `eismember`: Given a `name` returns whether that name is being monitored by the ekg (*NOTE*: Due to the way data
+               is being stored on the backed this command is necessarily O(N), where N is the number of connections/names
+               hooked up to the ekg).
 
 These commands mimic the syntax of their analagous set commands, and their return values are analagous as well.
 
