@@ -72,9 +72,9 @@ var monCh chan *types.Command
 type monPushPayload struct {
     Domain  string   `json:"domain"`
     Id      string   `json:"id"`
-    Name    string   `json:"name"`
+    Name    string   `json:"name,omitempty"`
     Command string   `json:"command"`
-    Values  []string `json:"values"`
+    Values  []string `json:"values,omitempty"`
 }
 
 // MonMakeAlert takes in a command that's being performed and sends
