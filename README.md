@@ -209,3 +209,27 @@ Removes nodes from the pool.
 { "command":"rem-nodes", "payload":[ { "name":"oldnode1" },{ "name":"oldnodes2" } ]}
 { "command":"rem-nodes", "return":[ 1,1 ]}
 ```
+
+## Command packages
+
+It's possible to package multiple commands up into one message by sending a list of commands.
+
+Example
+```json
+[ {"command":"set","payload":{"domain":"","id":"a","secret":"lotsahex","values":["ohai"]}},
+  {"command":"get","payload":{"domain":"","id":"a"}} ]
+```
+
+This will return a list of the commands' returns.
+
+Return for the previous example:
+```json
+[ {"command":"set","return":"OK"},
+  {"command":"get","return":"ohai"} ]
+```
+
+The purpose of packages is to ensure that if you have a couple commands that needs to be
+run you can make sure ALL or NONE of them reach the hyrax server. Packages also offer
+minor savings on bandwidth and maybe latency.
+
+*NOTE: PACKAGES ARE NOT ATOMIC!!!! The commands are run as if they had been sent one-after-the-other*

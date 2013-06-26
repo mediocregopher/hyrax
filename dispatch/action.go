@@ -16,17 +16,39 @@ import (
 // for some reason. Any actual errors are returned json encoded in the first return
 // parameter.
 func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
-    cmd,err := parse.DecodeCommand(rawJson)
-    if err != nil {
-        return parse.EncodeError("",err.Error())
+
+    if rawJson[0] == '{' {
+        cmd,err := parse.DecodeCommand(rawJson)
+        if err != nil {
+            return parse.EncodeError("",err.Error())
+        }
+
+        ret,err := doCommandWrap(cid,cmd)
+        if err != nil {
+            return parse.EncodeError(cmd.Command,err.Error())
+        }
+
+        return parse.EncodeMessage(cmd.Command,ret)
+    } else if rawJson[0] == '[' {
+        cmds,err := parse.DecodeCommandPackage(rawJson)
+        if err != nil {
+            return parse.EncodeError("",err.Error())
+        }
+
+        rets := make([][]byte,len(cmds))
+        for i := range cmds {
+            ret,err := doCommandWrap(cid,cmds[i])
+            if err != nil {
+                rets[i],_ = parse.EncodeError(cmds[i].Command,err.Error())
+            } else {
+                rets[i],_ = parse.EncodeMessage(cmds[i].Command,ret)
+            }
+        }
+
+        return parse.EncodeMessagePackage(rets)
     }
 
-    ret,err := doCommandWrap(cid,cmd)
-    if err != nil {
-        return parse.EncodeError(cmd.Command,err.Error())
-    }
-
-    return parse.EncodeMessage(cmd.Command,ret)
+    return parse.EncodeError("","unknown command format")
 }
 
 func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
