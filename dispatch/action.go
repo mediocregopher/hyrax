@@ -41,7 +41,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
         if !CheckAuth(pay) {
             return nil,errors.New("cannot authenticate with key "+pay.Secret)
         }
-        if !cinfo.IsQuiet {
+        if !cmd.Quiet {
             custom.MonMakeAlert(cmd)
         }
     }

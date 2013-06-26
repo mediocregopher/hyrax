@@ -29,6 +29,7 @@ type Payload struct {
 }
 
 type Command struct {
-    Command string        `json:"command"`
-    Payload Payload       `json:"payload"`
+    Command string  `json:"command"`
+    Payload Payload `json:"payload"`
+    Quiet   bool    `json:"quiet"`
 }

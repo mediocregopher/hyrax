@@ -11,7 +11,6 @@ import (
 type CommandInfo struct {
     IsCustom,
     Modifies,
-    IsQuiet,
     ReturnsMap bool
 }
 
@@ -111,9 +110,7 @@ var commandMap = map[string]*CommandInfo{
 
     //EKGs
     "eadd":             &CommandInfo{IsCustom:true,Modifies:true},
-    "eaddq":            &CommandInfo{IsCustom:true,Modifies:true,IsQuiet:true},
     "erem":             &CommandInfo{IsCustom:true,Modifies:true},
-    "eremq":            &CommandInfo{IsCustom:true,Modifies:true,IsQuiet:true},
     "emembers":         &CommandInfo{IsCustom:true},
     "ecard":            &CommandInfo{IsCustom:true},
     "eismember":        &CommandInfo{IsCustom:true},
