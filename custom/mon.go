@@ -66,38 +66,33 @@ func CleanConnMon(cid types.ConnId) error {
 
 var monCh chan *types.Command
 
-// monPushPayload is the payload for push notifications. It is basically
-// the standard payload object but without the secret, and with a command
-// string field instead
-type monPushPayload struct {
-    Domain  string   `json:"domain"`
-    Id      string   `json:"id"`
-    Name    string   `json:"name,omitempty"`
-    Command string   `json:"command"`
-    Values  []string `json:"values,omitempty"`
-}
-
 // MonMakeAlert takes in a command that's being performed and sends
 // out alerts to anyone monitoring that command
 func MonMakeAlert(cmd *types.Command) {
     monCh <- cmd
 }
 
-// monHandleAlert actually does the fetching of monitors on a value and
-// and sends them alerts
+// monHandleAlert takes commands to be alerted and does the alert
 func monHandleAlert(cmd *types.Command) error {
-    monkey := storage.MonKey(cmd.Payload.Domain,cmd.Payload.Id)
-    r,err := storage.CmdPretty("SMEMBERS",monkey)
-    if err != nil { return err }
-    idstrs := r.([]string)
 
-    if len(idstrs) == 0 { return nil }
-    var pay monPushPayload
+    var pay types.MonPushPayload
     pay.Domain = cmd.Payload.Domain
     pay.Id = cmd.Payload.Id
     pay.Name = cmd.Payload.Name
     pay.Command = cmd.Command
     pay.Values = cmd.Payload.Values
+
+    return MonDoAlert(&pay)
+
+}
+
+// MonDoAlert actually does the fetching of monitors on a value and
+// and sends them alerts
+func MonDoAlert(pay *types.MonPushPayload) error {
+    monkey := storage.MonKey(pay.Domain,pay.Id)
+    r,err := storage.CmdPretty("SMEMBERS",monkey)
+    if err != nil { return err }
+    idstrs := r.([]string)
 
     for i := range idstrs {
         id,err := strconv.Atoi(idstrs[i])
@@ -114,7 +109,6 @@ func monHandleAlert(cmd *types.Command) error {
     }
 
     return nil
-
 }
 
 // init creates a bunch of routines that will read in commands that require alerts
