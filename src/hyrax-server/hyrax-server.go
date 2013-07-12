@@ -38,7 +38,7 @@ func CleanupTransientData() error {
         keysr,err := storage.CmdPretty(storage.KEYS,queries[i])
         if err != nil { return err }
 
-        keys := keysr.([]string)
+        keys := keysr.([][]byte)
         for j := range keys {
             _,err := storage.CmdPretty(storage.DEL,keys[j])
             if err != nil { return err }

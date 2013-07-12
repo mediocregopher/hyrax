@@ -59,10 +59,9 @@ func Cmd(cmd []byte, args []interface{}) (interface{},error) {
     cmdCh <- &rCmd
     r := <-rCmd.ret
 
-    //TODO MORE BYTES
     switch r.Type {
         case redis.StatusReply:
-            return r.Str()
+            return r.Bytes()
 
         case redis.ErrorReply:
             return nil,r.Err
@@ -74,10 +73,26 @@ func Cmd(cmd []byte, args []interface{}) (interface{},error) {
             return nil,nil
 
         case redis.BulkReply:
-            return r.Str()
+            return r.Bytes()
 
         case redis.MultiReply:
-            return r.List()
+            //I have a merge request with radix for a proper
+            //ListBytes() method. Hopefully the guy notices,
+            //if not I'll change the radix dependency to be
+            //my fork
+            l,err := r.List()
+            if err != nil {
+                return nil,err
+            }
+            lb := make([][]byte,len(l))
+            for i := range l {
+                if l[i] == "" {
+                    lb[i] = nil
+                } else {
+                    lb[i] = []byte(l[i])
+                }
+            }
+            return lb,nil
     }
 
     return nil,nil

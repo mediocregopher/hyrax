@@ -3,13 +3,15 @@ package types
 import (
     "encoding/json"
     "bytes"
+    "fmt"
 )
 
-// byteSlice is a wrapper around a byte slice, which we
+// ByteSlice is a wrapper around a byte slice, which we
 // use because the json marshaler wants to turn bytes into
 // base64 strings
-type byteSlice []byte
-func (b byteSlice) MarshalJSON() ([]byte,error) {
+type ByteSlice []byte
+
+func (b ByteSlice) MarshalJSON() ([]byte,error) {
     buf := make([]byte,0,len(b)+2)
     buf = append(buf,'"')
     buf = append(buf,b...)
@@ -17,13 +19,23 @@ func (b byteSlice) MarshalJSON() ([]byte,error) {
     return buf,nil
 }
 
+func (b *ByteSlice) UnmarshalJSON(json []byte) error {
+    jlen := len(json)
+    if json[0] != '"' || json[jlen-1] != '"' {
+        return fmt.Errorf("%s is not a string",json)
+    }
+    *b = make([]byte,jlen-2)
+    copy(*b,json[1:jlen-1])
+    return nil
+}
+
 
 type Payload struct {
-    Domain byteSlice   `json:"domain"`
-    Id     byteSlice   `json:"id"`
-    Name   byteSlice   `json:"name"`
-    Secret byteSlice   `json:"secret"`
-    Values []byteSlice `json:"values"`
+    Domain ByteSlice   `json:"domain"`
+    Id     ByteSlice   `json:"id"`
+    Name   ByteSlice   `json:"name"`
+    Secret ByteSlice   `json:"secret"`
+    Values []ByteSlice `json:"values"`
 }
 
 
@@ -31,19 +43,19 @@ type Payload struct {
 // contain all relevant information about a command, so they're passed around a
 // lot
 type Command struct {
-    Command byteSlice  `json:"command"`
+    Command ByteSlice  `json:"command"`
     Payload Payload    `json:"payload"`
     Quiet   bool       `json:"quiet"`
 }
 
 type messageWrap struct {
-    Command byteSlice        `json:"command"`
+    Command ByteSlice     `json:"command"`
     Return  interface{}   `json:"return"`
 }
 
 type errorMessage struct {
-    Command byteSlice `json:"command"`
-    Error   byteSlice `json:"error"`
+    Command ByteSlice `json:"command,omitempty"`
+    Error   ByteSlice `json:"error"`
 }
 
 // EncodeMessage takes a return value from a given command,

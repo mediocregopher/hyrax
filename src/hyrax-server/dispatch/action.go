@@ -7,6 +7,7 @@ import (
     "hyrax-server/custom"
     "hyrax-server/router"
     "errors"
+    "fmt"
 )
 
 func errBytes (e error) []byte {
@@ -24,7 +25,7 @@ func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
     if rawJson[0] == '{' {
         cmd,err := types.DecodeCommand(rawJson)
         if err != nil {
-            return types.EncodeError([]byte{},errBytes(err))
+            return types.EncodeError(nil,errBytes(err))
         }
 
         ret,err := doCommandWrap(cid,cmd)
@@ -36,7 +37,7 @@ func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
     } else if rawJson[0] == '[' {
         cmds,err := types.DecodeCommandPackage(rawJson)
         if err != nil {
-            return types.EncodeError([]byte{},errBytes(err))
+            return types.EncodeError(nil,errBytes(err))
         }
 
         rets := make([][]byte,len(cmds))
@@ -52,7 +53,7 @@ func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
         return types.EncodeMessagePackage(rets)
     }
 
-    return types.EncodeError([]byte{},[]byte("unknown command format"))
+    return types.EncodeError(nil,[]byte("Unknown command format"))
 }
 
 func doCommandWrap(cid stypes.ConnId, cmd *types.Command) (interface{},error) {
@@ -60,7 +61,7 @@ func doCommandWrap(cid stypes.ConnId, cmd *types.Command) (interface{},error) {
     cinfo,cexists := GetCommandInfo(cmd.Command)
 
     if !cexists {
-        return nil,errors.New("Unsupported command")
+        return nil,fmt.Errorf("Unsupported command: %s",cmd.Command)
     }
 
     if cinfo.Modifies {
