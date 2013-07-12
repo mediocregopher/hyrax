@@ -3,8 +3,7 @@ package net
 import (
     "net"
     "log"
-    "bytes"
-    "io"
+    "bufio"
     "hyrax-server/types"
     "hyrax-server/dispatch"
     "hyrax-server/router"
@@ -45,24 +44,15 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 
     workerReadCh  := make(chan *tcpReadChRet)
     readMore := true
-    readBuf := new(bytes.Buffer)
+    bufReader := bufio.NewReader(conn)
     for {
 
         //readMore keeps track of whether or not a routine is already reading
         //off the connection. If there isn't one we make another
         if readMore {
             go func(){
-                var ret tcpReadChRet
-                buf := make([]byte,1024)
-                bcount, err := conn.Read(buf)
-                if err != nil {
-                    ret = tcpReadChRet{nil,err}
-                } else if bcount > 0 {
-                    ret = tcpReadChRet{buf,nil}
-                } else {
-                    ret = tcpReadChRet{nil,nil}
-                }
-                workerReadCh <- &ret
+                b,err := bufReader.ReadBytes('\n')
+                workerReadCh <- &tcpReadChRet{b,err}
             }()
             readMore = false
         }
@@ -87,30 +77,15 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
                 TcpClose(conn,cid,cmdCh)
                 return
             } else if msg != nil {
-                readBuf.Write(msg)
-                for {
-                    fullMsg,err := readBuf.ReadBytes('\n')
-                    if err == io.EOF {
-                        //We got to the end of the buffer without finding a delim,
-                        //write back what we did find so it can be searched the next time
-                        readBuf.Reset()
-                        if fullMsg[0] != '\x00' {
-                            readBuf.Write(fullMsg)
-                        }
-                        break
-                    } else {
-                        r,err := dispatch.DoCommand(cid,fullMsg)
-                        if err != nil {
-                            log.Println("Go error from dispatch.DoCommand",err)
-                            continue
-                        }
-
-                        conn.Write(r)
-                        conn.Write([]byte{'\n'})
-                    }
+                r,err := dispatch.DoCommand(cid,msg)
+                if err != nil {
+                    log.Println("Go error from dispatch.DoCommand:",err)
+                    continue
                 }
-            }
 
+                conn.Write(r)
+                conn.Write([]byte{'\n'})
+            }
         }
     }
 }
