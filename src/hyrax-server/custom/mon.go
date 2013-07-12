@@ -72,10 +72,22 @@ func MonMakeAlert(cmd *types.Command) {
     monCh <- cmd
 }
 
+// monPushPayload is the payload for push notifications. It is basically
+// the standard payload object but without the secret, and with a command
+// string field instead
+type monPushPayload struct {
+    Domain  string   `json:"domain"`
+    Id      string   `json:"id"`
+    Name    string   `json:"name,omitempty"`
+    Command string   `json:"command"`
+    Values  []string `json:"values,omitempty"`
+}
+
+
 // monHandleAlert takes commands to be alerted and does the alert
 func monHandleAlert(cmd *types.Command) error {
 
-    var pay stypes.MonPushPayload
+    var pay monPushPayload
     pay.Domain = cmd.Payload.Domain
     pay.Id = cmd.Payload.Id
     pay.Name = cmd.Payload.Name
@@ -88,7 +100,7 @@ func monHandleAlert(cmd *types.Command) error {
 
 // MonDoAlert actually does the fetching of monitors on a value and
 // and sends them alerts
-func MonDoAlert(pay *stypes.MonPushPayload) error {
+func MonDoAlert(pay *monPushPayload) error {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     r,err := storage.CmdPretty("SMEMBERS",monkey)
     if err != nil { return err }
