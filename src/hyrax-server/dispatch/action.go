@@ -1,7 +1,8 @@
 package dispatch
 
 import (
-    "hyrax/types"
+    types  "hyrax/types"
+    stypes "hyrax-server/types"
     "hyrax-server/storage"
     "hyrax-server/custom"
     "hyrax-server/router"
@@ -14,7 +15,7 @@ import (
 // The second return value, error, is only used if encoding the return value fails
 // for some reason. Any actual errors are returned json encoded in the first return
 // parameter.
-func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
+func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
 
     if rawJson[0] == '{' {
         cmd,err := types.DecodeCommand(rawJson)
@@ -50,7 +51,7 @@ func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
     return types.EncodeError("","unknown command format")
 }
 
-func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
+func doCommandWrap(cid stypes.ConnId, cmd *types.Command) (interface{},error) {
     pay := &cmd.Payload
     cinfo,cexists := GetCommandInfo(&cmd.Command)
 
@@ -96,7 +97,7 @@ func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {
 
 // doCustomCommand dispatches commands that don't go directly to redis, and instead
 // are handled elsewhere
-func doCustomCommand(cid types.ConnId, cmd *types.Command) (interface{},error) {
+func doCustomCommand(cid stypes.ConnId, cmd *types.Command) (interface{},error) {
     f,ok := customCommandMap[cmd.Command]
     if !ok { return nil,errors.New("Command in main map not listed in custom map") }
 
@@ -105,7 +106,7 @@ func doCustomCommand(cid types.ConnId, cmd *types.Command) (interface{},error) {
 
 // DoCleanup takes in a connection id which is now defunct and cleans up any data it
 // may have accumulated during its life (entry in router map, monitors, etc...)
-func DoCleanup(cid types.ConnId) error {
+func DoCleanup(cid stypes.ConnId) error {
     router.CleanId(cid)
     err := custom.CleanConnMon(cid)
     if err != nil { return err }

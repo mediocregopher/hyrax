@@ -5,6 +5,24 @@ import (
     "bytes"
 )
 
+type Payload struct {
+    Domain string   `json:"domain"`
+    Id     string   `json:"id"`
+    Name   string   `json:"name"`
+    Secret string   `json:"secret"`
+    Values []string `json:"values"`
+}
+
+
+// Command (and subsequently Payload) are populated by json from the client and
+// contain all relevant information about a command, so they're passed around a
+// lot
+type Command struct {
+    Command string  `json:"command"`
+    Payload Payload `json:"payload"`
+    Quiet   bool    `json:"quiet"`
+}
+
 type messageWrap struct {
     Command string        `json:"command"`
     Return  interface{}   `json:"return"`

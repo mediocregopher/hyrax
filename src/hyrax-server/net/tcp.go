@@ -5,7 +5,7 @@ import (
     "log"
     "bytes"
     "io"
-    "hyrax/types"
+    "hyrax-server/types"
     "hyrax-server/dispatch"
     "hyrax-server/router"
 )

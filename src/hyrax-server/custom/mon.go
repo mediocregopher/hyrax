@@ -1,7 +1,8 @@
 package custom
 
 import (
-    "hyrax/types"
+    types  "hyrax/types"
+    stypes "hyrax-server/types"
     "hyrax-server/storage"
     "hyrax-server/router"
     "strconv"
@@ -15,7 +16,7 @@ import (
 // and adds the domain/id to the set of domain/ids that the
 // connection is monitoring in redis (so it can clean up when the connection
 // closes).
-func MAdd(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
@@ -31,7 +32,7 @@ func MAdd(cid types.ConnId, pay *types.Payload) (interface{},error) {
 // are monitoring the domain/id in redis, and removes the domain/id
 // from the set of domain/ids that the connection is monitoring in
 // redis
-func MRem(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func MRem(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     connmonkey := storage.ConnMonKey(cid)
     connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
@@ -45,7 +46,7 @@ func MRem(cid types.ConnId, pay *types.Payload) (interface{},error) {
 
 // CleanConnMon takes in a connection id and cleans up all of its
 // monitors, and the set which keeps track of those monitors
-func CleanConnMon(cid types.ConnId) error {
+func CleanConnMon(cid stypes.ConnId) error {
     connmonkey := storage.ConnMonKey(cid)
     r,err := storage.CmdPretty("SMEMBERS",connmonkey)
     if err != nil { return err }
@@ -74,7 +75,7 @@ func MonMakeAlert(cmd *types.Command) {
 // monHandleAlert takes commands to be alerted and does the alert
 func monHandleAlert(cmd *types.Command) error {
 
-    var pay types.MonPushPayload
+    var pay stypes.MonPushPayload
     pay.Domain = cmd.Payload.Domain
     pay.Id = cmd.Payload.Id
     pay.Name = cmd.Payload.Name
@@ -87,7 +88,7 @@ func monHandleAlert(cmd *types.Command) error {
 
 // MonDoAlert actually does the fetching of monitors on a value and
 // and sends them alerts
-func MonDoAlert(pay *types.MonPushPayload) error {
+func MonDoAlert(pay *stypes.MonPushPayload) error {
     monkey := storage.MonKey(pay.Domain,pay.Id)
     r,err := storage.CmdPretty("SMEMBERS",monkey)
     if err != nil { return err }
@@ -104,7 +105,7 @@ func MonDoAlert(pay *types.MonPushPayload) error {
             return errors.New(err.Error()+" when encoding mon push message")
         }
 
-        router.SendPushMessage(types.ConnId(id),msg)
+        router.SendPushMessage(stypes.ConnId(id),msg)
     }
 
     return nil

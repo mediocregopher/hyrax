@@ -1,7 +1,8 @@
 package dispatch
 
 import (
-    "hyrax/types"
+    types  "hyrax/types"
+    stypes "hyrax-server/types"
     "hyrax-server/custom"
 )
 
@@ -118,7 +119,7 @@ var commandMap = map[string]*CommandInfo{
 
 // customCommandMap is a map of custom commands to their appropriate
 // built-in funcions.
-var customCommandMap = map[string]func(types.ConnId, *types.Payload)(interface{},error){
+var customCommandMap = map[string]func(stypes.ConnId, *types.Payload)(interface{},error){
 
     //Monitors
     "madd":             custom.MAdd,

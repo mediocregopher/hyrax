@@ -2,7 +2,7 @@ package storage
 
 import (
     "strings"
-    "hyrax/types"
+    "hyrax-server/types"
 )
 
 const SEP string = ":"

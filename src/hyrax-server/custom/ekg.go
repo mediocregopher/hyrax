@@ -1,7 +1,8 @@
 package custom
 
 import (
-    "hyrax/types"
+    types  "hyrax/types"
+    stypes "hyrax-server/types"
     "hyrax-server/storage"
     "errors"
 )
@@ -9,7 +10,7 @@ import (
 // EAdd adds the connection's id (and name) to an ekg's set of things it's
 // watching, and adds the ekg's information to the connection's set of
 // ekgs its hooked up to
-func EAdd(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func EAdd(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     connekgkey := storage.ConnEkgKey(cid)
     connekgval := storage.ConnEkgVal(pay.Domain,pay.Id,pay.Name)
     _,err := storage.CmdPretty("SADD",connekgkey,connekgval)
@@ -24,7 +25,7 @@ func EAdd(cid types.ConnId, pay *types.Payload) (interface{},error) {
 // ERem removes the connection's id (and name) from an ekg's set of things
 // it's watching, and removes the ekg's information from the connection's
 // set of ekgs its hooked up to
-func ERem(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func ERem(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     ekgkey := storage.EkgKey(pay.Domain,pay.Id)
     ekgval := storage.EkgVal(cid,pay.Name)
     _,err := storage.CmdPretty("SREM",ekgkey,ekgval)
@@ -40,7 +41,7 @@ func ERem(cid types.ConnId, pay *types.Payload) (interface{},error) {
 // ekgs, and the set which keeps track of those ekgs. It also
 // sends out alerts for all the ekgs it's hooked up to, since
 // this only gets called on a disconnect.
-func CleanConnEkg(cid types.ConnId) error {
+func CleanConnEkg(cid stypes.ConnId) error {
     connekgkey := storage.ConnEkgKey(cid)
     r,err := storage.CmdPretty("SMEMBERS",connekgkey)
     if err != nil { return err }
@@ -71,7 +72,7 @@ func CleanConnEkg(cid types.ConnId) error {
 }
 
 // EMembers returns the list of names being monitored by an ekg
-func EMembers(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func EMembers(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     ekgkey := storage.EkgKey(pay.Domain,pay.Id)
     r,err := storage.CmdPretty("SMEMBERS",ekgkey)
     if err != nil { return nil,err }
@@ -86,13 +87,13 @@ func EMembers(cid types.ConnId, pay *types.Payload) (interface{},error) {
 }
 
 // ECard returns the number of connection/name combinations being monitored
-func ECard(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func ECard(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
     ekgkey := storage.EkgKey(pay.Domain,pay.Id)
     return storage.CmdPretty("SCARD",ekgkey)
 }
 
 // EIsMember returns whether or not the given name is being monitored by the ekg
-func EIsMember(cid types.ConnId, pay *types.Payload) (interface{},error) {
+func EIsMember(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
 
     if !(len(pay.Values) > 0) {
         return nil,errors.New("ERR wrong number of arguments for 'eismember' command")

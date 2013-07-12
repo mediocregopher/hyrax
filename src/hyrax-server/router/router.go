@@ -2,7 +2,7 @@ package router
 
 import (
     "sync"
-    . "hyrax/types" //Import all cause we're gonna need ConnId alot!
+    . "hyrax-server/types" //Import all cause we're gonna need ConnId alot!
 )
 
 // MessageType's are the different types of messages that
