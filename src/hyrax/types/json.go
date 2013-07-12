@@ -1,8 +1,7 @@
-package parse
+package types
 
 import (
     "encoding/json"
-    "hyrax/types"
     "bytes"
 )
 
@@ -39,16 +38,16 @@ func EncodeError(command,err string) ([]byte,error) {
 
 // DecodeCommand takes in raw json and tries to decode it into
 // a command
-func DecodeCommand(b []byte) (*types.Command,error) {
-    var c types.Command
+func DecodeCommand(b []byte) (*Command,error) {
+    var c Command
     err := json.Unmarshal(b,&c)
     return &c,err
 }
 
 // DecodeCommandPackage takes in raw json and tries to decode it into
 // a list of commands
-func DecodeCommandPackage(b []byte) ([]*types.Command,error) {
-    var c []*types.Command
+func DecodeCommandPackage(b []byte) ([]*Command,error) {
+    var c []*Command
     err := json.Unmarshal(b,&c)
     return c,err
 }

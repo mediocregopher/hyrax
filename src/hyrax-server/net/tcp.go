@@ -5,9 +5,9 @@ import (
     "log"
     "bytes"
     "io"
-    "hyrax/dispatch"
     "hyrax/types"
-    "hyrax/router"
+    "hyrax-server/dispatch"
+    "hyrax-server/router"
 )
 
 // TcpListen starts up a tcp listen server, and sets up the acceptor routines

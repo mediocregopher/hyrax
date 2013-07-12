@@ -3,10 +3,10 @@ package main
 import (
     "strings"
     "strconv"
-    "hyrax/config"
-    "hyrax/storage"
-    "hyrax/dispatch"
-    "hyrax/net"
+    "hyrax-server/config"
+    "hyrax-server/storage"
+    "hyrax-server/dispatch"
+    "hyrax-server/net"
 )
 
 func main() {

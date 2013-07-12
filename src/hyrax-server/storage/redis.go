@@ -2,7 +2,7 @@ package storage
 
 import (
     "errors"
-    "hyrax/config"
+    "hyrax-server/config"
     "github.com/fzzy/radix/redis"
 )
 

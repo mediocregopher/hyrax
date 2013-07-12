@@ -1,11 +1,10 @@
 package dispatch
 
 import (
-    "hyrax/storage"
     "hyrax/types"
-    "hyrax/parse"
-    "hyrax/custom"
-    "hyrax/router"
+    "hyrax-server/storage"
+    "hyrax-server/custom"
+    "hyrax-server/router"
     "errors"
 )
 
@@ -18,37 +17,37 @@ import (
 func DoCommand(cid types.ConnId, rawJson []byte) ([]byte,error) {
 
     if rawJson[0] == '{' {
-        cmd,err := parse.DecodeCommand(rawJson)
+        cmd,err := types.DecodeCommand(rawJson)
         if err != nil {
-            return parse.EncodeError("",err.Error())
+            return types.EncodeError("",err.Error())
         }
 
         ret,err := doCommandWrap(cid,cmd)
         if err != nil {
-            return parse.EncodeError(cmd.Command,err.Error())
+            return types.EncodeError(cmd.Command,err.Error())
         }
 
-        return parse.EncodeMessage(cmd.Command,ret)
+        return types.EncodeMessage(cmd.Command,ret)
     } else if rawJson[0] == '[' {
-        cmds,err := parse.DecodeCommandPackage(rawJson)
+        cmds,err := types.DecodeCommandPackage(rawJson)
         if err != nil {
-            return parse.EncodeError("",err.Error())
+            return types.EncodeError("",err.Error())
         }
 
         rets := make([][]byte,len(cmds))
         for i := range cmds {
             ret,err := doCommandWrap(cid,cmds[i])
             if err != nil {
-                rets[i],_ = parse.EncodeError(cmds[i].Command,err.Error())
+                rets[i],_ = types.EncodeError(cmds[i].Command,err.Error())
             } else {
-                rets[i],_ = parse.EncodeMessage(cmds[i].Command,ret)
+                rets[i],_ = types.EncodeMessage(cmds[i].Command,ret)
             }
         }
 
-        return parse.EncodeMessagePackage(rets)
+        return types.EncodeMessagePackage(rets)
     }
 
-    return parse.EncodeError("","unknown command format")
+    return types.EncodeError("","unknown command format")
 }
 
 func doCommandWrap(cid types.ConnId, cmd *types.Command) (interface{},error) {

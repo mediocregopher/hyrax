@@ -2,7 +2,7 @@ package dispatch
 
 import (
     "hyrax/types"
-    "hyrax/custom"
+    "hyrax-server/custom"
 )
 
 // CommandInfo is a struct which is tied to a command,

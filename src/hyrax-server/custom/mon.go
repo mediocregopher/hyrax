@@ -2,9 +2,8 @@ package custom
 
 import (
     "hyrax/types"
-    "hyrax/storage"
-    "hyrax/router"
-    "hyrax/parse"
+    "hyrax-server/storage"
+    "hyrax-server/router"
     "strconv"
     "log"
     "errors"
@@ -100,7 +99,7 @@ func MonDoAlert(pay *types.MonPushPayload) error {
             return errors.New(err.Error()+" when converting "+idstrs[i]+" to int")
         }
 
-        msg,err := parse.EncodeMessage("mon-push",pay)
+        msg,err := types.EncodeMessage("mon-push",pay)
         if err != nil {
             return errors.New(err.Error()+" when encoding mon push message")
         }

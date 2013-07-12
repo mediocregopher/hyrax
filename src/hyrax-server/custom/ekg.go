@@ -2,7 +2,7 @@ package custom
 
 import (
     "hyrax/types"
-    "hyrax/storage"
+    "hyrax-server/storage"
     "errors"
 )
 
