@@ -94,15 +94,15 @@ func MonDoAlert(pay *stypes.MonPushPayload) error {
     if err != nil { return err }
     idstrs := r.([]string)
 
+    msg,err := types.EncodeMessage("mon-push",pay)
+    if err != nil {
+        return errors.New(err.Error()+" when encoding mon push message")
+    }
+
     for i := range idstrs {
         id,err := strconv.Atoi(idstrs[i])
         if err != nil {
             return errors.New(err.Error()+" when converting "+idstrs[i]+" to int")
-        }
-
-        msg,err := types.EncodeMessage("mon-push",pay)
-        if err != nil {
-            return errors.New(err.Error()+" when encoding mon push message")
         }
 
         router.SendPushMessage(stypes.ConnId(id),msg)

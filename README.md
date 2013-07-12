@@ -98,6 +98,10 @@ Push messages about keys that you're monitoring will merely contain the command 
 { "command":"mon-push", "return":{ "domain":"td", "id":"tid", "name":"", "values":["whatever"], "command":"set" }}
 ```
 
+(*NOTE*: There's no guarantee that `mon-push` messages will arrive in the same order that the changes
+happened in. This is a limitation in the current setup and a work-around will be devised after the
+first release)
+
 Here's an example of an actual `madd` command:
 ```json
 { "command":"madd", "payload":{ "domain":"td1","id":"tid1" } }
