@@ -117,9 +117,11 @@ var commandMap = map[string]*CommandInfo{
     "eismember":        &CommandInfo{IsCustom:true},
 }
 
+type customCmdFunc func(stypes.ConnId, *types.Payload)(interface{},error)
+
 // customCommandMap is a map of custom commands to their appropriate
 // built-in funcions.
-var customCommandMap = map[string]func(stypes.ConnId, *types.Payload)(interface{},error){
+var customCommandMap = map[string]customCmdFunc{
 
     //Monitors
     "madd":             custom.MAdd,
@@ -136,7 +138,12 @@ var customCommandMap = map[string]func(stypes.ConnId, *types.Payload)(interface{
 
 }
 
-func GetCommandInfo(cmd *string) (*CommandInfo,bool) {
-    cinfo,ok := commandMap[*cmd]
+func GetCommandInfo(cmd []byte) (*CommandInfo,bool) {
+    cinfo,ok := commandMap[string(cmd)]
     return cinfo,ok
+}
+
+func GetCustomCommandFunc(cmd []byte) (customCmdFunc,bool) {
+    fun,ok := customCommandMap[string(cmd)]
+    return fun,ok
 }

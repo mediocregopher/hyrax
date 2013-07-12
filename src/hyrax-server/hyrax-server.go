@@ -1,7 +1,7 @@
 package main
 
 import (
-    "strings"
+    "bytes"
     "strconv"
     "hyrax-server/config"
     "hyrax-server/storage"
@@ -12,7 +12,7 @@ import (
 func main() {
     config.LoadConfig()
 
-    keys := strings.Split(config.GetStr("initial-secret-keys"),":")
+    keys := bytes.Split([]byte(config.GetStr("initial-secret-keys")),[]byte{':'})
     dispatch.SetSecretKeys(keys)
 
     err := storage.RedisConnect()
@@ -35,12 +35,12 @@ func main() {
 func CleanupTransientData() error {
     queries := storage.AllWildcards()
     for i := range queries {
-        keysr,err := storage.CmdPretty("KEYS",queries[i])
+        keysr,err := storage.CmdPretty(storage.KEYS,queries[i])
         if err != nil { return err }
 
         keys := keysr.([]string)
         for j := range keys {
-            _,err := storage.CmdPretty("DEL",keys[j])
+            _,err := storage.CmdPretty(storage.DEL,keys[j])
             if err != nil { return err }
         }
     }

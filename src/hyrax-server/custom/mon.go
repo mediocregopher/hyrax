@@ -3,7 +3,7 @@ package custom
 import (
     types  "hyrax/types"
     stypes "hyrax-server/types"
-    "hyrax-server/storage"
+    . "hyrax-server/storage"
     "hyrax-server/router"
     "strconv"
     "log"
@@ -17,14 +17,14 @@ import (
 // connection is monitoring in redis (so it can clean up when the connection
 // closes).
 func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
-    monkey := storage.MonKey(pay.Domain,pay.Id)
-    connmonkey := storage.ConnMonKey(cid)
-    connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
+    monkey := MonKey(pay.Domain,pay.Id)
+    connmonkey := ConnMonKey(cid)
+    connmonval := ConnMonVal(pay.Domain,pay.Id)
 
-    _,err := storage.CmdPretty("SADD",connmonkey,connmonval)
+    _,err := CmdPretty(SADD,connmonkey,connmonval)
     if err != nil { return nil,err }
 
-    _,err = storage.CmdPretty("SADD",monkey,cid)
+    _,err = CmdPretty(SADD,monkey,cid)
     return "OK",err
 }
 
@@ -33,34 +33,34 @@ func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
 // from the set of domain/ids that the connection is monitoring in
 // redis
 func MRem(cid stypes.ConnId, pay *types.Payload) (interface{},error) {
-    monkey := storage.MonKey(pay.Domain,pay.Id)
-    connmonkey := storage.ConnMonKey(cid)
-    connmonval := storage.ConnMonVal(pay.Domain,pay.Id)
+    monkey := MonKey(pay.Domain,pay.Id)
+    connmonkey := ConnMonKey(cid)
+    connmonval := ConnMonVal(pay.Domain,pay.Id)
 
-    _,err := storage.CmdPretty("SREM",connmonkey,connmonval)
+    _,err := CmdPretty(SREM,connmonkey,connmonval)
     if err != nil { return nil,err }
 
-    _,err = storage.CmdPretty("SREM",monkey,cid)
+    _,err = CmdPretty(SREM,monkey,cid)
     return "OK",err
 }
 
 // CleanConnMon takes in a connection id and cleans up all of its
 // monitors, and the set which keeps track of those monitors
 func CleanConnMon(cid stypes.ConnId) error {
-    connmonkey := storage.ConnMonKey(cid)
-    r,err := storage.CmdPretty("SMEMBERS",connmonkey)
+    connmonkey := ConnMonKey(cid)
+    r,err := CmdPretty(SMEMBERS,connmonkey)
     if err != nil { return err }
 
-    mons := r.([]string)
+    mons := r.([][]byte)
 
     for i := range mons {
-        domain,id := storage.DeconstructConnMonVal(mons[i])
-        monkey := storage.MonKey(domain,id)
-        _,err = storage.CmdPretty("SREM",monkey,cid)
+        domain,id := DeconstructConnMonVal(mons[i])
+        monkey := MonKey(domain,id)
+        _,err = CmdPretty(SREM,monkey,cid)
         if err != nil { return err }
     }
 
-    _,err = storage.CmdPretty("DEL",connmonkey)
+    _,err = CmdPretty(DEL,connmonkey)
     return err
 }
 
@@ -76,11 +76,11 @@ func MonMakeAlert(cmd *types.Command) {
 // the standard payload object but without the secret, and with a command
 // string field instead
 type monPushPayload struct {
-    Domain  string   `json:"domain"`
-    Id      string   `json:"id"`
-    Name    string   `json:"name,omitempty"`
-    Command string   `json:"command"`
-    Values  []string `json:"values,omitempty"`
+    Domain  []byte   `json:"domain"`
+    Id      []byte   `json:"id"`
+    Name    []byte   `json:"name,omitempty"`
+    Command []byte   `json:"command"`
+    Values  [][]byte `json:"values,omitempty"`
 }
 
 
@@ -101,12 +101,12 @@ func monHandleAlert(cmd *types.Command) error {
 // MonDoAlert actually does the fetching of monitors on a value and
 // and sends them alerts
 func MonDoAlert(pay *monPushPayload) error {
-    monkey := storage.MonKey(pay.Domain,pay.Id)
-    r,err := storage.CmdPretty("SMEMBERS",monkey)
+    monkey := MonKey(pay.Domain,pay.Id)
+    r,err := CmdPretty(SMEMBERS,monkey)
     if err != nil { return err }
     idstrs := r.([]string)
 
-    msg,err := types.EncodeMessage("mon-push",pay)
+    msg,err := types.EncodeMessage(MONPUSH,pay)
     if err != nil {
         return errors.New(err.Error()+" when encoding mon push message")
     }

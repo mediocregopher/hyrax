@@ -6,11 +6,11 @@ import (
 )
 
 type Payload struct {
-    Domain string   `json:"domain"`
-    Id     string   `json:"id"`
-    Name   string   `json:"name"`
-    Secret string   `json:"secret"`
-    Values []string `json:"values"`
+    Domain []byte   `json:"domain"`
+    Id     []byte   `json:"id"`
+    Name   []byte   `json:"name"`
+    Secret []byte   `json:"secret"`
+    Values [][]byte `json:"values"`
 }
 
 
@@ -18,24 +18,24 @@ type Payload struct {
 // contain all relevant information about a command, so they're passed around a
 // lot
 type Command struct {
-    Command string  `json:"command"`
+    Command []byte  `json:"command"`
     Payload Payload `json:"payload"`
     Quiet   bool    `json:"quiet"`
 }
 
 type messageWrap struct {
-    Command string        `json:"command"`
+    Command []byte        `json:"command"`
     Return  interface{}   `json:"return"`
 }
 
 type errorMessage struct {
-    Command string `json:"command"`
-    Error   string `json:"error"`
+    Command []byte `json:"command"`
+    Error   []byte `json:"error"`
 }
 
 // EncodeMessage takes a return value from a given command,
 // and returns the raw json
-func EncodeMessage(command string, ret interface{}) ([]byte,error) {
+func EncodeMessage(command []byte, ret interface{}) ([]byte,error) {
     return json.Marshal(messageWrap{ command, ret })
 }
 
@@ -50,7 +50,7 @@ func EncodeMessagePackage(msgs [][]byte) ([]byte,error) {
 }
 
 // EncodeError takes in an error and returns the raw json for it
-func EncodeError(command,err string) ([]byte,error) {
+func EncodeError(command,err []byte) ([]byte,error) {
     return json.Marshal(errorMessage{command,err})
 }
 
