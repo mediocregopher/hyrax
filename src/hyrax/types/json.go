@@ -5,12 +5,25 @@ import (
     "bytes"
 )
 
+// byteSlice is a wrapper around a byte slice, which we
+// use because the json marshaler wants to turn bytes into
+// base64 strings
+type byteSlice []byte
+func (b byteSlice) MarshalJSON() ([]byte,error) {
+    buf := make([]byte,0,len(b)+2)
+    buf = append(buf,'"')
+    buf = append(buf,b...)
+    buf = append(buf,'"')
+    return buf,nil
+}
+
+
 type Payload struct {
-    Domain []byte   `json:"domain"`
-    Id     []byte   `json:"id"`
-    Name   []byte   `json:"name"`
-    Secret []byte   `json:"secret"`
-    Values [][]byte `json:"values"`
+    Domain byteSlice   `json:"domain"`
+    Id     byteSlice   `json:"id"`
+    Name   byteSlice   `json:"name"`
+    Secret byteSlice   `json:"secret"`
+    Values []byteSlice `json:"values"`
 }
 
 
@@ -18,19 +31,19 @@ type Payload struct {
 // contain all relevant information about a command, so they're passed around a
 // lot
 type Command struct {
-    Command []byte  `json:"command"`
-    Payload Payload `json:"payload"`
-    Quiet   bool    `json:"quiet"`
+    Command byteSlice  `json:"command"`
+    Payload Payload    `json:"payload"`
+    Quiet   bool       `json:"quiet"`
 }
 
 type messageWrap struct {
-    Command []byte        `json:"command"`
+    Command byteSlice        `json:"command"`
     Return  interface{}   `json:"return"`
 }
 
 type errorMessage struct {
-    Command []byte `json:"command"`
-    Error   []byte `json:"error"`
+    Command byteSlice `json:"command"`
+    Error   byteSlice `json:"error"`
 }
 
 // EncodeMessage takes a return value from a given command,
