@@ -1,3 +1,0 @@
-[submodule "src/github.com/fzzy/radix"]
-	path = src/github.com/fzzy/radix
-	url = https://github.com/fzzy/radix.git
