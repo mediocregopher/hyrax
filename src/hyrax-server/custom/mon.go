@@ -75,11 +75,11 @@ func MonMakeAlert(cmd *types.Command) {
 // the standard payload object but without the secret, and with a command
 // string field instead
 type monPushPayload struct {
-    Domain  types.ByteSlice   `json:"domain"`
-    Id      types.ByteSlice   `json:"id"`
-    Name    types.ByteSlice   `json:"name,omitempty"`
-    Command types.ByteSlice   `json:"command"`
-    Values  []types.ByteSlice `json:"values,omitempty"`
+    Domain  []byte   `json:"domain"`
+    Id      []byte   `json:"id"`
+    Name    []byte   `json:"name,omitempty"`
+    Command []byte   `json:"command"`
+    Values  [][]byte `json:"values,omitempty"`
 }
 
 
