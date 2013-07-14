@@ -25,26 +25,26 @@ func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
     if rawJson[0] == '{' {
         cmd,err := types.DecodeCommand(rawJson)
         if err != nil {
-            return types.EncodeError(nil,errBytes(err))
+            return types.EncodeError(nil,err)
         }
 
         ret,err := doCommandWrap(cid,cmd)
         if err != nil {
-            return types.EncodeError(cmd.Command,errBytes(err))
+            return types.EncodeError(cmd.Command,err)
         }
 
         return types.EncodeMessage(cmd.Command,ret)
     } else if rawJson[0] == '[' {
         cmds,err := types.DecodeCommandPackage(rawJson)
         if err != nil {
-            return types.EncodeError(nil,errBytes(err))
+            return types.EncodeError(nil,err)
         }
 
         rets := make([][]byte,len(cmds))
         for i := range cmds {
             ret,err := doCommandWrap(cid,cmds[i])
             if err != nil {
-                rets[i],_ = types.EncodeError(cmds[i].Command,errBytes(err))
+                rets[i],_ = types.EncodeError(cmds[i].Command,err)
             } else {
                 rets[i],_ = types.EncodeMessage(cmds[i].Command,ret)
             }
@@ -53,7 +53,7 @@ func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte,error) {
         return types.EncodeMessagePackage(rets)
     }
 
-    return types.EncodeError(nil,[]byte("Unknown command format"))
+    return types.EncodeError(nil,errors.New("Unknown command format"))
 }
 
 func doCommandWrap(cid stypes.ConnId, cmd *types.Command) (interface{},error) {

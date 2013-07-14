@@ -75,8 +75,8 @@ func EncodeMessagePackage(msgs [][]byte) ([]byte,error) {
 }
 
 // EncodeError takes in an error and returns the raw json for it
-func EncodeError(command,err []byte) ([]byte,error) {
-    return json.Marshal(errorMessage{command,err})
+func EncodeError(command []byte, err error) ([]byte,error) {
+    return json.Marshal(errorMessage{command,err.Error()})
 }
 
 // DecodeCommand takes in raw json and tries to decode it into
