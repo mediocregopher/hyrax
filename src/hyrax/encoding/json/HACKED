@@ -1,0 +1,17 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// HACKED BY MEDIOCREGOPHER
+//
+// This is the exact same as the standard encoding/json package (as of 7/13/13),
+// except that it doesn't have the baffling behavior of automatically encoding
+// []byte fields as base64. Seriously, who does that? What's the more common
+// use case, Go devs? I need to send the client binary data in json, or I like
+// to pass around my data as []byte instead of string because it's more efficient?
+// And no, *string isn't good enough, because to use anything in the strings
+// package I have to dereference that shit, meaning copy it. The bytes package
+// doesn't have that issue. I like bytes. Immutability is good, but for those of
+// use who can handle treating mutable structures like they're not let's not tie
+// the shoes together.
+//
+///////////////////////////////////////////////////////////////////////////////
+

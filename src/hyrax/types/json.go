@@ -1,61 +1,35 @@
 package types
 
 import (
-    "encoding/json"
+    "hyrax/encoding/json"
     "bytes"
-    "fmt"
 )
-
-// ByteSlice is a wrapper around a byte slice, which we
-// use because the json marshaler wants to turn bytes into
-// base64 strings
-type ByteSlice []byte
-
-func (b ByteSlice) MarshalJSON() ([]byte,error) {
-    buf := make([]byte,0,len(b)+2)
-    buf = append(buf,'"')
-    buf = append(buf,b...)
-    buf = append(buf,'"')
-    return buf,nil
-}
-
-func (b *ByteSlice) UnmarshalJSON(json []byte) error {
-    jlen := len(json)
-    if json[0] != '"' || json[jlen-1] != '"' {
-        return fmt.Errorf("%s is not a string",json)
-    }
-    *b = make([]byte,jlen-2)
-    copy(*b,json[1:jlen-1])
-    return nil
-}
-
-
-type Payload struct {
-    Domain ByteSlice   `json:"domain"`
-    Id     ByteSlice   `json:"id"`
-    Name   ByteSlice   `json:"name"`
-    Secret ByteSlice   `json:"secret"`
-    Values []ByteSlice `json:"values"`
-}
-
 
 // Command (and subsequently Payload) are populated by json from the client and
 // contain all relevant information about a command, so they're passed around a
 // lot
 type Command struct {
-    Command ByteSlice  `json:"command"`
-    Payload Payload    `json:"payload"`
-    Quiet   bool       `json:"quiet"`
+    Command []byte  `json:"command"`
+    Payload Payload `json:"payload"`
+    Quiet   bool    `json:"quiet"`
+}
+
+type Payload struct {
+    Domain []byte   `json:"domain"`
+    Id     []byte   `json:"id"`
+    Name   []byte   `json:"name"`
+    Secret []byte   `json:"secret"`
+    Values [][]byte `json:"values"`
 }
 
 type messageWrap struct {
-    Command ByteSlice     `json:"command"`
-    Return  interface{}   `json:"return"`
+    Command []byte      `json:"command"`
+    Return  interface{} `json:"return"`
 }
 
 type errorMessage struct {
-    Command ByteSlice `json:"command,omitempty"`
-    Error   ByteSlice `json:"error"`
+    Command []byte `json:"command,omitempty"`
+    Error   []byte `json:"error"`
 }
 
 // EncodeMessage takes a return value from a given command,
@@ -76,7 +50,7 @@ func EncodeMessagePackage(msgs [][]byte) ([]byte,error) {
 
 // EncodeError takes in an error and returns the raw json for it
 func EncodeError(command []byte, err error) ([]byte,error) {
-    return json.Marshal(errorMessage{command,err.Error()})
+    return json.Marshal(errorMessage{command,[]byte(err.Error())})
 }
 
 // DecodeCommand takes in raw json and tries to decode it into
