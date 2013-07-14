@@ -5,7 +5,6 @@ import (
     stypes "hyrax-server/types"
     . "hyrax-server/storage"
     "hyrax-server/router"
-    "strconv"
     "log"
     "errors"
 )
@@ -104,7 +103,11 @@ func MonDoAlert(pay *monPushPayload) error {
     monkey := MonKey(pay.Domain,pay.Id)
     r,err := CmdPretty(SMEMBERS,monkey)
     if err != nil { return err }
-    idstrs := r.([]string)
+    idstrs := r.([][]byte)
+
+    if len(idstrs) == 0 {
+        return nil
+    }
 
     msg,err := types.EncodeMessage(MONPUSH,pay)
     if err != nil {
@@ -112,9 +115,9 @@ func MonDoAlert(pay *monPushPayload) error {
     }
 
     for i := range idstrs {
-        id,err := strconv.Atoi(idstrs[i])
+        id,err := stypes.ConnIdDeserialize(idstrs[i])
         if err != nil {
-            return errors.New(err.Error()+" when converting "+idstrs[i]+" to int")
+            return errors.New(err.Error()+" when converting "+string(idstrs[i])+" to int")
         }
 
         router.SendPushMessage(stypes.ConnId(id),msg)
