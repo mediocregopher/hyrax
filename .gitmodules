@@ -1,4 +1,0 @@
-[submodule "src/github.com/fzzy/radix"]
-	path = src/github.com/fzzy/radix
-	url = https://github.com/fzzy/radix.git
-	branch = 7059bc019123ae3912b599050341d602b8a2c9dd
