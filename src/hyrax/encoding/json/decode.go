@@ -671,7 +671,7 @@ func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool
 			//	break
 			//}
 			//v.Set(reflect.ValueOf(b[0:n]))
-            v.Set(reflect.ValueOf(s))
+			v.Set(reflect.ValueOf(s))
 		case reflect.String:
 			v.SetString(string(s))
 		case reflect.Interface:

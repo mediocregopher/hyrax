@@ -236,7 +236,7 @@ func (e *encodeState) marshal(v interface{}) (err error) {
 			err = r.(error)
 		}
 	}()
-    e.reflectValue(reflect.ValueOf(v))
+	e.reflectValue(reflect.ValueOf(v))
 	return nil
 }
 
@@ -405,7 +405,7 @@ func (e *encodeState) reflectValueQuoted(v reflect.Value, quoted bool) {
 			// Byte slices get special treatment; arrays don't.
 			s := v.Bytes()
 			e.WriteByte('"')
-            e.WriteString(string(s))
+			e.WriteString(string(s))
 			e.WriteByte('"')
 			break
 		}
