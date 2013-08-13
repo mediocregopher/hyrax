@@ -36,8 +36,8 @@ func main() {
 }
 
 // CleanupTransientData uses AllWildcards to go through and delete all keys
-// containing data related to connections from the last instance of hyrax
-// that existed on the redis instance
+// containing data related to connections from the last instance of hyrax that
+// existed on the redis instance
 func CleanupTransientData() error {
 	queries := storage.AllWildcards()
 	for i := range queries {

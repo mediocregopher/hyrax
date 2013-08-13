@@ -15,11 +15,11 @@ func errBytes(e error) []byte {
 }
 
 // DoCommand takes in raw bytes that presumably have json data, decodes them,
-// and performs whatever commands are needed based on them. It then returns
-// raw bytes that contain the json return, either a return message or an error.
-// The second return value, error, is only used if encoding the return value fails
-// for some reason. Any actual errors are returned json encoded in the first return
-// parameter.
+// and performs whatever commands are needed based on them. It then returns raw
+// bytes that contain the json return, either a return message or an error.  The
+// second return value, error, is only used if encoding the return value fails
+// for some reason. Any actual errors are returned json encoded in the first
+// return parameter.
 func DoCommand(cid stypes.ConnId, rawJson []byte) ([]byte, error) {
 
 	if rawJson[0] == '{' {
@@ -102,8 +102,8 @@ func doCommandWrap(cid stypes.ConnId, cmd *types.Command) (interface{}, error) {
 	return r, nil
 }
 
-// doCustomCommand dispatches commands that don't go directly to redis, and instead
-// are handled elsewhere
+// doCustomCommand dispatches commands that don't go directly to redis, and
+// instead are handled elsewhere
 func doCustomCommand(cid stypes.ConnId, cmd *types.Command) (interface{}, error) {
 	f, ok := GetCustomCommandFunc(cmd.Command)
 	if !ok {
@@ -113,8 +113,9 @@ func doCustomCommand(cid stypes.ConnId, cmd *types.Command) (interface{}, error)
 	return f(cid, &cmd.Payload)
 }
 
-// DoCleanup takes in a connection id which is now defunct and cleans up any data it
-// may have accumulated during its life (entry in router map, monitors, etc...)
+// DoCleanup takes in a connection id which is now defunct and cleans up any
+// data it may have accumulated during its life (entry in router map, monitors,
+// etc...)
 func DoCleanup(cid stypes.ConnId) error {
 	router.CleanId(cid)
 	err := custom.CleanConnMon(cid)

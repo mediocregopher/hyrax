@@ -40,8 +40,8 @@ type tcpReadChRet struct {
 	err error
 }
 
-// TcpClient is the main function tcp connections use. It constantly reads
-// in data from the network and the messsage push channel
+// TcpClient is the main function tcp connections use. It constantly reads in
+// data from the network and the messsage push channel
 func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 
 	workerReadCh := make(chan *tcpReadChRet)
@@ -91,8 +91,8 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 	}
 }
 
-// TcpClose is used when a connection needs to be closed or when it's already been closed.
-// It initiates cleanup of the connection and its data.
+// TcpClose is used when a connection needs to be closed or when it's already
+// been closed.  It initiates cleanup of the connection and its data.
 func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 	conn.Close()
 	err := dispatch.DoCleanup(cid)

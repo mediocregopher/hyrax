@@ -9,8 +9,8 @@ import (
 )
 
 // EAdd adds the connection's id (and name) to an ekg's set of things it's
-// watching, and adds the ekg's information to the connection's set of
-// ekgs its hooked up to
+// watching, and adds the ekg's information to the connection's set of ekgs its
+// hooked up to
 func EAdd(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	connekgkey := ConnEkgKey(cid)
 	connekgval := ConnEkgVal(pay.Domain, pay.Id, pay.Name)
@@ -25,9 +25,9 @@ func EAdd(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	return OK, err
 }
 
-// ERem removes the connection's id (and name) from an ekg's set of things
-// it's watching, and removes the ekg's information from the connection's
-// set of ekgs its hooked up to
+// ERem removes the connection's id (and name) from an ekg's set of things it's
+// watching, and removes the ekg's information from the connection's set of ekgs
+// its hooked up to
 func ERem(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	ekgkey := EkgKey(pay.Domain, pay.Id)
 	ekgval := EkgVal(cid, pay.Name)
@@ -42,10 +42,9 @@ func ERem(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	return OK, err
 }
 
-// CleanConnEkg takes in a connection id and cleans up all of its
-// ekgs, and the set which keeps track of those ekgs. It also
-// sends out alerts for all the ekgs it's hooked up to, since
-// this only gets called on a disconnect.
+// CleanConnEkg takes in a connection id and cleans up all of its ekgs, and the
+// set which keeps track of those ekgs. It also sends out alerts for all the
+// ekgs it's hooked up to, since this only gets called on a disconnect.
 func CleanConnEkg(cid stypes.ConnId) error {
 	connekgkey := ConnEkgKey(cid)
 	r, err := CmdPretty(SMEMBERS, connekgkey)

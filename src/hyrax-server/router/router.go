@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// MessageType's are the different types of messages that
-// a connection routine will handle
+// MessageType's are the different types of messages that a connection routine
+// will handle
 type MessageType int
 
 const (
@@ -66,8 +66,8 @@ func getChan(cid ConnId) (chan Message, bool) {
 	return ch, ok
 }
 
-// SendPushMessage sends a message to a connection routine telling it to
-// send the given data to a connection
+// SendPushMessage sends a message to a connection routine telling it to send
+// the given data to a connection
 func SendPushMessage(cid ConnId, msg []byte) bool {
 	ch, ok := getChan(cid)
 	if !ok {

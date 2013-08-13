@@ -9,11 +9,10 @@ import (
 	"log"
 )
 
-// MAdd adds the connection's id to the set of connections that
-// are monitoring the domain/id in redis (so it can receive alerts)
-// and adds the domain/id to the set of domain/ids that the
-// connection is monitoring in redis (so it can clean up when the connection
-// closes).
+// MAdd adds the connection's id to the set of connections that are monitoring
+// the domain/id in redis (so it can receive alerts) and adds the domain/id to
+// the set of domain/ids that the connection is monitoring in redis (so it can
+// clean up when the connection closes).
 func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	monkey := MonKey(pay.Domain, pay.Id)
 	connmonkey := ConnMonKey(cid)
@@ -28,10 +27,9 @@ func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	return "OK", err
 }
 
-// MRem removes the connection's id form the set of connections that
-// are monitoring the domain/id in redis, and removes the domain/id
-// from the set of domain/ids that the connection is monitoring in
-// redis
+// MRem removes the connection's id form the set of connections that are
+// monitoring the domain/id in redis, and removes the domain/id from the set of
+// domain/ids that the connection is monitoring in redis
 func MRem(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	monkey := MonKey(pay.Domain, pay.Id)
 	connmonkey := ConnMonKey(cid)
@@ -46,8 +44,8 @@ func MRem(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
 	return "OK", err
 }
 
-// CleanConnMon takes in a connection id and cleans up all of its
-// monitors, and the set which keeps track of those monitors
+// CleanConnMon takes in a connection id and cleans up all of its monitors, and
+// the set which keeps track of those monitors
 func CleanConnMon(cid stypes.ConnId) error {
 	connmonkey := ConnMonKey(cid)
 	r, err := CmdPretty(SMEMBERS, connmonkey)
@@ -72,15 +70,15 @@ func CleanConnMon(cid stypes.ConnId) error {
 
 var monCh chan *types.Command
 
-// MonMakeAlert takes in a command that's being performed and sends
-// out alerts to anyone monitoring that command
+// MonMakeAlert takes in a command that's being performed and sends out alerts
+// to anyone monitoring that command
 func MonMakeAlert(cmd *types.Command) {
 	monCh <- cmd
 }
 
-// monPushPayload is the payload for push notifications. It is basically
-// the standard payload object but without the secret, and with a command
-// string field instead
+// monPushPayload is the payload for push notifications. It is basically the
+// standard payload object but without the secret, and with a command string
+// field instead
 type monPushPayload struct {
 	Domain  []byte   `json:"domain"`
 	Id      []byte   `json:"id"`
@@ -103,8 +101,8 @@ func monHandleAlert(cmd *types.Command) error {
 
 }
 
-// MonDoAlert actually does the fetching of monitors on a value and
-// and sends them alerts
+// MonDoAlert actually does the fetching of monitors on a value and and sends
+// them alerts
 func MonDoAlert(pay *monPushPayload) error {
 	monkey := MonKey(pay.Domain, pay.Id)
 	r, err := CmdPretty(SMEMBERS, monkey)
@@ -134,8 +132,8 @@ func MonDoAlert(pay *monPushPayload) error {
 	return nil
 }
 
-// init creates a bunch of routines that will read in commands that require alerts
-// and call monHandleAlert on them
+// init creates a bunch of routines that will read in commands that require
+// alerts and call monHandleAlert on them
 func init() {
 	monCh = make(chan *types.Command)
 

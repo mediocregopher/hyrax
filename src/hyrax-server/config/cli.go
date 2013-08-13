@@ -10,8 +10,8 @@ import (
 var configInt = map[string]int{}
 var configStr = map[string]string{}
 
-// GetInt looks for a configuration parameter of the given name and
-// returns its value (assuming the parameter is an integer)
+// GetInt looks for a configuration parameter of the given name and returns its
+// value (assuming the parameter is an integer)
 func GetInt(name string) int {
 	val, ok := configInt[name]
 	if !ok {
@@ -30,8 +30,8 @@ func GetStr(name string) string {
 	return val
 }
 
-// LoadConfig loads hyrax's runtime configuration, using both command-line arguments
-// and a possible configuration file
+// LoadConfig loads hyrax's runtime configuration, using both command-line
+// arguments and a possible configuration file
 func LoadConfig() {
 
 	//Load cli into its own set of config maps
@@ -61,8 +61,8 @@ func LoadConfig() {
 		os.Exit(0)
 	}
 
-	//If config file is specified, load the string map from it and load the values into
-	//global config
+	//If config file is specified, load the string map from it and load the
+	//values into global config
 	if *configFile != "" {
 		configFileMap, err := readConfig(*configFile)
 		if err != nil {
@@ -84,10 +84,10 @@ func LoadConfig() {
 		}
 	}
 
-	//Now we look through each param. If it's set on the command-line (not to the default)
-	//we set that in the global config maps. If it's also not set in the conf we set it
-	//to the param's default. If it is set in the conf then it's already set in the global
-	//configs by the previous section
+	//Now we look through each param. If it's set on the command-line (not to
+	//the default) we set that in the global config maps. If it's also not set
+	//in the conf we set it to the param's default. If it is set in the conf
+	//then it's already set in the global configs by the previous section
 	for name, param := range params {
 		if param.Type == INT {
 			cliVal := *cliConfigInt[name]

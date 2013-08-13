@@ -5,8 +5,8 @@ import (
 	"hyrax-server/types"
 )
 
-//These are for use by this and other modules so we don't have to
-//re-allocate them everytime they get used
+//These are for use by this and other modules so we don't have to re-allocate
+//them everytime they get used
 var SEP = []byte{':'}
 var CONN = []byte("conn")
 var DIRECT = []byte("direct")
@@ -27,8 +27,8 @@ func createKey(pieces ...[]byte) []byte {
 	return bytes.Join(pieces, SEP)
 }
 
-// DirectKey returns the key for redis that will be used as a key
-// for commands that interact directly with redis
+// DirectKey returns the key for redis that will be used as a key for commands
+// that interact directly with redis
 func DirectKey(domain, id []byte) []byte {
 	return createKey(DIRECT, domain, id)
 }
@@ -39,22 +39,22 @@ func DirectKey(domain, id []byte) []byte {
 
 var MON = []byte("mon")
 
-// MonKey returns the key that will be used to store the set of
-// connection ids that are monitoring a value
+// MonKey returns the key that will be used to store the set of connection ids
+// that are monitoring a value
 func MonKey(domain, id []byte) []byte {
 	return createKey(MON, domain, id)
 }
 
-// ConnMonKey returns the key that will be used to store the set
-// of values being monitored by a connection
+// ConnMonKey returns the key that will be used to store the set of values being
+// monitored by a connection
 func ConnMonKey(cid types.ConnId) []byte {
 	return createKey(CONN, MON, cid.Serialize())
 }
 
 // ConnMonVal returns the value that will be stored at a ConnMonKey
 func ConnMonVal(domain, id []byte) []byte {
-	//We use createKey cause it does what we want, even though
-	//we're actually making the value that's going to be set
+	//We use createKey cause it does what we want, even though we're actually
+	//making the value that's going to be set
 	return createKey(domain, id)
 }
 
@@ -64,8 +64,8 @@ func DeconstructConnMonVal(connmonval []byte) ([]byte, []byte) {
 	return b[0], b[1]
 }
 
-// MonWildcards returns the list of wildcarded keys that will cover
-// all Mon related data in redis
+// MonWildcards returns the list of wildcarded keys that will cover all Mon
+// related data in redis
 func MonWildcards() [][]byte {
 	return [][]byte{createKey(MON, WILDCARD),
 		createKey(CONN, MON, WILDCARD)}
@@ -77,8 +77,8 @@ func MonWildcards() [][]byte {
 
 var EKG = []byte("ekg")
 
-// EkgKey returns the key that will be used to store the set
-// of connection id/names being monitored by the ekg
+// EkgKey returns the key that will be used to store the set of connection
+// id/names being monitored by the ekg
 func EkgKey(domain, id []byte) []byte {
 	return createKey(EKG, domain, id)
 }
@@ -88,8 +88,8 @@ func EkgVal(cid types.ConnId, name []byte) []byte {
 	return createKey(cid.Serialize(), name)
 }
 
-// DeconstructEkgVal returns the connection id and name being
-// represented by the given EkgVal
+// DeconstructEkgVal returns the connection id and name being represented by the
+// given EkgVal
 func DeconstructEkgVal(ekgval []byte) (types.ConnId, []byte) {
 	b := bytes.SplitN(ekgval, SEP, 2)
 
@@ -101,8 +101,8 @@ func DeconstructEkgVal(ekgval []byte) (types.ConnId, []byte) {
 	return cid, b[1]
 }
 
-// ConnEkgKey returns the key that will be used to store the set
-// of ekgs that a connection is hooked up to
+// ConnEkgKey returns the key that will be used to store the set of ekgs that a
+// connection is hooked up to
 func ConnEkgKey(cid types.ConnId) []byte {
 	return createKey(CONN, EKG, cid.Serialize())
 }
@@ -118,8 +118,8 @@ func DeconstructConnEkgVal(connekgval []byte) ([]byte, []byte, []byte) {
 	return b[0], b[1], b[2]
 }
 
-// EkgWildcards returns the list of wildcarded keys that will cover
-// all Ekg related data in redis
+// EkgWildcards returns the list of wildcarded keys that will cover all Ekg
+// related data in redis
 func EkgWildcards() [][]byte {
 	return [][]byte{createKey(EKG, WILDCARD),
 		createKey(CONN, EKG, WILDCARD)}
@@ -129,9 +129,9 @@ func EkgWildcards() [][]byte {
 // Util
 ////////////////////////////////////////////////////////////////////////
 
-// AllWildcards returns the list of wildcarded keys that will cover
-// all "transient" data (aka, all data related to connections that would
-// become invalid on a server restart)
+// AllWildcards returns the list of wildcarded keys that will cover all
+// "transient" data (aka, all data related to connections that would become
+// invalid on a server restart)
 func AllWildcards() [][]byte {
 	mon := MonWildcards()
 	ekg := EkgWildcards()

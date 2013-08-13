@@ -12,7 +12,8 @@ type param struct {
 	Default     interface{}
 }
 
-// The list of parameters that hyrax will use during runtime, and all of their metadata
+// The list of parameters that hyrax will use during runtime, and all of their
+// metadata
 var params = map[string]param{
 	"port": param{Description: "The tcp port to listen for new connections on",
 		Type:    INT,
