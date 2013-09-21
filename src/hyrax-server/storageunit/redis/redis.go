@@ -3,12 +3,12 @@ package redis
 import (
 	"errors"
 	"github.com/fzzy/radix/redis"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storageunit"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storageunit/command"
 )
 
 type RedisConn struct {
 	conn *redis.Client
-	cmdCh chan *storageunit.Command
+	cmdCh chan *sucmd.Command
 	closeCh chan chan error
 }
 
@@ -37,13 +37,13 @@ func (r *RedisConn) spin() {
 
 		case cmd := <- r.cmdCh:
 			r, err := r.cmd(cmd)
-			ret := storageunit.CommandRet{r, err}
+			ret := sucmd.CommandRet{r, err}
 			cmd.RetCh <- &ret
 		}
 	}
 }
 
-func (r *RedisConn) cmd(cmd *storageunit.Command) (interface{}, error) {
+func (r *RedisConn) cmd(cmd *sucmd.Command) (interface{}, error) {
 	reply := r.conn.Cmd(string(cmd.Cmd), cmd.Args)
 
 	switch reply.Type {
@@ -70,7 +70,7 @@ func (r *RedisConn) cmd(cmd *storageunit.Command) (interface{}, error) {
 }
 
 // Implements Cmd for StorageUnitConn.
-func (r *RedisConn) Cmd(cmd *storageunit.Command) {
+func (r *RedisConn) Cmd(cmd *sucmd.Command) {
 	r.cmdCh <- cmd
 }
 

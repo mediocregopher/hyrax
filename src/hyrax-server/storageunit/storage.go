@@ -2,6 +2,7 @@ package storageunit
 
 import (
 	"errors"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storageunit/command"
 	"time"
 )
 
@@ -17,7 +18,7 @@ type StorageUnitConn interface {
 	// Cmd takes in a command struct and processes the command contained within,
 	// as well as responding on the RetCh in it. This method shouldn't worry
 	// about timeouts, the StorageUnit will worry about that.
-	Cmd(cmd *Command)
+	Cmd(cmd *sucmd.Command)
 
 	// Close tells the connection that it's no longer needed. It should close
 	// any external resources it has open and tell all internal go-routines to
@@ -26,26 +27,11 @@ type StorageUnitConn interface {
 	Close() error
 }
 
-// CommandRet is returned from a Command in the RetCh. It's really just a tuple
-// around the return value and an error
-type CommandRet struct {
-	Ret interface{}
-	Err error
-}
-
-// Command is sent to a StorageUnitConn, and contains all data necessary to
-// complete a call and return any data from it.
-type Command struct {
-	Cmd   []byte
-	Args  []interface{}
-	RetCh chan *CommandRet
-}
-
 // A storage unit is a pool of storage unit conns which can be opened and closed
 // as a single group. It also multiplexes calls across the connections.
 type StorageUnit struct {
 	conns []StorageUnitConn
-	cmdCh chan *Command
+	cmdCh chan *sucmd.Command
 	closeCh chan chan error
 }
 
@@ -59,7 +45,7 @@ func NewStorageUnit(
 	
 	su := StorageUnit{
 		conns: make([]StorageUnitConn, 0, len(sucs)),
-		cmdCh: make(chan *Command),
+		cmdCh: make(chan *sucmd.Command),
 		closeCh: make(chan chan error),
 	}
 
@@ -119,10 +105,10 @@ func (su *StorageUnit) Close() error {
 func (su *StorageUnit) Cmd(
 	cmd []byte, args []interface{}) (interface{}, error) {
 
-	cmdS := Command{
+	cmdS := sucmd.Command{
 		Cmd: cmd,
 		Args: args,
-		RetCh: make(chan *CommandRet),
+		RetCh: make(chan *sucmd.CommandRet),
 	}
 
 	select {
