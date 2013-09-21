@@ -22,7 +22,7 @@ type Payload struct {
 	Values [][]byte `json:"values"`
 }
 
-type messageWrap struct {
+type returnMessage struct {
 	Command []byte      `json:"command"`
 	Return  interface{} `json:"return"`
 }
@@ -32,15 +32,15 @@ type errorMessage struct {
 	Error   []byte `json:"error"`
 }
 
-// EncodeMessage takes a return value from a given command,
-// and returns the raw json
-func EncodeMessage(command []byte, ret interface{}) ([]byte, error) {
-	return json.Marshal(messageWrap{command, ret})
+// EncodeReturn takes a return value from a given command, and returns the raw
+// json
+func EncodeReturn(command []byte, ret interface{}) ([]byte, error) {
+	return json.Marshal(returnMessage{command, ret})
 }
 
-// EncodeMessagePackage takes in a list of encoded messages as bytes
-// and creates a proper json list
-func EncodeMessagePackage(msgs [][]byte) ([]byte, error) {
+// EncodeReturnPackage takes in a list of encoded return messages as bytes and
+// creates a proper json list
+func EncodeReturnPackage(msgs [][]byte) ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteByte('[')
 	buf.Write(bytes.Join(msgs, []byte{','}))
@@ -51,6 +51,11 @@ func EncodeMessagePackage(msgs [][]byte) ([]byte, error) {
 // EncodeError takes in an error and returns the raw json for it
 func EncodeError(command []byte, err error) ([]byte, error) {
 	return json.Marshal(errorMessage{command, []byte(err.Error())})
+}
+
+// EncodeCommand takes in a command and returns its byte form
+func EncodeCommand(cmd *Command) ([]byte,error) {
+	return json.Marshal(cmd)
 }
 
 // DecodeCommand takes in raw json and tries to decode it into
