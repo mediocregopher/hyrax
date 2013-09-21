@@ -1,6 +1,11 @@
 {
-    "loc":"https://github.com/fzzy/radix.git",
-    "type":"git",
-    "reference":"7059bc019123ae3912b599050341d602b8a2c9dd",
-    "path":"github.com/fzzy/radix"
+    "path":"github.com/mediocregopher/hyrax",
+    "deps":[
+        {
+            "loc":"https://github.com/fzzy/radix.git",
+            "type":"git",
+            "reference":"7059bc019123ae3912b599050341d602b8a2c9dd",
+            "path":"github.com/fzzy/radix"
+        }
+    ]
 }
