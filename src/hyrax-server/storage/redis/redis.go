@@ -3,7 +3,7 @@ package redis
 import (
 	"errors"
 	"github.com/fzzy/radix/redis"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storageunit/command"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
 )
 
 type RedisConn struct {

@@ -1,8 +1,8 @@
-package storageunit
+package unit
 
 import (
 	"errors"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storageunit/command"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
 	"time"
 )
 
