@@ -16,9 +16,9 @@ type StorageUnitConn interface {
 	Connect(conntype, addr string, extra ...interface{}) error
 
 	// Cmd takes in a command struct and processes the command contained within,
-	// as well as responding on the RetCh in it. This method shouldn't worry
+	// returning the result on the ret channel. This method shouldn't worry
 	// about timeouts, the StorageUnit will worry about that.
-	Cmd(cmd *sucmd.Command)
+	Cmd(cmd *sucmd.Command, ret chan *sucmd.CommandRet)
 
 	// Close tells the connection that it's no longer needed. It should close
 	// any external resources it has open and tell all internal go-routines to
@@ -27,11 +27,16 @@ type StorageUnitConn interface {
 	Close() error
 }
 
+type storageUnitCmd struct {
+	cmd *sucmd.Command
+	ret chan *sucmd.CommandRet
+}
+
 // A storage unit is a pool of storage unit conns which can be opened and closed
 // as a single group. It also multiplexes calls across the connections.
 type StorageUnit struct {
 	conns []StorageUnitConn
-	cmdCh chan *sucmd.Command
+	cmdCh chan *storageUnitCmd
 	closeCh chan chan error
 }
 
@@ -45,7 +50,7 @@ func NewStorageUnit(
 	
 	su := StorageUnit{
 		conns: make([]StorageUnitConn, 0, len(sucs)),
-		cmdCh: make(chan *sucmd.Command),
+		cmdCh: make(chan *storageUnitCmd),
 		closeCh: make(chan chan error),
 	}
 
@@ -73,8 +78,16 @@ func (su *StorageUnit) spin() {
 				close(su.cmdCh)
 				return
 
-			case cmd := <-su.cmdCh:
-				su.conns[i].Cmd(cmd)
+			case sucmd := <-su.cmdCh:
+				// This is not great. It could lead to a race-condition if the
+				// call to Cmd (which is sending on a channel to the connection
+				// go-routine presumably) comes in AFTER a call to close on that
+				// same connection, which could happen in the next iteration of
+				// this loop. I'm not sure of any good solutions to this other
+				// then to make this happen synchronously, which would be really
+				// bad for performance if one connection suddenly locks up.
+				go su.conns[i].Cmd(sucmd.cmd, sucmd.ret)
+
 			}
 		}
 	}
@@ -108,17 +121,20 @@ func (su *StorageUnit) Cmd(
 	cmdS := sucmd.Command{
 		Cmd: cmd,
 		Args: args,
-		RetCh: make(chan *sucmd.CommandRet),
 	}
 
+	sucmd := storageUnitCmd{
+		cmd: &cmdS,
+		ret: make(chan *sucmd.CommandRet),
+	}
 	select {
-	case su.cmdCh <- &cmdS:
+	case su.cmdCh <- &sucmd:
 	case <- time.After(10 * time.Second):
 		return nil, errors.New("sending command to StorageUnit timedout")
 	}
 
 	select {
-	case ret := <- cmdS.RetCh:
+	case ret := <- sucmd.ret:
 		return ret.Ret, ret.Err
 	case <- time.After(10 * time.Second):
 		return nil, errors.New("receiving results from StorageUnit timedout")

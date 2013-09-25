@@ -17,7 +17,6 @@ type CommandRet struct {
 type Command struct {
 	Cmd   []byte
 	Args  []interface{}
-	RetCh chan *CommandRet
 }
 
 // A CommandFactory (it's not a real factory in the OO sense, I just couldn't

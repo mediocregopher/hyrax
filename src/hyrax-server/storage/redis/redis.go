@@ -8,8 +8,21 @@ import (
 
 type RedisConn struct {
 	conn *redis.Client
-	cmdCh chan *sucmd.Command
+	cmdCh chan *cmdWrap
 	closeCh chan chan error
+}
+
+type cmdWrap struct {
+	cmd *sucmd.Command
+	ret chan *sucmd.CommandRet
+}
+
+func New() *RedisConn {
+	return &RedisConn{
+		conn: nil,
+		cmdCh: make(chan *cmdWrap),
+		closeCh: make(chan chan error),
+	}
 }
 
 // Implements Connect for StorageUnitConn. Connects to redis over tcp and spawns
@@ -38,13 +51,13 @@ func (r *RedisConn) spin() {
 		case cmd := <- r.cmdCh:
 			r, err := r.cmd(cmd)
 			ret := sucmd.CommandRet{r, err}
-			cmd.RetCh <- &ret
+			cmd.ret <- &ret
 		}
 	}
 }
 
-func (r *RedisConn) cmd(cmd *sucmd.Command) (interface{}, error) {
-	reply := r.conn.Cmd(string(cmd.Cmd), cmd.Args)
+func (r *RedisConn) cmd(cmdwrap *cmdWrap) (interface{}, error) {
+	reply := r.conn.Cmd(string(cmdwrap.cmd.Cmd), cmdwrap.cmd.Args)
 
 	switch reply.Type {
 	case redis.StatusReply:
@@ -70,8 +83,8 @@ func (r *RedisConn) cmd(cmd *sucmd.Command) (interface{}, error) {
 }
 
 // Implements Cmd for StorageUnitConn.
-func (r *RedisConn) Cmd(cmd *sucmd.Command) {
-	r.cmdCh <- cmd
+func (r *RedisConn) Cmd(cmd *sucmd.Command, cmdret chan *sucmd.CommandRet) {
+	r.cmdCh <- &cmdWrap{cmd, cmdret}
 }
 
 // Implements Close for StorageUnitConn.
