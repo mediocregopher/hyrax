@@ -5,24 +5,6 @@ import (
 	"hyrax-server/types"
 )
 
-//These are for use by this and other modules so we don't have to re-allocate
-//them everytime they get used
-var SEP = []byte{':'}
-var CONN = []byte("conn")
-var DIRECT = []byte("direct")
-var WILDCARD = []byte{'*'}
-
-var SADD = []byte("SADD")
-var SREM = []byte("SREM")
-var SMEMBERS = []byte("SMEMBERS")
-var SCARD = []byte("SCARD")
-var DEL = []byte("DEL")
-var KEYS = []byte("KEYS")
-var OK = []byte("OK")
-
-var DISCONNECT = []byte("disconnect")
-var MONPUSH = []byte("mon-push")
-
 func createKey(pieces ...[]byte) []byte {
 	return bytes.Join(pieces, SEP)
 }
