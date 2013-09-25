@@ -13,7 +13,7 @@ type RedisConn struct {
 }
 
 type cmdWrap struct {
-	cmd *sucmd.Command
+	cmd sucmd.Command
 	ret chan *sucmd.CommandRet
 }
 
@@ -57,33 +57,50 @@ func (r *RedisConn) spin() {
 }
 
 func (r *RedisConn) cmd(cmdwrap *cmdWrap) (interface{}, error) {
-	reply := r.conn.Cmd(string(cmdwrap.cmd.Cmd), cmdwrap.cmd.Args)
+	if trans := cmdwrap.cmd.ExpandTransaction(); trans != nil {
+		r.conn.Append(string(MULTI))
+		for i := range trans {
+			r.conn.Append(string(trans[i].Cmd()), trans[i].Args()...)
+		}
+		r.conn.Append(string(EXEC))
 
-	switch reply.Type {
+		for i := 0; i < len(trans)+1; i++ {
+			r.conn.GetReply()
+		}
+		return decodeReply(r.conn.GetReply())
+	} else {
+		reply := r.conn.Cmd(string(cmdwrap.cmd.Cmd()), cmdwrap.cmd.Args()...)
+		return decodeReply(reply)
+	}
+}
+
+// Decodes a reply into a generic interface object, or an error
+func decodeReply(r *redis.Reply) (interface{}, error) {
+	switch r.Type {
 	case redis.StatusReply:
-		return reply.Bytes()
+		return r.Bytes()
 
 	case redis.ErrorReply:
-		return nil, reply.Err
+		return nil, r.Err
 
 	case redis.IntegerReply:
-		return reply.Int()
+		return r.Int()
 
 	case redis.NilReply:
 		return nil, nil
 
 	case redis.BulkReply:
-		return reply.Bytes()
+		return r.Bytes()
 
 	case redis.MultiReply:
-		return reply.ListBytes()
+		return r.ListBytes()
 	}
 
 	return nil, nil
 }
 
 // Implements Cmd for StorageUnitConn.
-func (r *RedisConn) Cmd(cmd *sucmd.Command, cmdret chan *sucmd.CommandRet) {
+func (r *RedisConn) Cmd(cmd sucmd.Command, cmdret chan *sucmd.CommandRet) {
 	r.cmdCh <- &cmdWrap{cmd, cmdret}
 }
 

@@ -25,6 +25,10 @@ var SREM = []byte("SREM")
 var SISMEMBER = []byte("SISMEMBER")
 var SMEMBERS = []byte("SMEMBERS")
 var SCARD = []byte("SCARD")
+
+var MULTI = []byte("MULTI")
+var EXEC = []byte("EXEC")
+
 var DEL = []byte("DEL")
 var KEYS = []byte("KEYS")
 var OK = []byte("OK")
@@ -35,12 +39,22 @@ var MONPUSH = []byte("mon-push")
 type RedisCommand struct {
 	cmd  []byte
 	args []interface{}
+	trans []command.Command
 }
 
 func NewRedisCommand(cmd []byte, args []interface{}) *RedisCommand {
 	return &RedisCommand{
 		cmd: cmd,
 		args: args,
+		trans: nil,
+	}
+}
+
+func NewRedisTransaction(cmds ...command.Command) *RedisCommand {
+	return &RedisCommand{
+		cmd: nil,
+		args: nil,
+		trans: cmds,
 	}
 }
 
@@ -52,6 +66,12 @@ func (c *RedisCommand) Args() []interface{} {
 	return c.args
 }
 
+func (c *RedisCommand) ExpandTransaction() []command.Command {
+	return c.trans
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 type RedisCommandFactory struct{}
 
 func (r *RedisCommandFactory) createCmd(	
@@ -59,6 +79,12 @@ func (r *RedisCommandFactory) createCmd(
 	args ...interface{}) command.Command{
 
 	return NewRedisCommand(cmd, args)
+}
+
+func (r *RedisCommandFactory) Transaction(
+	cmds ...command.Command) command.Command {
+
+	return NewRedisTransaction(cmds...)
 }
 
 func (r *RedisCommandFactory) DirectCommand(

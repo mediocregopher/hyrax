@@ -25,6 +25,11 @@ type Command interface {
 	// Args is a list of arguments to the command. This will also differ
 	// depending on platform.
 	Args() []interface{}
+
+	// If this command represents a transaction then ExpandTransaction returns
+	// all the sub-commands that the transaction encompasses. If this command
+	// isn't a transaction then this returns nil
+	ExpandTransaction() []Command
 }
 
 // A CommandFactory (it's not a real factory in the OO sense, I just couldn't
