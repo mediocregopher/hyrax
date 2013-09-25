@@ -32,22 +32,39 @@ var OK = []byte("OK")
 var DISCONNECT = []byte("disconnect")
 var MONPUSH = []byte("mon-push")
 
+type RedisCommand struct {
+	cmd  []byte
+	args []interface{}
+}
+
+func NewRedisCommand(cmd []byte, args []interface{}) *RedisCommand {
+	return &RedisCommand{
+		cmd: cmd,
+		args: args,
+	}
+}
+
+func (c *RedisCommand) Cmd() []byte {
+	return c.cmd
+}
+
+func (c *RedisCommand) Args() []interface{} {
+	return c.args
+}
+
 type RedisCommandFactory struct{}
 
 func (r *RedisCommandFactory) createCmd(	
 	cmd []byte,
-	args ...interface{}) *command.Command{
+	args ...interface{}) command.Command{
 
-	return &command.Command{
-		Cmd: cmd,
-		Args: args,
-	}
+	return NewRedisCommand(cmd, args)
 }
 
 func (r *RedisCommandFactory) DirectCommand(
 	cmd []byte,
 	key types.Byter,
-	args []interface{}) *command.Command {
+	args []interface{}) command.Command {
 
 	argv := append([]interface{}{key.Bytes()}, args...)
 	return r.createCmd(cmd, argv...)
@@ -56,7 +73,7 @@ func (r *RedisCommandFactory) DirectCommand(
 func (r *RedisCommandFactory) IdValueSetAdd(
 	key types.Byter,
 	id types.Uint64er,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(ZADD, key.Bytes(), id.Uint64(), value.Bytes())
 }
@@ -68,7 +85,7 @@ func (r *RedisCommandFactory) IdValueSetAdd(
 func (r *RedisCommandFactory) IdValueSetRem(
 	key types.Byter,
 	_ types.Uint64er,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(ZREM, key.Bytes(), value.Bytes())
 }
@@ -76,7 +93,7 @@ func (r *RedisCommandFactory) IdValueSetRem(
 // This will return an empty list if false, non-empty if true
 func (r *RedisCommandFactory) IdValueSetIsIdMember(
 	key types.Byter,
-	id types.Uint64er) *command.Command {
+	id types.Uint64er) command.Command {
 
 	return r.createCmd(ZRANGEBYSCORE, key.Bytes(), id.Uint64(), id.Uint64())
 }
@@ -84,47 +101,47 @@ func (r *RedisCommandFactory) IdValueSetIsIdMember(
 // This will return a nil if false, non-nil if true
 func (r *RedisCommandFactory) IdValueSetIsValueMember(
 	key types.Byter,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(ZSCORE, key.Bytes(), value.Bytes())
 }
 
-func (r *RedisCommandFactory) IdValueSetCard(key types.Byter) *command.Command {
+func (r *RedisCommandFactory) IdValueSetCard(key types.Byter) command.Command {
 	return r.createCmd(ZCARD, key.Bytes())
 }
 
 func (r *RedisCommandFactory) IdValueSetMemberValues(
-	key types.Byter) *command.Command {
+	key types.Byter) command.Command {
 
 	return r.createCmd(ZRANGE, key.Bytes(), 0, -1)
 }
 
 func (r *RedisCommandFactory) GenericSetAdd(
 	key types.Byter,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(SADD, key.Bytes(), value.Bytes())
 }
 
 func (r *RedisCommandFactory) GenericSetRem(
 	key types.Byter,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(SREM, key.Bytes(), value.Bytes())
 }
 
 func (r *RedisCommandFactory) GenericSetIsMember(
 	key types.Byter,
-	value types.Byter) *command.Command {
+	value types.Byter) command.Command {
 
 	return r.createCmd(SISMEMBER, key.Bytes(), value.Bytes())
 }
 
-func (r *RedisCommandFactory) GenericSetCard(key types.Byter) *command.Command {
+func (r *RedisCommandFactory) GenericSetCard(key types.Byter) command.Command {
 	return r.createCmd(SCARD, key.Bytes())
 }
 
 func (r *RedisCommandFactory) GenericSetMembers(
-	key types.Byter) *command.Command {
+	key types.Byter) command.Command {
 	return r.createCmd(SMEMBERS, key.Bytes())
 }
