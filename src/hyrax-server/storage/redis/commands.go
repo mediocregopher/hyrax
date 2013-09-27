@@ -7,11 +7,6 @@ import (
 
 //These are for use by this and other modules so we don't have to re-allocate
 //them everytime they get used
-var SEP = []byte{':'}
-var CONN = []byte("conn")
-var DIRECT = []byte("direct")
-var WILDCARD = []byte{'*'}
-
 var ZADD = []byte("ZADD")
 var ZREM = []byte("ZREM")
 var ZMEMBERS = []byte("ZMEMBERS")
@@ -28,13 +23,6 @@ var SCARD = []byte("SCARD")
 
 var MULTI = []byte("MULTI")
 var EXEC = []byte("EXEC")
-
-var DEL = []byte("DEL")
-var KEYS = []byte("KEYS")
-var OK = []byte("OK")
-
-var DISCONNECT = []byte("disconnect")
-var MONPUSH = []byte("mon-push")
 
 type RedisCommand struct {
 	cmd  []byte

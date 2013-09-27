@@ -87,7 +87,6 @@ func (su *StorageUnit) spin() {
 				// then to make this happen synchronously, which would be really
 				// bad for performance if one connection suddenly locks up.
 				go su.conns[i].Cmd(sucmd.cmd, sucmd.ret)
-
 			}
 		}
 	}
