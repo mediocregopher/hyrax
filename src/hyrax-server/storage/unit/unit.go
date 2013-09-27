@@ -1,7 +1,7 @@
 package unit
 
 import (
-	"errors"
+	"fmt"
 	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
 	"time"
 )
@@ -15,10 +15,11 @@ type StorageUnitConn interface {
 	// that are needed.
 	Connect(conntype, addr string, extra ...interface{}) error
 
-	// Cmd takes in a command struct and processes the command contained within,
-	// returning the result on the ret channel. This method shouldn't worry
-	// about timeouts, the StorageUnit will worry about that.
-	Cmd(cmd *sucmd.Command, ret chan *sucmd.CommandRet)
+	// Cmd takes in a command bundle and processes the command contained within,
+	// returning the result on the ret channel. If the implementation of this
+	// method involves any blocking operations then they should have a timeout
+	// which, when hit, stops the command and sends an error on the ret channel
+	Cmd(*sucmd.CommandBundle)
 
 	// Close tells the connection that it's no longer needed. It should close
 	// any external resources it has open and tell all internal go-routines to
@@ -27,16 +28,12 @@ type StorageUnitConn interface {
 	Close() error
 }
 
-type storageUnitCmd struct {
-	cmd *sucmd.Command
-	ret chan *sucmd.CommandRet
-}
-
 // A storage unit is a pool of storage unit conns which can be opened and closed
 // as a single group. It also multiplexes calls across the connections.
 type StorageUnit struct {
+	ConnType, Addr string
 	conns []StorageUnitConn
-	cmdCh chan *storageUnitCmd
+	cmdCh chan *sucmd.CommandBundle
 	closeCh chan chan error
 }
 
@@ -49,8 +46,10 @@ func NewStorageUnit(
 	sucs []StorageUnitConn, conntype, addr string, extra ...interface{}) error {
 	
 	su := StorageUnit{
+		ConnType: conntype,
+		Addr: addr,
 		conns: make([]StorageUnitConn, 0, len(sucs)),
-		cmdCh: make(chan *storageUnitCmd),
+		cmdCh: make(chan *sucmd.CommandBundle),
 		closeCh: make(chan chan error),
 	}
 
@@ -86,7 +85,7 @@ func (su *StorageUnit) spin() {
 				// this loop. I'm not sure of any good solutions to this other
 				// then to make this happen synchronously, which would be really
 				// bad for performance if one connection suddenly locks up.
-				go su.conns[i].Cmd(sucmd.cmd, sucmd.ret)
+				go su.conns[i].Cmd(sucmd)
 			}
 		}
 	}
@@ -112,31 +111,20 @@ func (su *StorageUnit) Close() error {
 	return <- retCh
 }
 
-// Cmd takes in a command and its arguments, performs the command in one of the
-// StorageUnitConn's, and returns any return data from performing the command.
-func (su *StorageUnit) Cmd(
-	cmd []byte, args []interface{}) (interface{}, error) {
-
-	cmdS := sucmd.Command{
-		Cmd: cmd,
-		Args: args,
-	}
-
-	sucmd := storageUnitCmd{
-		cmd: &cmdS,
-		ret: make(chan *sucmd.CommandRet),
-	}
+// Cmd takes in a command bundle and performs the command in one of the
+// StorageUnitConn's
+func (su *StorageUnit) Cmd(cmdb *sucmd.CommandBundle) {
 	select {
-	case su.cmdCh <- &sucmd:
+	case su.cmdCh <- cmdb:
 	case <- time.After(10 * time.Second):
-		return nil, errors.New("sending command to StorageUnit timedout")
+		err := fmt.Errorf(
+			"sending command to StorageUnit %s:%s timedout",
+			su.ConnType,
+			su.Addr,
+		)
+		select {
+		case cmdb.RetCh <- &sucmd.CommandRet{nil, err}:
+		case <-time.After(1 * time.Second):
+		}
 	}
-
-	select {
-	case ret := <- sucmd.ret:
-		return ret.Ret, ret.Err
-	case <- time.After(10 * time.Second):
-		return nil, errors.New("receiving results from StorageUnit timedout")
-	}
-
 }

@@ -32,6 +32,13 @@ type Command interface {
 	ExpandTransaction() []Command
 }
 
+// CommandBundle is a grouping of a Command and a channel on which the
+// CommandRet for that command will be returned.
+type CommandBundle struct {
+	Cmd Command
+	RetCh chan *CommandRet
+}
+
 // A CommandFactory (it's not a real factory in the OO sense, I just couldn't
 // think of a better name) is a set of methods that need to be implemented by a
 // backend data-store in order for the rest of hyrax-server to correctly

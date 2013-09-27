@@ -1,26 +1,24 @@
 package redis
 
 import (
+	"time"
 	"errors"
+	"log"
+	"fmt"
 	"github.com/fzzy/radix/redis"
 	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
 )
 
 type RedisConn struct {
 	conn *redis.Client
-	cmdCh chan *cmdWrap
+	cmdCh chan *sucmd.CommandBundle
 	closeCh chan chan error
-}
-
-type cmdWrap struct {
-	cmd sucmd.Command
-	ret chan *sucmd.CommandRet
 }
 
 func New() *RedisConn {
 	return &RedisConn{
 		conn: nil,
-		cmdCh: make(chan *cmdWrap),
+		cmdCh: make(chan *sucmd.CommandBundle),
 		closeCh: make(chan chan error),
 	}
 }
@@ -48,16 +46,20 @@ func (r *RedisConn) spin() {
 			close(r.closeCh)
 			return
 
-		case cmd := <- r.cmdCh:
-			r, err := r.cmd(cmd)
+		case cmdb := <- r.cmdCh:
+			r, err := r.cmd(cmdb.Cmd)
 			ret := sucmd.CommandRet{r, err}
-			cmd.ret <- &ret
+			select {
+			case cmdb.RetCh <- &ret:
+			case <-time.After(10 * time.Second):
+				log.Printf("Timedout in redisconn replying to cmd %v", cmdb.Cmd)
+			}
 		}
 	}
 }
 
-func (r *RedisConn) cmd(cmdwrap *cmdWrap) (interface{}, error) {
-	if trans := cmdwrap.cmd.ExpandTransaction(); trans != nil {
+func (r *RedisConn) cmd(cmd sucmd.Command) (interface{}, error) {
+	if trans := cmd.ExpandTransaction(); trans != nil {
 		r.conn.Append(string(MULTI))
 		for i := range trans {
 			r.conn.Append(string(trans[i].Cmd()), trans[i].Args()...)
@@ -69,7 +71,7 @@ func (r *RedisConn) cmd(cmdwrap *cmdWrap) (interface{}, error) {
 		}
 		return decodeReply(r.conn.GetReply())
 	} else {
-		reply := r.conn.Cmd(string(cmdwrap.cmd.Cmd()), cmdwrap.cmd.Args()...)
+		reply := r.conn.Cmd(string(cmd.Cmd()), cmd.Args()...)
 		return decodeReply(reply)
 	}
 }
@@ -100,8 +102,16 @@ func decodeReply(r *redis.Reply) (interface{}, error) {
 }
 
 // Implements Cmd for StorageUnitConn.
-func (r *RedisConn) Cmd(cmd sucmd.Command, cmdret chan *sucmd.CommandRet) {
-	r.cmdCh <- &cmdWrap{cmd, cmdret}
+func (r *RedisConn) Cmd(cmdb *sucmd.CommandBundle) {
+	select {
+	case r.cmdCh <- cmdb:
+	case <-time.After(10 * time.Second):
+		err := fmt.Errorf("Redis connection timedout receiving command")
+		select {
+		case cmdb.RetCh <- &sucmd.CommandRet{nil, err}:
+		case <-time.After(1 * time.Second):
+		}
+	}
 }
 
 // Implements Close for StorageUnitConn.
