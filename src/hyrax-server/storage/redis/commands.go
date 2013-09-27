@@ -30,7 +30,7 @@ type RedisCommand struct {
 	trans []command.Command
 }
 
-func NewRedisCommand(cmd []byte, args []interface{}) *RedisCommand {
+func NewRedisCommand(cmd []byte, args []interface{}) command.Command {
 	return &RedisCommand{
 		cmd: cmd,
 		args: args,
@@ -38,7 +38,7 @@ func NewRedisCommand(cmd []byte, args []interface{}) *RedisCommand {
 	}
 }
 
-func NewRedisTransaction(cmds ...command.Command) *RedisCommand {
+func NewRedisTransaction(cmds ...command.Command) command.Command {
 	return &RedisCommand{
 		cmd: nil,
 		args: nil,

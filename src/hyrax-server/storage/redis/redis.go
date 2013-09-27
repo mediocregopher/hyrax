@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/fzzy/radix/redis"
 	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/storage/unit"
 )
 
 type RedisConn struct {
@@ -15,7 +16,7 @@ type RedisConn struct {
 	closeCh chan chan error
 }
 
-func New() *RedisConn {
+func New() unit.StorageUnitConn {
 	return &RedisConn{
 		conn: nil,
 		cmdCh: make(chan *sucmd.CommandBundle),

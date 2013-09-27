@@ -94,7 +94,7 @@ type CommandFactory interface {
 	// A generic set is your run-of-the-mill set, where each value in the set
 	// only appears once. GenericSetAdd adds a value to the set at key, and
 	// creates the set if it didn't previously exist.
-	GenericSetAdd(key, value types.Byter)
+	GenericSetAdd(key, value types.Byter) Command
 
 	// GenericSetRem removes the given value from the set at the given key.
 	// There is no error if the set did not exist.
