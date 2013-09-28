@@ -43,7 +43,9 @@ type StorageUnit struct {
 // error all the previous StorageUnitConns will be Close'd and that error will
 // be returned.
 func NewStorageUnit(
-	sucs []StorageUnitConn, conntype, addr string, extra ...interface{}) error {
+	sucs []StorageUnitConn,
+	conntype, addr string,
+	extra ...interface{}) (*StorageUnit,error) {
 	
 	su := StorageUnit{
 		ConnType: conntype,
@@ -58,12 +60,12 @@ func NewStorageUnit(
 			su.conns = append(su.conns, suc)
 		} else {
 			su.internalClose()
-			return err
+			return nil,err
 		}
 	}
 
 	go su.spin()
-	return nil
+	return &su,nil
 }
 
 func (su *StorageUnit) spin() {
