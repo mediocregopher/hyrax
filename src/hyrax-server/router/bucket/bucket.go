@@ -27,15 +27,18 @@ func Set(s *string, bIndex int) error {
 	return nil
 }
 
-// PrintBuckets is a debug command which simply dumps the bucket list to stdout
-func PrintBuckets() {
+// Buckets returns a copy (not the actual slice, so you don't have to worry
+// about it being changed under your nose) of the bucket list in its current
+// state
+func Buckets() []*string {
 	bLock.RLock()
 	defer bLock.RUnlock()
-	for i, s := range bList {
-		if s != nil {
-			fmt.Println(i,*s)
-		}
+
+	r := make([]*string, len(bList))
+	for i := range bList {
+		r[i] = bList[i]
 	}
+	return r
 }
 
 // KeyBucket hashes the given key with a Shift-Add-XOR hash, identifies which
