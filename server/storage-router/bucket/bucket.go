@@ -3,7 +3,7 @@ package bucket
 import (
 	"sync"
 	"fmt"
-	"github.com/mediocregopher/hyrax/src/hyrax/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 var bList []*string

@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/mediocregopher/hyrax/src/hyrax/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 

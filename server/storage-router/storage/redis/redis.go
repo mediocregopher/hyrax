@@ -6,8 +6,8 @@ import (
 	"log"
 	"fmt"
 	"github.com/fzzy/radix/redis"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage-router/storage/command"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage-router/storage/unit"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage/unit"
 )
 
 type RedisConn struct {
