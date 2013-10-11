@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/mediocregopher/hyrax/src/hyrax/types"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/router/bucket"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/storage-router/storage"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/storage-router/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/storage-router/bucket"
 )
 
 // SetBucket sets the given bucket index to be the connection to the given
