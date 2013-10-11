@@ -6,6 +6,12 @@
             "type":"git",
             "reference":"7059bc019123ae3912b599050341d602b8a2c9dd",
             "path":"github.com/fzzy/radix"
+        },
+        {
+            "loc":"https://github.com/mediocregopher/ghost.git",
+            "type":"git",
+            "reference":"v0.2.1",
+            "path":"github.com/mediocregopher/ghost"
         }
     ]
 }
