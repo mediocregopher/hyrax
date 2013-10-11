@@ -6,20 +6,20 @@ import (
 	"log"
 	"fmt"
 	"github.com/fzzy/radix/redis"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/unit"
 )
 
 type RedisConn struct {
 	conn *redis.Client
-	cmdCh chan *sucmd.CommandBundle
+	cmdCh chan *command.CommandBundle
 	closeCh chan chan error
 }
 
 func New() unit.StorageUnitConn {
 	return &RedisConn{
 		conn: nil,
-		cmdCh: make(chan *sucmd.CommandBundle),
+		cmdCh: make(chan *command.CommandBundle),
 		closeCh: make(chan chan error),
 	}
 }
@@ -49,7 +49,7 @@ func (r *RedisConn) spin() {
 
 		case cmdb := <- r.cmdCh:
 			r, err := r.cmd(cmdb.Cmd)
-			ret := sucmd.CommandRet{r, err}
+			ret := command.CommandRet{r, err}
 			select {
 			case cmdb.RetCh <- &ret:
 			case <-time.After(10 * time.Second):
@@ -59,7 +59,7 @@ func (r *RedisConn) spin() {
 	}
 }
 
-func (r *RedisConn) cmd(cmd sucmd.Command) (interface{}, error) {
+func (r *RedisConn) cmd(cmd command.Command) (interface{}, error) {
 	if trans := cmd.ExpandTransaction(); trans != nil {
 		r.conn.Append(string(MULTI))
 		for i := range trans {
@@ -103,13 +103,13 @@ func decodeReply(r *redis.Reply) (interface{}, error) {
 }
 
 // Implements Cmd for StorageUnitConn.
-func (r *RedisConn) Cmd(cmdb *sucmd.CommandBundle) {
+func (r *RedisConn) Cmd(cmdb *command.CommandBundle) {
 	select {
 	case r.cmdCh <- cmdb:
 	case <-time.After(10 * time.Second):
 		err := fmt.Errorf("Redis connection timedout receiving command")
 		select {
-		case cmdb.RetCh <- &sucmd.CommandRet{nil, err}:
+		case cmdb.RetCh <- &command.CommandRet{nil, err}:
 		case <-time.After(1 * time.Second):
 		}
 	}

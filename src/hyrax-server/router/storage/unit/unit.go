@@ -2,7 +2,7 @@ package unit
 
 import (
 	"fmt"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 	"time"
 )
 
@@ -19,7 +19,7 @@ type StorageUnitConn interface {
 	// returning the result on the ret channel. If the implementation of this
 	// method involves any blocking operations then they should have a timeout
 	// which, when hit, stops the command and sends an error on the ret channel
-	Cmd(*sucmd.CommandBundle)
+	Cmd(*command.CommandBundle)
 
 	// Close tells the connection that it's no longer needed. It should close
 	// any external resources it has open and tell all internal go-routines to
@@ -33,7 +33,7 @@ type StorageUnitConn interface {
 type StorageUnit struct {
 	ConnType, Addr string
 	conns []StorageUnitConn
-	cmdCh chan *sucmd.CommandBundle
+	cmdCh chan *command.CommandBundle
 	closeCh chan chan error
 }
 
@@ -51,7 +51,7 @@ func NewStorageUnit(
 		ConnType: conntype,
 		Addr: addr,
 		conns: make([]StorageUnitConn, 0, len(sucs)),
-		cmdCh: make(chan *sucmd.CommandBundle),
+		cmdCh: make(chan *command.CommandBundle),
 		closeCh: make(chan chan error),
 	}
 
@@ -79,7 +79,7 @@ func (su *StorageUnit) spin() {
 				close(su.cmdCh)
 				return
 
-			case sucmd := <-su.cmdCh:
+			case command := <-su.cmdCh:
 				// This is not great. It could lead to a race-condition if the
 				// call to Cmd (which is sending on a channel to the connection
 				// go-routine presumably) comes in AFTER a call to close on that
@@ -87,7 +87,7 @@ func (su *StorageUnit) spin() {
 				// this loop. I'm not sure of any good solutions to this other
 				// then to make this happen synchronously, which would be really
 				// bad for performance if one connection suddenly locks up.
-				go su.conns[i].Cmd(sucmd)
+				go su.conns[i].Cmd(command)
 			}
 		}
 	}
@@ -115,7 +115,7 @@ func (su *StorageUnit) Close() error {
 
 // Cmd takes in a command bundle and performs the command in one of the
 // StorageUnitConn's
-func (su *StorageUnit) Cmd(cmdb *sucmd.CommandBundle) {
+func (su *StorageUnit) Cmd(cmdb *command.CommandBundle) {
 	select {
 	case su.cmdCh <- cmdb:
 	case <- time.After(10 * time.Second):
@@ -125,7 +125,7 @@ func (su *StorageUnit) Cmd(cmdb *sucmd.CommandBundle) {
 			su.Addr,
 		)
 		select {
-		case cmdb.RetCh <- &sucmd.CommandRet{nil, err}:
+		case cmdb.RetCh <- &command.CommandRet{nil, err}:
 		case <-time.After(1 * time.Second):
 		}
 	}

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/redis"
 	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/unit"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 )
 
 const UNITSIZE = 10
@@ -14,7 +14,7 @@ type LocatorFunc func([]*unit.StorageUnit) *unit.StorageUnit
 
 type commandWrap struct {
 	unitname *string
-	cmdb *sucmd.CommandBundle
+	cmdb *command.CommandBundle
 }
 
 type addUnitWrap struct {
@@ -37,14 +37,14 @@ var sm = storageManager{
 }
 
 var NewStorageUnitConn func() unit.StorageUnitConn
-var CommandFactory sucmd.CommandFactory
-var NewTransaction func(...sucmd.Command) sucmd.Command
+var CommandFactory command.CommandFactory
+var NewTransaction func(...command.Command) command.Command
 
 // Init starts up the storage manager and prepares various storage sepecific
 // units for use by the outside world
 func Init() {
 	NewStorageUnitConn = redis.New
-	CommandFactory = sucmd.CommandFactory(&redis.RedisCommandFactory{})
+	CommandFactory = command.CommandFactory(&redis.RedisCommandFactory{})
 	NewTransaction = redis.NewRedisTransaction
 	go sm.spin()
 }
@@ -70,7 +70,7 @@ func (sm *storageManager) spin() {
 				unit.Cmd(c.cmdb)
 			} else {
 				err := errors.New("Unknown storage unit: "+*c.unitname)
-				c.cmdb.RetCh <- &sucmd.CommandRet{nil, err}
+				c.cmdb.RetCh <- &command.CommandRet{nil, err}
 			}
 		}
 	}
@@ -102,10 +102,10 @@ func RemUnit(name string) {
 
 // Cmd takes in a command struct generated from a CommandFactory and executes
 // it on the StorageUnit named by unitname
-func Cmd(unitname *string, cmd sucmd.Command) (interface{},error) {
-	cmdb := sucmd.CommandBundle{
+func Cmd(unitname *string, cmd command.Command) (interface{},error) {
+	cmdb := command.CommandBundle{
 		Cmd: cmd,
-		RetCh: make(chan *sucmd.CommandRet),
+		RetCh: make(chan *command.CommandRet),
 	}
 	cmdw := commandWrap{
 		unitname: unitname,
