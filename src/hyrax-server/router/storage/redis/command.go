@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 )
 
 type RedisCommand struct {

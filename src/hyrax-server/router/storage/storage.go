@@ -3,9 +3,9 @@ package storage
 import (
 	"time"
 	"errors"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage/redis"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage/unit"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/redis"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/unit"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 )
 
 const UNITSIZE = 10

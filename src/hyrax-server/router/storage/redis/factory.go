@@ -2,7 +2,7 @@ package redis
 
 import (
 	"github.com/mediocregopher/hyrax/src/hyrax/types"
-	"github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
+	"github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 )
 
 //These are for use by this and other modules so we don't have to re-allocate

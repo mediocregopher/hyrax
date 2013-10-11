@@ -2,7 +2,7 @@ package unit
 
 import (
 	"fmt"
-	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/storage/command"
+	sucmd "github.com/mediocregopher/hyrax/src/hyrax-server/router/storage/command"
 	"time"
 )
 
