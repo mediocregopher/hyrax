@@ -1,152 +1,97 @@
 package custom
 
 import (
-	"errors"
-	"hyrax-server/router"
-	. "hyrax-server/storage"
-	stypes "hyrax-server/types"
-	types "hyrax/types"
-	"log"
+	"github.com/mediocregopher/hyrax/server/config"
+	"github.com/mediocregopher/hyrax/server/storage-router"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	"github.com/mediocregopher/hyrax/types"
+	ctypes "github.com/mediocregopher/hyrax/types/client"
+	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
-// MAdd adds the connection's id to the set of connections that are monitoring
-// the domain/id in redis (so it can receive alerts) and adds the domain/id to
-// the set of domain/ids that the connection is monitoring in redis (so it can
-// clean up when the connection closes).
-func MAdd(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
-	monkey := MonKey(pay.Domain, pay.Id)
-	connmonkey := ConnMonKey(cid)
-	connmonval := ConnMonVal(pay.Domain, pay.Id)
+var monns = types.SimpleByter([]byte("mon"))
 
-	_, err := CmdPretty(SADD, connmonkey, connmonval)
+//MAdd adds the client's id to the set of clients that are monitoring the key
+//(so it can receive alerts) and adds the key to the set of keys that the client
+//is monitoring (so it can clean up)
+func MAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+	key := cmd.StorageKey
+	monKey := storage.KeyMaker.Namespace(monns, key)
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	thisnode := &config.StorageAddr
+
+	clientAdd := storage.CommandFactory.GenericSetAdd(clientMonsKey, key)
+	if _, err := router.DirectedCmd(thisnode, clientAdd); err != nil {
+		return nil, err
+	}
+
+	monAdd := storage.CommandFactory.GenericSetAdd(monKey, cid)
+	return router.DirectedCmd(thisnode, monAdd)
+}
+
+// MRem removes the client's id from the set of clients that are monitoring the
+// key, and removes the key from the set of keys that the client is monitoring
+func MRem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+	key := cmd.StorageKey
+	monKey := storage.KeyMaker.Namespace(monns, key)
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	thisnode := &config.StorageAddr
+
+	monRem := storage.CommandFactory.GenericSetRem(monKey, cid)
+	r, err := router.DirectedCmd(thisnode, monRem)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = CmdPretty(SADD, monkey, cid)
-	return "OK", err
+	clientRem := storage.CommandFactory.GenericSetRem(clientMonsKey, key)
+	_, err = router.DirectedCmd(thisnode, clientRem)
+	return r, err
 }
 
-// MRem removes the connection's id form the set of connections that are
-// monitoring the domain/id in redis, and removes the domain/id from the set of
-// domain/ids that the connection is monitoring in redis
-func MRem(cid stypes.ConnId, pay *types.Payload) (interface{}, error) {
-	monkey := MonKey(pay.Domain, pay.Id)
-	connmonkey := ConnMonKey(cid)
-	connmonval := ConnMonVal(pay.Domain, pay.Id)
-
-	_, err := CmdPretty(SREM, connmonkey, connmonval)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = CmdPretty(SREM, monkey, cid)
-	return "OK", err
-}
-
-// CleanConnMon takes in a connection id and cleans up all of its monitors, and
-// the set which keeps track of those monitors
-func CleanConnMon(cid stypes.ConnId) error {
-	connmonkey := ConnMonKey(cid)
-	r, err := CmdPretty(SMEMBERS, connmonkey)
+// CleanMons takes in a client id and cleans up all of its monitors, and the set
+// which keeps track of those monitors
+func CleanMons(cid stypes.ClientId) error {
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)	
+	thisnode := &config.StorageAddr
+	r, err := router.DirectedCmd(thisnode, monlistCmd)
 	if err != nil {
 		return err
 	}
 
 	mons := r.([][]byte)
-
 	for i := range mons {
-		domain, id := DeconstructConnMonVal(mons[i])
-		monkey := MonKey(domain, id)
-		_, err = CmdPretty(SREM, monkey, cid)
-		if err != nil {
+		key := types.NewByter(mons[i])
+		monKey := storage.KeyMaker.Namespace(monns, key)
+		cleanKeyCmd := storage.CommandFactory.GenericSetRem(monKey, cid)
+		if _, err = router.DirectedCmd(thisnode, cleanKeyCmd); err != nil {
 			return err
 		}
 	}
 
-	_, err = CmdPretty(DEL, connmonkey)
+	delClientMonCmd := storage.CommandFactory.GenericSetDel(clientMonsKey)
+	_, err = router.DirectedCmd(thisnode, delClientMonCmd)
 	return err
 }
 
-var monCh chan *types.Command
-
-// MonMakeAlert takes in a command that's being performed and sends out alerts
-// to anyone monitoring that command
-func MonMakeAlert(cmd *types.Command) {
-	monCh <- cmd
-}
-
-// monPushPayload is the payload for push notifications. It is basically the
-// standard payload object but without the secret, and with a command string
-// field instead
-type monPushPayload struct {
-	Domain  []byte   `json:"domain"`
-	Id      []byte   `json:"id"`
-	Name    []byte   `json:"name,omitempty"`
-	Command []byte   `json:"command"`
-	Values  [][]byte `json:"values,omitempty"`
-}
-
-// monHandleAlert takes commands to be alerted and does the alert
-func monHandleAlert(cmd *types.Command) error {
-
-	var pay monPushPayload
-	pay.Domain = cmd.Payload.Domain
-	pay.Id = cmd.Payload.Id
-	pay.Name = cmd.Payload.Name
-	pay.Command = cmd.Command
-	pay.Values = cmd.Payload.Values
-
-	return MonDoAlert(&pay)
-
-}
-
-// MonDoAlert actually does the fetching of monitors on a value and and sends
-// them alerts
-func MonDoAlert(pay *monPushPayload) error {
-	monkey := MonKey(pay.Domain, pay.Id)
-	r, err := CmdPretty(SMEMBERS, monkey)
+// ClientsForMon takes in a key and returns all the client ids on this node that
+// are mon'ing that key
+func ClientsForMon(key types.Byter) ([]stypes.ClientId, error) {
+	monKey := storage.KeyMaker.Namespace(monns, key)
+	monsCmd := storage.CommandFactory.GenericSetMembers(monKey)
+	thisnode := &config.StorageAddr
+	r, err := router.DirectedCmd(thisnode, monsCmd)
 	if err != nil {
-		return err
-	}
-	idstrs := r.([][]byte)
-
-	if len(idstrs) == 0 {
-		return nil
+		return nil, err
 	}
 
-	msg, err := types.EncodeMessage(MONPUSH, pay)
-	if err != nil {
-		return errors.New(err.Error() + " when encoding mon push message")
-	}
-
-	for i := range idstrs {
-		id, err := stypes.ConnIdDeserialize(idstrs[i])
+	ids := r.([][]byte)
+	cids := make([]stypes.ClientId, len(ids))
+	for i := range ids {
+		cids[i], err = stypes.ClientIdFromBytes(ids[i])
 		if err != nil {
-			return errors.New(err.Error() + " when converting " + string(idstrs[i]) + " to int")
+			return nil, err
 		}
-
-		router.SendPushMessage(stypes.ConnId(id), msg)
 	}
-
-	return nil
-}
-
-// init creates a bunch of routines that will read in commands that require
-// alerts and call monHandleAlert on them
-func init() {
-	monCh = make(chan *types.Command)
-
-	for i := 0; i < 10; i++ {
-		go func() {
-			for {
-				cmd := <-monCh
-				err := monHandleAlert(cmd)
-				if err != nil {
-					log.Printf("%s when calling monHandleAlert(%v)\n", err.Error(), cmd)
-				}
-			}
-		}()
-	}
-
+	return cids, nil
 }
