@@ -49,6 +49,19 @@ func (r *RedisCommandFactory) DirectCommand(
 	return r.createCmd(cmd, argv...)
 }
 
+func (r *RedisCommandFactory) DirectCommandAllowed(cmd []byte) bool {
+	_, ok := getCommandInfo(cmd)
+	return ok
+}
+
+func (r *RedisCommandFactory) DirectCommandModifies(cmd []byte) bool {
+	if cinfo, ok := getCommandInfo(cmd); ok {
+		return cinfo.Modifies
+	}
+
+	return false
+}
+
 func (r *RedisCommandFactory) IdValueSetAdd(
 	key types.Byter,
 	id types.Uint64er,

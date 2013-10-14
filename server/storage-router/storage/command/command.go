@@ -56,6 +56,14 @@ type CommandFactory interface {
 	// storage for itself.
 	DirectCommand(cmd []byte, key types.Byter, args []interface{}) Command
 
+	// DirectCommandAllowed returns whether or not a direct command is allowed
+	// to be executed by a client
+	DirectCommandAllowed(cmd []byte) bool
+
+	// DirectCommandModifies returns whether or not a direct command modifies
+	// existing state in the storage unit
+	DirectCommandModifies(cmd []byte) bool
+
 	// IdValueSets are sets of (id,value) tuples, which can be queried for both
 	// by id and value. IdValueSetAdd is a command which adds a tuple (id,value)
 	// to the set at key, and creates that set if it didn't exist before.
