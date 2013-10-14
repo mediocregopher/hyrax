@@ -12,6 +12,12 @@
             "type":"git",
             "reference":"v0.2.1",
             "path":"github.com/mediocregopher/ghost"
+        },
+        {
+            "loc":"https://github.com/mediocregopher/flagconfig.git",
+            "type":"git",
+            "reference":"v0.3.1",
+            "path":"github.com/mediocregopher/flagconfig"
         }
     ]
 }
