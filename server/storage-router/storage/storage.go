@@ -38,14 +38,12 @@ var sm = storageManager{
 
 var NewStorageUnitConn func() unit.StorageUnitConn
 var CommandFactory command.CommandFactory
-var NewTransaction func(...command.Command) command.Command
 
 // Init starts up the storage manager and prepares various storage sepecific
 // units for use by the outside world
 func Init() {
 	NewStorageUnitConn = redis.New
 	CommandFactory = command.CommandFactory(&redis.RedisCommandFactory{})
-	NewTransaction = redis.NewRedisTransaction
 	go sm.spin()
 }
 
