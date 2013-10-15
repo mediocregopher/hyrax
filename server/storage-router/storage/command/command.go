@@ -99,6 +99,10 @@ type CommandFactory interface {
 	// list if the set doesn't exist
 	IdValueSetMemberValues(key types.Byter) Command
 
+	// IdValueSetDel is a command which deletes the entire set at the given key.
+	// Nothing should happen if the set doesn't exist in the first place
+	IdValueSetDel(key types.Byter) Command
+
 	// A generic set is your run-of-the-mill set, where each value in the set
 	// only appears once. GenericSetAdd adds a value to the set at key, and
 	// creates the set if it didn't previously exist.
@@ -121,6 +125,10 @@ type CommandFactory interface {
 	// set at the given key. It should return an empty list if the set doesn't
 	// exist.
 	GenericSetMembers(key types.Byter) Command
+
+	// GenericSetDel is a command which deletes the entire set at the given key.
+	// Nothing should happen if the set doesn't exist in the first place
+	GenericSetDel(key types.Byter) Command
 }
 
 // KeyMaker is responsible taking in keys for clients and creating new

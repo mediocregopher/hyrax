@@ -7,6 +7,8 @@ import (
 
 //These are for use by this and other modules so we don't have to re-allocate
 //them everytime they get used
+var DEL = []byte("DEL")
+
 var ZADD = []byte("ZADD")
 var ZREM = []byte("ZREM")
 var ZMEMBERS = []byte("ZMEMBERS")
@@ -108,6 +110,10 @@ func (r *RedisCommandFactory) IdValueSetMemberValues(
 	return r.createCmd(ZRANGE, key.Bytes(), 0, -1)
 }
 
+func (r *RedisCommandFactory) IdValueSetDel(key types.Byter) command.Command {
+	return r.createCmd(DEL, key.Bytes())
+}
+
 func (r *RedisCommandFactory) GenericSetAdd(
 	key types.Byter,
 	value types.Byter) command.Command {
@@ -136,4 +142,8 @@ func (r *RedisCommandFactory) GenericSetCard(key types.Byter) command.Command {
 func (r *RedisCommandFactory) GenericSetMembers(
 	key types.Byter) command.Command {
 	return r.createCmd(SMEMBERS, key.Bytes())
+}
+
+func (r *RedisCommandFactory) GenericSetDel(key types.Byter) command.Command {
+	return r.createCmd(DEL, key.Bytes())
 }
