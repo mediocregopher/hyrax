@@ -122,3 +122,20 @@ type CommandFactory interface {
 	// exist.
 	GenericSetMembers(key types.Byter) Command
 }
+
+// KeyMaker is responsible taking in keys for clients and creating new
+// namespaced keys for them. Depending on the datastore this may not be needed,
+// but for ones like redis it is.
+type KeyMaker interface{
+
+	// Namespace takes a namespace and a key and returns a combination of them
+	// which makes sense for the storage backend. For some backends, this may
+	// simply ignore the namespace
+	Namespace(ns, key types.Byter) types.Byter
+
+	// ConnNamespace is the same as Namespace except that it is used for
+	// metadata related to a specific client, so it may be formatted a bit
+	// different then Namespace's output for the same inputs
+	ClientNamespace(ns, key types.Byter) types.Byter
+
+}

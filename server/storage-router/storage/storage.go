@@ -38,12 +38,14 @@ var sm = storageManager{
 
 var NewStorageUnitConn func() unit.StorageUnitConn
 var CommandFactory command.CommandFactory
+var KeyMaker command.KeyMaker
 
 // Init starts up the storage manager and prepares various storage sepecific
 // units for use by the outside world
 func Init() {
 	NewStorageUnitConn = redis.New
 	CommandFactory = command.CommandFactory(&redis.RedisCommandFactory{})
+	KeyMaker = command.KeyMaker(&redis.RedisKeyMaker{})
 	go sm.spin()
 }
 
