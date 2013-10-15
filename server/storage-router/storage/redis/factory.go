@@ -9,13 +9,10 @@ import (
 //them everytime they get used
 var DEL = []byte("DEL")
 
-var ZADD = []byte("ZADD")
-var ZREM = []byte("ZREM")
-var ZMEMBERS = []byte("ZMEMBERS")
-var ZCARD = []byte("ZCARD")
-var ZRANGE = []byte("ZRANGE")
-var ZRANGEBYSCORE = []byte("ZRANGEBYSCORE")
-var ZSCORE = []byte("ZSCORE")
+var HSET = []byte("HSET")
+var HDEL = []byte("HDEL")
+var HLEN = []byte("HLEN")
+var HVALS = []byte("HVALS")
 
 var SADD = []byte("SADD")
 var SREM = []byte("SREM")
@@ -64,53 +61,32 @@ func (r *RedisCommandFactory) DirectCommandModifies(cmd []byte) bool {
 	return false
 }
 
-func (r *RedisCommandFactory) IdValueSetAdd(
+func (r *RedisCommandFactory) KeyValueSetAdd(
 	key types.Byter,
-	id types.Uint64er,
+	innerkey types.Byter,
 	value types.Byter) command.Command {
 
-	return r.createCmd(ZADD, key.Bytes(), id.Uint64(), value.Bytes())
+	return r.createCmd(HSET, key.Bytes(), innerkey.Bytes(), value.Bytes())
 }
 
-// Theoretically this should remove a value that is (id,value) from the set, but
-// redis sorted sets only support removing by (_,value), ignoring the id. The
-// observable effect of this is that it will be possible for two connections to
-// have the same value, one will just overwrite the other.
-func (r *RedisCommandFactory) IdValueSetRem(
+func (r *RedisCommandFactory) KeyValueSetRemByInnerKey(
 	key types.Byter,
-	_ types.Uint64er,
-	value types.Byter) command.Command {
+	innerkey types.Byter) command.Command {
 
-	return r.createCmd(ZREM, key.Bytes(), value.Bytes())
+	return r.createCmd(HDEL, key.Bytes(),  innerkey.Bytes())
 }
 
-// This will return an empty list if false, non-empty if true
-func (r *RedisCommandFactory) IdValueSetIsIdMember(
-	key types.Byter,
-	id types.Uint64er) command.Command {
-
-	return r.createCmd(ZRANGEBYSCORE, key.Bytes(), id.Uint64(), id.Uint64())
+func (r *RedisCommandFactory) KeyValueSetCard(key types.Byter) command.Command {
+	return r.createCmd(HLEN, key.Bytes())
 }
 
-// This will return a nil if false, non-nil if true
-func (r *RedisCommandFactory) IdValueSetIsValueMember(
-	key types.Byter,
-	value types.Byter) command.Command {
-
-	return r.createCmd(ZSCORE, key.Bytes(), value.Bytes())
-}
-
-func (r *RedisCommandFactory) IdValueSetCard(key types.Byter) command.Command {
-	return r.createCmd(ZCARD, key.Bytes())
-}
-
-func (r *RedisCommandFactory) IdValueSetMemberValues(
+func (r *RedisCommandFactory) KeyValueSetMemberValues(
 	key types.Byter) command.Command {
 
-	return r.createCmd(ZRANGE, key.Bytes(), 0, -1)
+	return r.createCmd(HVALS, key.Bytes())
 }
 
-func (r *RedisCommandFactory) IdValueSetDel(key types.Byter) command.Command {
+func (r *RedisCommandFactory) KeyValueSetDel(key types.Byter) command.Command {
 	return r.createCmd(DEL, key.Bytes())
 }
 

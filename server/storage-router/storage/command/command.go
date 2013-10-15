@@ -64,44 +64,35 @@ type CommandFactory interface {
 	// existing state in the storage unit
 	DirectCommandModifies(cmd []byte) bool
 
-	// IdValueSets are sets of (id,value) tuples, which can be queried for both
-	// by id and value. IdValueSetAdd is a command which adds a tuple (id,value)
-	// to the set at key, and creates that set if it didn't exist before.
-	IdValueSetAdd(
+	// KeyValueSets are sets of (innerkey -> value) mappings located at key.
+	// They are queried, added, and removed by innerkey. It's also possible to
+	// get a list of all values being held. KeyValueSetAdd is a command which
+	// adds an (innerkey -> value) map (or overwrites it, if innerky was already
+	// mapped to something). It creates the set at key with this one mapping if
+	// it didn't exist previously.
+	KeyValueSetAdd(
 		key types.Byter,
-		id types.Uint64er,
+		innerKey types.Byter,
 		value types.Byter) Command
 
-	// IdValueSetRem removes an (id,value) tuple from an IdValueSet. There is no
-	// error if the set did not exist.
-	IdValueSetRem(
-		key types.Byter,
-		id types.Uint64er,
-		value types.Byter) Command
+	// KeyValueSetRemByInnerKey removes an (innerkey -> value) mapping from the
+	// keyval set located at key, or does nothing if that key, or that innerkey
+	// within the key, didn't exist.
+	KeyValueSetRemByInnerKey(key types.Byter, innerkey types.Byter) Command
 
-	// IdValueSetIsIdMember is a command which returns whether or not a given id
-	// is a member in the set at key. The command created should return a falsey
-	// value if the set didn't exist.
-	IdValueSetIsIdMember(key types.Byter, id types.Uint64er) Command
+	// KeyValueSetCard is a command which returns the number of (innerkey ->
+	// value) mappings are in the set at the given key. It should return a zero
+	// value if the given key doesn't exist
+	KeyValueSetCard(key types.Byter) Command
 
-	// IdValueSetIsValueMember is a command which returns whether or not a given
-	// value is a member in the set at key. The command created should return a
-	// falsey value if the set didn't exist.
-	IdValueSetIsValueMember(key, value types.Byter) Command
+	// KeyValueSetMemberValues is a command which returns the list of value
+	// portions of the (innerkey -> value) mappings in the set. It should return
+	// an empty list if the set doesn't exist
+	KeyValueSetMemberValues(key types.Byter) Command
 
-	// IdValueSetCard is a command which returns the number of (id,value) tuples
-	// are in the set at the given key. It should return a zero value if the
-	// given key doesn't exist
-	IdValueSetCard(key types.Byter) Command
-
-	// IdValueSetMemberValues is a command which returns the list of value
-	// portions of the (id,value) tuples in the set. It should return an empty
-	// list if the set doesn't exist
-	IdValueSetMemberValues(key types.Byter) Command
-
-	// IdValueSetDel is a command which deletes the entire set at the given key.
-	// Nothing should happen if the set doesn't exist in the first place
-	IdValueSetDel(key types.Byter) Command
+	// KeyValueSetDel is a command which deletes the entire set at the given
+	// key.  Nothing should happen if the set doesn't exist in the first place
+	KeyValueSetDel(key types.Byter) Command
 
 	// A generic set is your run-of-the-mill set, where each value in the set
 	// only appears once. GenericSetAdd adds a value to the set at key, and
