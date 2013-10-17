@@ -1,4 +1,4 @@
-package client
+package types
 
 // Storage key is used to identify a key that a command is taking place at (for
 // example, SET, DEL, or any other redis command, assuming redis is your

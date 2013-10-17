@@ -4,7 +4,6 @@ import (
 	"github.com/mediocregopher/hyrax/server/config"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
-	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
@@ -17,7 +16,7 @@ var cmdFactory = storage.CommandFactory
 // EAdd adds the client's id (actual and given) to an ekg's set of things it's
 // watching, and adds the ekg's information to the client's set of ekgs its
 // hooked up to
-func EAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey	
 	id := types.NewByter(cmd.Id)
 	ekgKey := keyMaker.Namespace(ekgns, key)
@@ -35,7 +34,7 @@ func EAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 
 // ERem removes the client's id from an ekg's set of things it's watching, and
 // removes the ekg's information from the client's set of ekgs its hooked up to
-func ERem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey	
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	clientEkgsKey := keyMaker.Namespace(ekgns, cid)
@@ -58,7 +57,7 @@ func ERem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 // EMembers returns the list of ids being monitored by an ekg
 func EMembers(
 	cid stypes.ClientId,
-	cmd *ctypes.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) (interface{}, error) {
 
 	key := cmd.StorageKey
 	ekgKey := keyMaker.Namespace(ekgns, key)
@@ -69,7 +68,7 @@ func EMembers(
 // ECard returns the number of client/id combinations being monitored
 func ECard(
 	cid stypes.ClientId,
-	cmd *ctypes.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) (interface{}, error) {
 
 	key := cmd.StorageKey
 	ekgKey := keyMaker.Namespace(ekgns, key)

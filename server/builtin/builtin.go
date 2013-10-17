@@ -1,14 +1,14 @@
 package builtin
 
 import (
-	ctypes "github.com/mediocregopher/hyrax/types/client"
+	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"strings"
 )
 
 type BuiltInFunc func(
 	stypes.ClientId,
-	*ctypes.ClientCommand) (interface{}, error)
+	*types.ClientCommand) (interface{}, error)
 
 type builtInCommandInfo struct {
 	Func BuiltInFunc

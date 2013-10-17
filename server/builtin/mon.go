@@ -4,7 +4,6 @@ import (
 	"github.com/mediocregopher/hyrax/server/config"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
-	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
@@ -13,7 +12,7 @@ var monns = types.SimpleByter([]byte("mon"))
 //MAdd adds the client's id to the set of clients that are monitoring the key
 //(so it can receive alerts) and adds the key to the set of keys that the client
 //is monitoring (so it can clean up)
-func MAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
@@ -30,7 +29,7 @@ func MAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 
 // MRem removes the client's id from the set of clients that are monitoring the
 // key, and removes the key from the set of keys that the client is monitoring
-func MRem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
+func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)

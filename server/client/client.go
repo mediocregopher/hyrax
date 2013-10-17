@@ -6,7 +6,6 @@ import (
 	"github.com/mediocregopher/hyrax/server/builtin"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
-	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
@@ -35,7 +34,7 @@ func NewClient() stypes.ClientId {
 // appropriate function.
 func RunCommand(
 	cid stypes.ClientId,
-	cmd *ctypes.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) (interface{}, error) {
 
 	if storage.CommandFactory.DirectCommandAllowed(cmd.Command) {
 		return runDirectCommand(cid, cmd)
@@ -52,7 +51,7 @@ var autherr = errors.New("auth failed")
 // it, assuming auth checks out.
 func runBuiltInCommand(
 	cid stypes.ClientId,
-	cmd *ctypes.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) (interface{}, error) {
 
 	if builtin.CommandModifies(cmd.Command) {
 		ok, err := auth.Auth(cmd)
@@ -73,7 +72,7 @@ var directns = types.NewByter([]byte("dir"))
 // storage unit for the command's key
 func runDirectCommand(
 	cid stypes.ClientId,
-	cmd *ctypes.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) (interface{}, error) {
 
 	if storage.CommandFactory.DirectCommandModifies(cmd.Command) {
 		ok, err := auth.Auth(cmd)

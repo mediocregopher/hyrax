@@ -1,4 +1,4 @@
-package client
+package types
 
 import (
 	//See encoding/json/HACKED for why
