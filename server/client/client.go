@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/custom"
 	"github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
@@ -46,6 +47,8 @@ func RunCommand(
 	}
 }
 
+var autherr = errors.New("auth failed")
+
 // runCustomCommand takes in a clientid and a custom command struct and runs it,
 // assuming auth checks out.
 func runCustomCommand(
@@ -53,7 +56,12 @@ func runCustomCommand(
 	cmd *ctypes.ClientCommand) (interface{}, error) {
 
 	if custom.CommandModifies(cmd.Command) {
-		// Auth check
+		ok, err := auth.Auth(cmd)
+		if !ok {
+			return nil, autherr
+		} else if err != nil {
+			return nil, err
+		}
 	}
 
 	return custom.GetFunc(cmd.Command)(cid, cmd)
@@ -69,7 +77,12 @@ func runDirectCommand(
 	cmd *ctypes.ClientCommand) (interface{}, error) {
 
 	if storage.CommandFactory.DirectCommandModifies(cmd.Command) {
-		// Auth check
+		ok, err := auth.Auth(cmd)
+		if !ok {
+			return nil, autherr
+		} else if err != nil {
+			return nil, err
+		}
 	}
 
 	dcmd := storage.CommandFactory.DirectCommand(
