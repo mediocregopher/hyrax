@@ -30,7 +30,7 @@ func init() {
 // returns a channel that other kinds of messages from the network will be
 // pushed to, a channel that network errors will be pushed to, and an error if
 // listening failed for some reason
-func Listen(addr string) (chan interface{}, chan error, error) {
+func Listen(addr string) (<-chan interface{}, <-chan error, error) {
 	msgCh, errCh, err := ghost.Listen(addr)
 	if err != nil {
 		return nil, nil, err
@@ -56,6 +56,8 @@ func RegisterMsgType(typ interface{}) {
 // AddNode manually adds a node to this node's view of the mesh, and tells other
 // nodes to do the same
 func AddNode(addr string) {
+	// TODO AddConn isn't synchronous. We want the new node to add itself to its
+	// mesh view, but it's possible this won't happen
 	ghost.AddConn(addr)
 	ghost.SendAll(msg{MESH_ADD, addr})
 }
@@ -83,6 +85,8 @@ func (ml *meshListen) msgSpin() {
 		case MESH_ADD:
 			ghost.AddConn(m.(msg).payload.(string))
 		case MESH_REM:
+			// TODO if we remove ourselves then we should disconnect from
+			// everyone
 			ghost.RemoveConn(m.(msg).payload.(string))
 		case MESH_OTHER:
 			ml.outCh <- m.(msg).payload
