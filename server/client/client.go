@@ -4,8 +4,7 @@ import (
 	"errors"
 	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/builtin"
-	"github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
@@ -91,7 +90,7 @@ func runDirectCommand(
 		cmd.Args,
 	)
 
-	return router.RoutedCmd(cmd.StorageKey, dcmd)
+	return storage.RoutedCmd(cmd.StorageKey, dcmd)
 }
 
 // ClientClosed takes care of all cleanup that's necessary when a client has

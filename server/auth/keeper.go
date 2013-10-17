@@ -3,8 +3,7 @@ package auth
 import (
 	"bytes"
 	"github.com/mediocregopher/hyrax/types"
-	"github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
 )
 
 var globalSecrets = [][]byte{}
@@ -63,7 +62,7 @@ var secretns = types.NewByter([]byte("sec"))
 func AddSecret(key types.Byter, s []byte) error {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
 	addCmd := storage.CommandFactory.GenericSetAdd(secKey, types.NewByter(s))
-	_, err := router.RoutedCmd(key, addCmd)
+	_, err := storage.RoutedCmd(key, addCmd)
 	return err
 }
 
@@ -72,7 +71,7 @@ func AddSecret(key types.Byter, s []byte) error {
 func RemSecret(key types.Byter, s []byte) error {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
 	remCmd := storage.CommandFactory.GenericSetRem(secKey, types.NewByter(s))
-	_, err := router.RoutedCmd(key, remCmd)
+	_, err := storage.RoutedCmd(key, remCmd)
 	return err
 }
 
@@ -80,7 +79,7 @@ func RemSecret(key types.Byter, s []byte) error {
 func GetSecrets(key types.Byter) ([][]byte, error) {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
 	getCmd := storage.CommandFactory.GenericSetMembers(secKey)
-	r, err := router.RoutedCmd(key, getCmd)
+	r, err := storage.RoutedCmd(key, getCmd)
 	if err != nil {
 		return nil, err
 	}

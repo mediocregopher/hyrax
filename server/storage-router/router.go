@@ -5,7 +5,11 @@ import (
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 	"github.com/mediocregopher/hyrax/server/storage-router/bucket"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage/redis"
 )
+
+var CommandFactory = command.CommandFactory(&redis.RedisCommandFactory{})
+var KeyMaker = command.KeyMaker(&redis.RedisKeyMaker{})
 
 // SetBucket sets the given bucket index to be the connection to the given
 // storage unit, whose name is given by its address

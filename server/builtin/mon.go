@@ -2,8 +2,7 @@ package builtin
 
 import (
 	"github.com/mediocregopher/hyrax/server/config"
-	"github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
@@ -21,12 +20,12 @@ func MAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 	thisnode := &config.StorageAddr
 
 	clientAdd := storage.CommandFactory.GenericSetAdd(clientMonsKey, key)
-	if _, err := router.DirectedCmd(thisnode, clientAdd); err != nil {
+	if _, err := storage.DirectedCmd(thisnode, clientAdd); err != nil {
 		return nil, err
 	}
 
 	monAdd := storage.CommandFactory.GenericSetAdd(monKey, cid)
-	return router.DirectedCmd(thisnode, monAdd)
+	return storage.DirectedCmd(thisnode, monAdd)
 }
 
 // MRem removes the client's id from the set of clients that are monitoring the
@@ -38,13 +37,13 @@ func MRem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 	thisnode := &config.StorageAddr
 
 	monRem := storage.CommandFactory.GenericSetRem(monKey, cid)
-	r, err := router.DirectedCmd(thisnode, monRem)
+	r, err := storage.DirectedCmd(thisnode, monRem)
 	if err != nil {
 		return nil, err
 	}
 
 	clientRem := storage.CommandFactory.GenericSetRem(clientMonsKey, key)
-	_, err = router.DirectedCmd(thisnode, clientRem)
+	_, err = storage.DirectedCmd(thisnode, clientRem)
 	return r, err
 }
 
@@ -54,7 +53,7 @@ func CleanMons(cid stypes.ClientId) error {
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
 	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)	
 	thisnode := &config.StorageAddr
-	r, err := router.DirectedCmd(thisnode, monlistCmd)
+	r, err := storage.DirectedCmd(thisnode, monlistCmd)
 	if err != nil {
 		return err
 	}
@@ -64,13 +63,13 @@ func CleanMons(cid stypes.ClientId) error {
 		key := types.NewByter(mons[i])
 		monKey := storage.KeyMaker.Namespace(monns, key)
 		cleanKeyCmd := storage.CommandFactory.GenericSetRem(monKey, cid)
-		if _, err = router.DirectedCmd(thisnode, cleanKeyCmd); err != nil {
+		if _, err = storage.DirectedCmd(thisnode, cleanKeyCmd); err != nil {
 			return err
 		}
 	}
 
 	delClientMonCmd := storage.CommandFactory.GenericSetDel(clientMonsKey)
-	_, err = router.DirectedCmd(thisnode, delClientMonCmd)
+	_, err = storage.DirectedCmd(thisnode, delClientMonCmd)
 	return err
 }
 
@@ -80,7 +79,7 @@ func ClientsForMon(key types.Byter) ([]stypes.ClientId, error) {
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	monsCmd := storage.CommandFactory.GenericSetMembers(monKey)
 	thisnode := &config.StorageAddr
-	r, err := router.DirectedCmd(thisnode, monsCmd)
+	r, err := storage.DirectedCmd(thisnode, monsCmd)
 	if err != nil {
 		return nil, err
 	}

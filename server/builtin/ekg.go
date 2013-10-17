@@ -2,8 +2,7 @@ package builtin
 
 import (
 	"github.com/mediocregopher/hyrax/server/config"
-	"github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	ctypes "github.com/mediocregopher/hyrax/types/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
@@ -26,12 +25,12 @@ func EAdd(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 	thisnode := &config.StorageAddr
 	
 	clAdd := cmdFactory.GenericSetAdd(clientEkgsKey, key)
-	if _, err := router.DirectedCmd(thisnode, clAdd); err != nil {
+	if _, err := storage.DirectedCmd(thisnode, clAdd); err != nil {
 		return nil, err
 	}
 
 	addCmd := storage.CommandFactory.KeyValueSetAdd(ekgKey, cid, id)
-	return router.RoutedCmd(key, addCmd)
+	return storage.RoutedCmd(key, addCmd)
 }
 
 // ERem removes the client's id from an ekg's set of things it's watching, and
@@ -43,13 +42,13 @@ func ERem(cid stypes.ClientId, cmd *ctypes.ClientCommand) (interface{}, error) {
 	thisnode := &config.StorageAddr
 
 	remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cid)
-	r, err := router.RoutedCmd(key, remCmd)
+	r, err := storage.RoutedCmd(key, remCmd)
 	if err != nil {
 		return nil, err
 	}
 
 	clRem := cmdFactory.GenericSetRem(clientEkgsKey, key)
-	if _, err := router.DirectedCmd(thisnode, clRem); err != nil {
+	if _, err := storage.DirectedCmd(thisnode, clRem); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +63,7 @@ func EMembers(
 	key := cmd.StorageKey
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	memsCmd := cmdFactory.KeyValueSetMemberValues(ekgKey)
-	return router.RoutedCmd(key, memsCmd)
+	return storage.RoutedCmd(key, memsCmd)
 }
 
 // ECard returns the number of client/id combinations being monitored
@@ -75,7 +74,7 @@ func ECard(
 	key := cmd.StorageKey
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	cardCmd := cmdFactory.KeyValueSetCard(ekgKey)
-	return router.RoutedCmd(key, cardCmd)
+	return storage.RoutedCmd(key, cardCmd)
 }
 
 // EkgsForClient returns a list of all the ekgs a particular client is hooked up
@@ -84,7 +83,7 @@ func EkgsForClient(cid stypes.ClientId) ([]types.Byter, error) {
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cid)
 	ekgsCmd := cmdFactory.GenericSetMembers(clientEkgsKey)
 	thisnode := &config.StorageAddr
-	r, err := router.DirectedCmd(thisnode, ekgsCmd)
+	r, err := storage.DirectedCmd(thisnode, ekgsCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +109,7 @@ func CleanClientEkgs(cid stypes.ClientId) error {
 		key := ekgs[i]
 		ekgKey := keyMaker.Namespace(ekgns, key)
 		remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cid)
-		if _, err = router.RoutedCmd(key, remCmd); err != nil {
+		if _, err = storage.RoutedCmd(key, remCmd); err != nil {
 			return err
 		}
 	}
