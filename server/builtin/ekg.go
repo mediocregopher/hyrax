@@ -1,4 +1,4 @@
-package custom
+package builtin
 
 import (
 	"github.com/mediocregopher/hyrax/server/config"
