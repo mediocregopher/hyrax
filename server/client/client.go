@@ -29,6 +29,18 @@ func NewClient() stypes.ClientId {
 	return <- idCh
 }
 
+// Client is an interface which must be implemented by clients to hyrax (go
+// figure)
+type Client interface {
+
+	// ClientId returns the ClientId of a given client (again, go figure)
+	ClientId() stypes.ClientId
+
+	// CommandPushChannel returns a channel where commands that are to be pushed
+	// to the client should be pushed on to
+	CommandPushChannel() chan<- *types.ClientCommand
+}
+
 // RunCommand takes in a client id and a client command, figures out what type
 // of command it is (builtin or direct) and routes the arguments to the
 // appropriate function.
