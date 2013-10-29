@@ -1,59 +1,60 @@
 package main
 
 import (
-	"bytes"
-	"hyrax-server/config"
-	"hyrax-server/dispatch"
-	"hyrax-server/net"
-	"hyrax-server/storage"
-	"strconv"
+	"github.com/mediocregopher/hyrax/server/auth"
+	"github.com/mediocregopher/hyrax/server/config"
+	"github.com/mediocregopher/hyrax/server/dist"
+	"github.com/mediocregopher/hyrax/server/net"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	"github.com/mediocregopher/hyrax/translate"
 )
 
 func main() {
-	config.LoadConfig()
-
-	keys := bytes.Split([]byte(config.GetStr("initial-secret-keys")), []byte{':'})
-	dispatch.SetSecretKeys(keys)
-
-	err := storage.RedisConnect()
+	err := config.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	err = CleanupTransientData()
+	if config.FirstNode {
+		secrets := config.InitSecrets
+		for _, secret := range secrets {
+			auth.AddGlobalSecret(secret)
+		}
+	}
+
+	storageAddr := config.StorageAddr
+	err = storage.AddUnit(storageAddr, "tcp", storageAddr)
 	if err != nil {
 		panic(err)
 	}
 
-	port := strconv.Itoa(config.GetInt("port"))
-	addr := ":" + port
-	err = net.TcpListen(addr)
+	meshListenAddr := config.MeshListenAddr
+	meshAdvertiseAddr := config.MeshAdvertiseAddr
+	err = dist.Init(meshListenAddr)
 	if err != nil {
 		panic(err)
+	}
+	dist.AddNode(meshAdvertiseAddr)
+
+	listens := config.ListenAddrs
+	for i := range listens {
+		go listenHandler(&listens[i])
 	}
 
 	select {}
 }
 
-// CleanupTransientData uses AllWildcards to go through and delete all keys
-// containing data related to connections from the last instance of hyrax that
-// existed on the redis instance
-func CleanupTransientData() error {
-	queries := storage.AllWildcards()
-	for i := range queries {
-		keysr, err := storage.CmdPretty(storage.KEYS, queries[i])
-		if err != nil {
-			return err
-		}
-
-		keys := keysr.([][]byte)
-		for j := range keys {
-			_, err := storage.CmdPretty(storage.DEL, keys[j])
-			if err != nil {
-				return err
-			}
-		}
+func listenHandler(l *config.ListenAddr) {
+	var trans translate.Translator
+	switch l.Format {
+	case config.LFORMAT_JSON:
+		trans = &translate.JsonTranslator{}
 	}
 
-	return nil
+	switch l.Type {
+	case  config.LTYPE_TCP:
+		if err := net.TcpListen(l.Addr, trans); err != nil {
+			panic(err)
+		}
+	}
 }
