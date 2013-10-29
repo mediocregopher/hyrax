@@ -46,15 +46,23 @@ type Client interface {
 // appropriate function.
 func RunCommand(
 	cid stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
+	cmd *types.ClientCommand) *types.ClientReturn {
 
+	var r interface{}
+	var err error
 	if storage.CommandFactory.DirectCommandAllowed(cmd.Command) {
-		return runDirectCommand(cid, cmd)
+		r, err = runDirectCommand(cid, cmd)
 	} else if builtin.IsBuiltInCommand(cmd.Command) {
-		return runBuiltInCommand(cid, cmd)
+		r, err = runBuiltInCommand(cid, cmd)
 	} else {
-		return nil, errors.New("command not supported")
+		err = errors.New("command not supported")
 	}
+
+	if err != nil {
+		return &types.ClientReturn{Error: []byte(err.Error())}
+	}
+
+	return &types.ClientReturn{Return: r}
 }
 
 var autherr = errors.New("auth failed")

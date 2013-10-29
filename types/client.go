@@ -49,8 +49,4 @@ type ClientReturn struct {
 	// be filled with whatever was returned from the command
 	Return interface{} `json:"return,omitempty"`
 
-	// Push will be filled out if this isn't actually a return from a command
-	// but instead is a message being pushed by hyrax. It will be filled by
-	// whatever message is being pushed.
-	Push interface{} `json:"push,omitempty"`
 }
