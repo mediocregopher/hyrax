@@ -2,37 +2,73 @@ package net
 
 import (
 	"bufio"
-	"hyrax-server/dispatch"
-	"hyrax-server/router"
-	"hyrax-server/types"
-	"log"
+	"github.com/mediocregopher/hyrax/server/client"
+	crouter "github.com/mediocregopher/hyrax/server/client-router"
+	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/translate"
+	"github.com/mediocregopher/hyrax/types"
 	"net"
 )
 
-// TcpListen starts up a tcp listen server, and sets up the acceptor routines
-func TcpListen(addr string) error {
-	log.Println("Starting tcp listener for", addr)
-	listener, err := net.Listen("tcp", addr)
+// TcpClient holds a tcp connection into the hyrax server, and implements the
+// Client interface
+type TcpClient struct {
+	id     stypes.ClientId
+	pushCh chan *types.ClientCommand
+	conn   net.Conn
+	trans  translate.Translator
+}
+
+// Returns a new TcpClient structure, having populated it with all necessary
+// fields and added it to the client router
+func NewTcpClient(conn net.Conn, t translate.Translator) (*TcpClient, error) {
+	cid := client.NewClient()
+	c := &TcpClient{
+		id: cid,
+		pushCh: make(chan *types.ClientCommand),
+		conn: conn,
+		trans: t,
+	}
+	if err := crouter.Add(c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func (tc *TcpClient) ClientId() stypes.ClientId {
+	return tc.id
+}
+
+func (tc *TcpClient) CommandPushChannel() chan<- *types.ClientCommand {
+	return tc.pushCh
+}
+
+func (tc *TcpClient) write(b []byte) error {
+	//TODO write deadline
+	if _, err := tc.conn.Write(b); err != nil {
+		return err
+	}
+
+	if _, err := tc.conn.Write([]byte("\n")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tc *TcpClient) writeClientReturn(cr *types.ClientReturn) error {
+	b, err := tc.trans.FromClientReturn(cr)
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < 10; i++ {
-		go func() {
-			for {
-				conn, err := listener.Accept()
-				if err != nil {
-					log.Println("accept failed:", err.Error())
-					continue
-				}
+	return tc.write(b)
+}
 
-				cid, ch := router.AllocateId()
-				go TcpClient(conn, cid, ch)
-			}
-		}()
-	}
-
-	return nil
+func (tc *TcpClient) writeErr(err error) error {
+	cr := types.ClientReturn{Error: []byte(err.Error())}
+	return tc.writeClientReturn(&cr)
 }
 
 type tcpReadChRet struct {
@@ -40,14 +76,11 @@ type tcpReadChRet struct {
 	err error
 }
 
-// TcpClient is the main function tcp connections use. It constantly reads in
-// data from the network and the messsage push channel
-func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
-
+func (tc *TcpClient) Spin() {
 	workerReadCh := make(chan *tcpReadChRet)
 	readMore := true
-	bufReader := bufio.NewReader(conn)
-	for {
+	bufReader := bufio.NewReader(tc.conn)
+	spin: for {
 
 		//readMore keeps track of whether or not a routine is already reading
 		//off the connection. If there isn't one we make another
@@ -61,42 +94,57 @@ func TcpClient(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
 
 		select {
 
-		//If we pull a command off we decode it and act accordingly
-		case command := <-cmdCh:
-			switch command.Type() {
-			case router.PUSH:
-				conn.Write(*command.(*router.PushMessage))
-				conn.Write([]byte{'\n'})
+		case cmd := <-tc.pushCh:
+			b, _ := tc.trans.FromClientCommand(cmd)
+			if err := tc.write(b); err != nil {
+				break spin
 			}
 
-		//If the goroutine doing the reading gets data we check it for an error
-		//and send it to the globalReadCh to be handled
 		case rcr := <-workerReadCh:
 			readMore = true
 			msg, err := rcr.msg, rcr.err
 			if err != nil {
-				TcpClose(conn, cid, cmdCh)
-				return
+				break spin
 			} else if msg != nil {
-				r, err := dispatch.DoCommand(cid, msg)
+				cc, err := tc.trans.ToClientCommand(msg)
 				if err != nil {
-					log.Println("Go error from dispatch.DoCommand:", err)
+					if err = tc.writeErr(err); err != nil {
+						break spin
+					}
 					continue
 				}
 
-				conn.Write(r)
-				conn.Write([]byte{'\n'})
+				cr := client.RunCommand(tc.id, cc)
+				if err = tc.writeClientReturn(cr); err != nil {
+					break spin
+				}
 			}
 		}
 	}
+
+	tc.conn.Close()
+	client.ClientClosed(tc.id)
 }
 
-// TcpClose is used when a connection needs to be closed or when it's already
-// been closed.  It initiates cleanup of the connection and its data.
-func TcpClose(conn net.Conn, cid types.ConnId, cmdCh chan router.Message) {
-	conn.Close()
-	err := dispatch.DoCleanup(cid)
+func TcpListen(addr string, trans translate.Translator) error {
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Println("Error during cleanup of", cid, ":", err.Error())
+		return err
+	}
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			// TODO log error
+			continue
+		}
+
+		c, err := NewTcpClient(conn, trans)
+		if err != nil {
+			// TODO log error
+			continue
+		}
+
+		go c.Spin()
 	}
 }
