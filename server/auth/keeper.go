@@ -38,6 +38,10 @@ func keeper() {
 	}
 }
 
+// TODO make sure global secrets make it to all other nodes
+// TODO make a way to "set" global secrets, so one node can sync them to other
+//      nodes
+
 // AddGlobalSecret appends a secret to the list of global ones currently in use.
 func AddGlobalSecret(s []byte) {
 	addSecretCh <- s

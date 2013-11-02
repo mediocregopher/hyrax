@@ -73,7 +73,9 @@ func runBuiltInCommand(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	if builtin.CommandModifies(cmd.Command) {
+	if builtin.CommandModifies(cmd.Command) ||
+		builtin.IsAdminCommand(cmd.Command) {
+
 		ok, err := auth.Auth(cmd)
 		if !ok {
 			return nil, autherr

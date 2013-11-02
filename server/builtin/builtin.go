@@ -12,16 +12,84 @@ type BuiltInFunc func(
 
 type builtInCommandInfo struct {
 	Func BuiltInFunc
+	Admin    bool
 	Modifies bool
 }
 
 var builtInMap = map[string]*builtInCommandInfo{
-	"madd":      &builtInCommandInfo{Func: MAdd, Modifies: true},
-	"mrem":      &builtInCommandInfo{Func: MRem, Modifies: true},
-	"eadd":      &builtInCommandInfo{Func: EAdd, Modifies: true},
-	"erem":      &builtInCommandInfo{Func: ERem, Modifies: true},
-	"emembers":  &builtInCommandInfo{Func: EMembers},
-	"ecard":     &builtInCommandInfo{Func: ECard},
+	"madd":       &builtInCommandInfo{Func: MAdd, Modifies: true},
+	"mrem":       &builtInCommandInfo{Func: MRem, Modifies: true},
+	"eadd":       &builtInCommandInfo{Func: EAdd, Modifies: true},
+	"erem":       &builtInCommandInfo{Func: ERem, Modifies: true},
+	"emembers":   &builtInCommandInfo{Func: EMembers},
+	"ecard":      &builtInCommandInfo{Func: ECard},
+
+	"anodeadd":
+		&builtInCommandInfo{
+			Func: ANodeAdd,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"anoderem":
+		&builtInCommandInfo{
+			Func: ANodeRem,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"abucketset":
+		&builtInCommandInfo{
+			Func: ABucketSet,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"abuckets":
+		&builtInCommandInfo{
+			Func: ABuckets,
+			Admin: true,
+		},
+
+	"aglobalsecretadd":
+		&builtInCommandInfo{
+			Func: AGlobalSecretAdd,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"aglobalsecretrem":
+		&builtInCommandInfo{
+			Func: AGlobalSecretRem,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"aglobalsecrets":
+		&builtInCommandInfo{
+			Func: AGlobalSecrets,
+			Admin: true,
+		},
+
+	"asecretadd":
+		&builtInCommandInfo{
+			Func: ASecretAdd,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"asecretrem":
+		&builtInCommandInfo{
+			Func: ASecretRem,
+			Modifies: true,
+			Admin: true,
+		},
+
+	"asecrets":
+		&builtInCommandInfo{
+			Func: ASecrets,
+			Admin: true,
+		},
 }
 
 func getBuiltInCommandInfo(cmd []byte) (*builtInCommandInfo, bool) {
@@ -41,6 +109,15 @@ func IsBuiltInCommand(cmd []byte) bool {
 func CommandModifies(cmd []byte) bool {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Modifies
+	}
+	return false
+}
+
+// IsAdminCommand returns whether or not a given builtin command is an admin
+// only command, or false if it's not a valid builtin command
+func IsAdminCommand(cmd []byte) bool {
+	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
+		return cinfo.Admin
 	}
 	return false
 }
