@@ -55,23 +55,24 @@ func RegisterMsgType(typ interface{}) {
 
 // AddNode manually adds a node to this node's view of the mesh, and tells other
 // nodes to do the same
-func AddNode(addr string) {
-	// TODO AddConn isn't synchronous. We want the new node to add itself to its
-	// mesh view, but it's possible this won't happen
-	ghost.AddConn(addr)
-	ghost.SendAll(msg{MESH_ADD, addr})
+func AddNode(addr *string) error {
+	if err := ghost.AddConn(addr); err != nil {
+		return err
+	}
+	ghost.SendAll(msg{MESH_ADD, *addr})
+	return nil
 }
 
 // RemNode manually removes a node from this node's view of the mesh, and tells
 // other nodes to do the same
-func RemNode(addr string) {
-	ghost.RemoveConn(addr)
-	ghost.SendAll(msg{MESH_REM, addr})
+func RemNode(addr *string) {
+	ghost.SendAll(msg{MESH_REM, *addr})
+	ghost.RemConn(addr)
 }
 
 // SendDirect sends a message directly to a node in the mesh
-func SendDirect(addr string, m interface{}) {
-	ghost.Send(addr, msg{MESH_OTHER, m})
+func SendDirect(addr string, m interface{}) error {
+	return ghost.Send(&addr, msg{MESH_OTHER, m})
 }
 
 // SendAll sends a message to all the nodes currently connected to in the mesh
@@ -83,11 +84,13 @@ func (ml *meshListen) msgSpin() {
 	for m := range ml.inCh {
 		switch m.(msg).msgtype {
 		case MESH_ADD:
-			ghost.AddConn(m.(msg).payload.(string))
+			addr := m.(msg).payload.(string)
+			ghost.AddConn(&addr)
 		case MESH_REM:
 			// TODO if we remove ourselves then we should disconnect from
 			// everyone
-			ghost.RemoveConn(m.(msg).payload.(string))
+			addr := m.(msg).payload.(string)
+			ghost.RemConn(&addr)
 		case MESH_OTHER:
 			ml.outCh <- m.(msg).payload
 		}

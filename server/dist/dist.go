@@ -56,12 +56,12 @@ func Init(addr string) error {
 }
 
 // AddNode passes straight through to mesh.AddNode
-func AddNode(addr string) {
-	mesh.AddNode(addr)
+func AddNode(addr *string) error {
+	return mesh.AddNode(addr)
 }
 
 // RemNode passes straight through to mesh.RemNode
-func RemNode(addr string) {
+func RemNode(addr *string) {
 	mesh.RemNode(addr)
 }
 

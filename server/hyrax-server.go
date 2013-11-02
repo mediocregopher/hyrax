@@ -30,11 +30,11 @@ func main() {
 
 	meshListenAddr := config.MeshListenAddr
 	meshAdvertiseAddr := config.MeshAdvertiseAddr
-	err = dist.Init(meshListenAddr)
-	if err != nil {
+	if err = dist.Init(meshListenAddr); err != nil {
+		panic(err)
+	} else if err = dist.AddNode(&meshAdvertiseAddr); err != nil {
 		panic(err)
 	}
-	dist.AddNode(meshAdvertiseAddr)
 
 	listens := config.ListenAddrs
 	for i := range listens {

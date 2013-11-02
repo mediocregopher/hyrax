@@ -10,7 +10,7 @@
         {
             "loc":"https://github.com/mediocregopher/ghost.git",
             "type":"git",
-            "reference":"v0.2.1",
+            "reference":"v0.3.0",
             "path":"github.com/mediocregopher/ghost"
         },
         {
