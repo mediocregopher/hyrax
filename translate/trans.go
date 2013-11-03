@@ -2,6 +2,8 @@ package translate
 
 import (
 	"github.com/mediocregopher/hyrax/types"
+	"strings"
+	"fmt"
 )
 
 // A translator takes in raw data of some known format and translates it into
@@ -24,4 +26,15 @@ type Translator interface {
 	// slice, or returns an error if it can't
 	FromClientReturn(*types.ClientReturn) ([]byte, error)
 
+}
+
+// StringToTranslator takes in a string which is supposed to identify which
+// translator is desired and returns an instance of a translator of that type
+func StringToTranslator(ts string) (Translator, error) {
+	switch strings.ToLower(ts) {
+	case "json":
+		return &JsonTranslator{}, nil
+	default:
+		return nil, fmt.Errorf("unknown format: %s", ts)
+	}
 }

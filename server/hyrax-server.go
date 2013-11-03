@@ -7,6 +7,7 @@ import (
 	"github.com/mediocregopher/hyrax/server/net"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
 	"github.com/mediocregopher/hyrax/translate"
+	"strings"
 )
 
 func main() {
@@ -45,14 +46,13 @@ func main() {
 }
 
 func listenHandler(l *config.ListenAddr) {
-	var trans translate.Translator
-	switch l.Format {
-	case config.LFORMAT_JSON:
-		trans = &translate.JsonTranslator{}
+	trans, err := translate.StringToTranslator(l.Format)
+	if err != nil {
+		panic(err)
 	}
 
-	switch l.Type {
-	case  config.LTYPE_TCP:
+	switch strings.ToLower(l.Type) {
+	case "tcp":
 		if err := net.TcpListen(l.Addr, trans); err != nil {
 			panic(err)
 		}
