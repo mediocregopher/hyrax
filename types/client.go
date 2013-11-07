@@ -50,3 +50,8 @@ type ClientReturn struct {
 	Return interface{} `json:"return,omitempty"`
 
 }
+
+// ErrorReturn takes in an error and returns a ClientReturn for it
+func ErrorReturn(err error) *ClientReturn {
+	return &ClientReturn{Error: []byte(err.Error())}
+}
