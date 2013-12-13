@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/mediocregopher/flagconfig/src/flagconfig"
+	"github.com/mediocregopher/flagconfig"
 	"strings"
 )
 
