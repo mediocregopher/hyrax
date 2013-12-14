@@ -9,15 +9,8 @@ import (
 	"github.com/mediocregopher/hyrax/translate"
 )
 
-type cmdWrap struct {
-	cmd *types.ClientCommand
-	retCh chan *types.ClientReturn
-}
-
 type TcpClient struct {
 	conn     net.Conn
-	cmdCh    chan *cmdWrap
-	closeCh  chan struct{}
 	pushCh   chan *types.ClientCommand
 	cmdRetCh chan *types.ClientReturn
 	trans    translate.Translator
@@ -36,15 +29,12 @@ func NewTcpClient(
 
 	c := &TcpClient{
 		conn: conn,
-		cmdCh: make(chan *cmdWrap),
-		closeCh: make(chan struct{}),
 		pushCh: pushCh,
 		cmdRetCh: make(chan *types.ClientReturn),
 		trans: t,
 	}
 
 	go c.readSpin()
-	go c.writeSpin()
 	return c, nil
 }
 
@@ -54,7 +44,7 @@ func (c *TcpClient) readSpin() {
 
 	for {
 		b, err := bufReader.ReadBytes('\n')
-		if err == io.EOF {
+		if err != nil {
 			break
 		}
 		cmd, err := c.trans.ToClientCommand(b)
@@ -74,35 +64,11 @@ func (c *TcpClient) readSpin() {
 			c.cmdRetCh <- &types.ClientReturn{Return: ret}
 		}
 	}
+	c.conn.Close()
 	if c.pushCh != nil {
 		close(c.pushCh)
 	}
 	close(c.cmdRetCh)
-}
-
-func (c *TcpClient) writeSpin() {
-	spinloop: for {
-		select {
-		case <- c.closeCh:
-			break spinloop
-		case cw := <- c.cmdCh:
-			b, err := c.trans.FromClientCommand(cw.cmd)
-			if err != nil {
-				cw.retCh <- types.ErrorReturn(err)
-				break
-			} else if err := c.write(b); err != nil {
-				cw.retCh <- types.ErrorReturn(err)
-				break
-			}
-			
-			if ret, ok := <- c.cmdRetCh; ok {
-				cw.retCh <- ret
-			} else {
-				cw.retCh <- types.ErrorReturn(io.EOF)
-			}
-		}
-	}
-	c.conn.Close()
 }
 
 func (c *TcpClient) write(b []byte) error {
@@ -119,16 +85,24 @@ func (c *TcpClient) write(b []byte) error {
 
 // Cmd sends the given command to the connection and returns the response
 func (c *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
-	cw := cmdWrap{cmd, make(chan *types.ClientReturn)}
-	c.cmdCh <- &cw
-	ret := <- cw.retCh
-	if ret.Error != nil {
-		return nil, errors.New(string(ret.Error))
+	b, err := c.trans.FromClientCommand(cmd)
+	if err != nil {
+		return nil, err
+	} else if err := c.write(b); err != nil {
+		return nil, err
 	}
-	return ret.Return, nil
+
+	ret, ok := <- c.cmdRetCh
+	if !ok {
+		return nil, io.EOF
+	} else if ret.Error != nil {
+		return nil, errors.New(string(ret.Error))
+	} else {
+		return ret.Return, nil
+	}
 }
 
 // Close closes the tcp client
 func (c *TcpClient) Close() {
-	close(c.closeCh)
+	c.conn.Close()
 }
