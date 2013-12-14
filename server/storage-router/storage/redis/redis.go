@@ -27,6 +27,7 @@ func New() unit.StorageUnitConn {
 // Implements Connect for StorageUnitConn. Connects to redis over tcp and spawns
 // a handler go-routine
 func (r *RedisConn) Connect(conntype, addr string, _ ... interface{}) error {
+	log.Println("redis.Dial(", conntype, addr, ")")
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
 		return err

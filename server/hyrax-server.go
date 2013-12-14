@@ -8,37 +8,43 @@ import (
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
 	"github.com/mediocregopher/hyrax/translate"
 	"strings"
+	"log"
 )
 
 func main() {
 	err := config.Load()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if config.FirstNode {
 		secrets := config.InitSecrets
+		log.Println("This is the first node, loading up the secrets")
 		for _, secret := range secrets {
+			log.Println("Loading secret:", string(secret))
 			auth.AddGlobalSecret(secret)
 		}
 	}
 
 	storageAddr := config.StorageAddr
+	log.Println("Connecting to storage unit at", storageAddr)
 	err = storage.AddUnit(storageAddr, "tcp", storageAddr)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	meshListenAddr := config.MeshListenAddr
 	meshAdvertiseAddr := config.MeshAdvertiseAddr
+	log.Println("Creating mesh listener at", meshListenAddr)
 	if err = dist.Init(meshListenAddr); err != nil {
-		panic(err)
+		log.Fatal(err)
 	} else if err = dist.AddNode(&meshAdvertiseAddr); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	listens := config.ListenAddrs
 	for i := range listens {
+		log.Println("Listening for clients at", listens[i])
 		go listenHandler(&listens[i])
 	}
 
@@ -48,13 +54,13 @@ func main() {
 func listenHandler(l *config.ListenAddr) {
 	trans, err := translate.StringToTranslator(l.Format)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	switch strings.ToLower(l.Type) {
 	case "tcp":
 		if err := net.TcpListen(l.Addr, trans); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 }
