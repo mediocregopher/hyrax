@@ -44,13 +44,15 @@ var ListenAddrs []ListenAddr
 
 func Load() error {
 	fc := flagconfig.New("hyrax")
-	fc.RequiredStrParam(
+	fc.StrParam(
 		"mesh-listen-addr",
-		"The address hyrax should listen on for other hyrax nodes to connect (exemple: \":9379\")",
+		"The address hyrax should listen on for other hyrax nodes to connect",
+		":9379",
 	)
-	fc.RequiredStrParam(
+	fc.StrParam(
 		"mesh-advertise-addr",
-		"The address to advertise to other hyrax nodes that we're listening for new mesh connections on (example: \"127.0.0.1:9379\")",
+		"The address to advertise to other hyrax nodes that we're listening for new mesh connections on",
+		"127.0.0.1:9379",
 	)
 	fc.FlagParam(
 		"first-node",
@@ -58,7 +60,7 @@ func Load() error {
 		false,
 	)
 	fc.StrParams(
-		"init-secrets",
+		"init-secret",
 		"A global secret key as a string. Can be specified multiple times if this is a first-node",
 	)
 	fc.StrParam(
@@ -86,7 +88,7 @@ func Load() error {
 	}
 
 	fn := fc.GetFlag("first-node")
-	isRaw := fc.GetStrs("init-secrets")
+	isRaw := fc.GetStrs("init-secret")
 	if fn && len(isRaw) == 0 {
 		return fmt.Errorf("first-node set but no init-secrets specified")
 	}
