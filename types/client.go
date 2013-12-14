@@ -33,7 +33,7 @@ type ClientCommand struct {
 
 	// Secret is the sha1-hmac which is required for all commands which
 	// add/change data in the datastore. The secret encompasses the command, the
-	// key, the args, and the id.
+	// key, and the id.
 	Secret []byte `json:"secret"`
 }
 
