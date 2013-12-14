@@ -38,9 +38,7 @@ var sm = storageManager{
 
 var NewStorageUnitConn = redis.New
 
-// Init starts up the storage manager and prepares various storage sepecific
-// units for use by the outside world
-func Init() {
+func init() {
 	go sm.spin()
 }
 
