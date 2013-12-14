@@ -109,7 +109,7 @@ func AGlobalSecretAdd(
 	return nil, nil
 }
 
-// AGlobalSecretRem removes a global secret from every nod in the mesh's global
+// AGlobalSecretRem removes a global secret from every node in the mesh's global
 // secret list
 func AGlobalSecretRem(
 	_ stypes.ClientId,
