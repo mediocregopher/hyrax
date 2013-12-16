@@ -61,7 +61,7 @@ func (c *TcpClient) readSpin() {
 		if err != nil {
 			c.cmdRetCh <- types.ErrorReturn(err)
 		} else {
-			c.cmdRetCh <- &types.ClientReturn{Return: ret}
+			c.cmdRetCh <- ret
 		}
 	}
 	c.conn.Close()

@@ -1,5 +1,9 @@
 package types
 
+import (
+	"fmt"
+)
+
 // Storage key is used to identify a key that a command is taking place at (for
 // example, SET, DEL, or any other redis command, assuming redis is your
 // datastore).
@@ -8,6 +12,16 @@ type StorageKey []byte
 // Implements the Bytes method for the Byter interface
 func (s StorageKey) Bytes() []byte {
 	return []byte(s)
+}
+
+func (s *StorageKey) UnmarshalJSON(b []byte) error {
+	last := len(b)-1
+	if b[0] != '"' || b[last] != '"' {
+		return fmt.Errorf("'%s' isn't a JSON string", string(b))
+	}
+	*s = make([]byte, len(b)-2)
+	copy(*s, b[1:last])
+	return nil
 }
 
 // ClientCommand is the structure that commands from the client are parsed into.
@@ -21,7 +35,7 @@ type ClientCommand struct {
 	// StorageKey is the key used to route the command to the proper hyrax node.
 	// Depending on the datastore backend it may also be incorporated into the
 	// actual command sent to the datastore.
-	StorageKey `json:"key"`
+	StorageKey StorageKey `json:"key"`
 
 	// Args are extra arguments needed for the command. This will depend on the
 	// datastore used. The items in the args list can be of any type, but I
