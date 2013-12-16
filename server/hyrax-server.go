@@ -5,7 +5,7 @@ import (
 	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/server/dist"
 	"github.com/mediocregopher/hyrax/server/net"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage"
+	"github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/translate"
 	"strings"
 	"log"
@@ -24,13 +24,12 @@ func main() {
 			log.Println("Loading secret:", string(secret))
 			auth.AddGlobalSecret(secret)
 		}
-	}
 
-	storageAddr := config.StorageAddr
-	log.Println("Connecting to storage unit at", storageAddr)
-	err = storage.AddUnit(storageAddr, "tcp", storageAddr)
-	if err != nil {
-		log.Fatal(err)
+		storageAddr := config.StorageAddr
+		log.Println("Connecting to storage unit at", storageAddr)
+		if err := router.SetBucket(0, "tcp", storageAddr); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	meshListenAddr := config.MeshListenAddr
