@@ -3,8 +3,8 @@ package redis
 import (
 	"time"
 	"errors"
-	"log"
 	"fmt"
+	"log"
 	"github.com/fzzy/radix/redis"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/unit"
@@ -27,7 +27,6 @@ func New() unit.StorageUnitConn {
 // Implements Connect for StorageUnitConn. Connects to redis over tcp and spawns
 // a handler go-routine
 func (r *RedisConn) Connect(conntype, addr string, _ ... interface{}) error {
-	log.Println("redis.Dial(", conntype, addr, ")")
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
 		return err
@@ -49,8 +48,8 @@ func (r *RedisConn) spin() {
 			return
 
 		case cmdb := <- r.cmdCh:
-			r, err := r.cmd(cmdb.Cmd)
-			ret := command.CommandRet{r, err}
+			rawret, err := r.cmd(cmdb.Cmd)
+			ret := command.CommandRet{rawret, err}
 			select {
 			case cmdb.RetCh <- &ret:
 			case <-time.After(10 * time.Second):
