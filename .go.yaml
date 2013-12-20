@@ -1,8 +1,8 @@
 path: github.com/mediocregopher/hyrax
 deps:
-    - loc: https://github.com/fzzy/radix.git
+    - loc: https://github.com/mediocregopher/radix.git
       type: git
-      ref: 7059bc019123ae3912b599050341d602b8a2c9dd
+      ref: d4347b079a16213c138623227b6be4559b69da23
       path: github.com/fzzy/radix
 
     - loc: https://github.com/mediocregopher/ghost.git
