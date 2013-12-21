@@ -44,15 +44,15 @@ type ClientCommand struct {
 	// Args are extra arguments needed for the command. This will depend on the
 	// datastore used. The items in the args list can be of any type, but I
 	// can't imagine needing anything except strings and numbers.
-	Args []interface{} `json:"args"`
+	Args []interface{} `json:"args,omitempty"`
 
 	// Id is an optional identifier for who is sending this command.
-	Id []byte `json:"id"`
+	Id []byte `json:"id,omitempty"`
 
 	// Secret is the sha1-hmac which is required for all commands which
 	// add/change data in the datastore. The secret encompasses the command, the
 	// key, and the id.
-	Secret []byte `json:"secret"`
+	Secret []byte `json:"secret,omitempty"`
 }
 
 // ClientReturn is the structure that returns to the client are parsed into.
