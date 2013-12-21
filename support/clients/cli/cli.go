@@ -51,7 +51,7 @@ func main() {
 	fc.StrParam("key", "key the command is executed against, if any", "")
 	fc.StrParams("arg", "argument to command")
 	fc.StrParam("id", "id of the client issuing command, if any", "")
-	fc.RequiredStrParam("secret-key", "secret key used to construct hmac and validate command")
+	fc.StrParam("secret-key", "", "secret key used to construct hmac and validate command")
 
 	if err := fc.Parse(); err != nil {
 		fmt.Println(err)
