@@ -96,7 +96,13 @@ func main() {
 
 	if hold {
 		for pushed := range pushCh {
-			fmt.Println("PUSH", pushed)
+			fmt.Printf(
+				"PUSH from '%s' %s %s %v\n",
+				string(pushed.Id),
+				string(pushed.Command),
+				string(pushed.StorageKey),
+				pushed.Args,
+			)
 		}
 	}
 
