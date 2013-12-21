@@ -14,6 +14,10 @@ func (s StorageKey) Bytes() []byte {
 	return []byte(s)
 }
 
+func (s StorageKey) String() string {
+	return string(s)
+}
+
 func (s *StorageKey) UnmarshalJSON(b []byte) error {
 	last := len(b)-1
 	if b[0] != '"' || b[last] != '"' {

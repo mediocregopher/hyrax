@@ -14,6 +14,10 @@ func (b SimpleByter) Bytes() []byte {
 	return []byte(b)
 }
 
+func (b SimpleByter) String() string {
+	return string(b)
+}
+
 // Returns a SimpleByter. Doesn't actually do a copy.
 func NewByter(b []byte) Byter {
 	return SimpleByter(b)
