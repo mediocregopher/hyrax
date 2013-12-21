@@ -34,7 +34,7 @@ func ByterJoin(sep Byter, b ...Byter) Byter {
 	r = append(r, bb[0]...)
 	for i := range bb[1:] {
 		r = append(r, sepb...)
-		r = append(r, bb[i]...)
+		r = append(r, bb[i+1]...)
 	}
 
 	return NewByter(r)
