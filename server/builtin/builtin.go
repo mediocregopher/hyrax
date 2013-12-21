@@ -17,8 +17,8 @@ type builtInCommandInfo struct {
 }
 
 var builtInMap = map[string]*builtInCommandInfo{
-	"madd":       &builtInCommandInfo{Func: MAdd, Modifies: true},
-	"mrem":       &builtInCommandInfo{Func: MRem, Modifies: true},
+	"madd":       &builtInCommandInfo{Func: MAdd},
+	"mrem":       &builtInCommandInfo{Func: MRem},
 	"eadd":       &builtInCommandInfo{Func: EAdd, Modifies: true},
 	"erem":       &builtInCommandInfo{Func: ERem, Modifies: true},
 	"emembers":   &builtInCommandInfo{Func: EMembers},
