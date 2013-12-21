@@ -7,7 +7,7 @@ import (
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 )
 
-func init() {
+func Init() {
 	go spin()
 }
 

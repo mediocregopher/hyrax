@@ -4,6 +4,7 @@ import (
 	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/server/dist"
+	dworker "github.com/mediocregopher/hyrax/server/dist-worker"
 	"github.com/mediocregopher/hyrax/server/net"
 	"github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/translate"
@@ -40,6 +41,9 @@ func main() {
 	} else if err = dist.AddNode(&meshAdvertiseAddr); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("starting up the dist worker")
+	dworker.Init()
 
 	listens := config.ListenAddrs
 	for i := range listens {

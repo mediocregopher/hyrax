@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/builtin"
+	"github.com/mediocregopher/hyrax/server/dist"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
@@ -96,7 +97,8 @@ func runDirectCommand(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	if storage.CommandFactory.DirectCommandModifies(cmd.Command) {
+	mods := storage.CommandFactory.DirectCommandModifies(cmd.Command)
+	if mods {
 		ok, err := auth.Auth(cmd)
 		if !ok {
 			return nil, autherr
@@ -110,6 +112,10 @@ func runDirectCommand(
 		storage.KeyMaker.Namespace(directns, cmd.StorageKey),
 		cmd.Args,
 	)
+
+	if mods {
+		dist.SendClientCommand(cmd)
+	}
 
 	return storage.RoutedCmd(cmd.StorageKey, dcmd)
 }

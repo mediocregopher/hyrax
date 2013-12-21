@@ -11,8 +11,8 @@ const (
 )
 
 type msg struct {
-	msgtype int
-	payload interface{}
+	MsgType int
+	Payload interface{}
 }
 
 type meshListen struct {
@@ -82,17 +82,17 @@ func SendAll(m interface{}) {
 
 func (ml *meshListen) msgSpin() {
 	for m := range ml.inCh {
-		switch m.(msg).msgtype {
+		switch m.(msg).MsgType {
 		case MESH_ADD:
-			addr := m.(msg).payload.(string)
+			addr := m.(msg).Payload.(string)
 			ghost.AddConn(&addr)
 		case MESH_REM:
 			// TODO if we remove ourselves then we should disconnect from
 			// everyone
-			addr := m.(msg).payload.(string)
+			addr := m.(msg).Payload.(string)
 			ghost.RemConn(&addr)
 		case MESH_OTHER:
-			ml.outCh <- m.(msg).payload
+			ml.outCh <- m.(msg).Payload
 		}
 	}
 }

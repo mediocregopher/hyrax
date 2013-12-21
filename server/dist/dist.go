@@ -44,7 +44,7 @@ func Init(addr string) error {
 		return err
 	}
 
-	distWorkerInst := distWorker{
+	distWorkerInst = distWorker{
 		msgCh: msgCh,
 		errCh: errCh,
 		clientCmdCh: make(chan *types.ClientCommand),
@@ -84,6 +84,10 @@ func (dw *distWorker) spin() {
 		select {
 		case msg := <- dw.msgCh:
 			handleMsg(msg)
+		case cmd := <- dw.clientCmdCh:
+			mesh.SendAll(cmd)
+		case sbs := <- dw.setBucketCh:
+			mesh.SendAll(sbs)
 		case <- dw.errCh:
 			// TODO do something with the error
 		}
