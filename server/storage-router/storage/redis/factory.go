@@ -12,6 +12,7 @@ var DEL = []byte("DEL")
 var HSET = []byte("HSET")
 var HDEL = []byte("HDEL")
 var HLEN = []byte("HLEN")
+var HGETALL = []byte("HGETALL")
 var HVALS = []byte("HVALS")
 
 var SADD = []byte("SADD")
@@ -78,6 +79,12 @@ func (r *RedisCommandFactory) KeyValueSetRemByInnerKey(
 
 func (r *RedisCommandFactory) KeyValueSetCard(key types.Byter) command.Command {
 	return r.createCmd(HLEN, key.Bytes())
+}
+
+func (r *RedisCommandFactory) KeyValueSetMembers(
+	key types.Byter) command.Command {
+
+	return r.createCmd(HGETALL, key.Bytes())
 }
 
 func (r *RedisCommandFactory) KeyValueSetMemberValues(

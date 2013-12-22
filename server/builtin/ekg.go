@@ -23,7 +23,7 @@ func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cid)
 	thisnode := &config.StorageAddr
 	
-	clAdd := cmdFactory.GenericSetAdd(clientEkgsKey, key)
+	clAdd := cmdFactory.KeyValueSetAdd(clientEkgsKey, key, id)
 	if _, err := storage.DirectedCmd(thisnode, clAdd); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 		return nil, err
 	}
 
-	clRem := cmdFactory.GenericSetRem(clientEkgsKey, key)
+	clRem := cmdFactory.KeyValueSetRemByInnerKey(clientEkgsKey, key)
 	if _, err := storage.DirectedCmd(thisnode, clRem); err != nil {
 		return nil, err
 	}
@@ -77,40 +77,55 @@ func ECard(
 }
 
 // EkgsForClient returns a list of all the ekgs a particular client is hooked up
-// to
-func EkgsForClient(cid stypes.ClientId) ([]types.Byter, error) {
+// to, and all the ids the client is associated with for those ekgs
+func EkgsForClient(cid stypes.ClientId) ([]types.Byter, [][]byte, error) {
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cid)
-	ekgsCmd := cmdFactory.GenericSetMembers(clientEkgsKey)
+	ekgsCmd := cmdFactory.KeyValueSetMembers(clientEkgsKey)
 	thisnode := &config.StorageAddr
 	r, err := storage.DirectedCmd(thisnode, ekgsCmd)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	ekgs := r.([][]byte)
-	ekgsb := make([]types.Byter, len(ekgs))
-	for i := range ekgs {
-		ekgsb[i] = types.NewByter(ekgs[i])
+	rall := r.([][]byte)
+	ekgs := make([]types.Byter, len(rall)/2)
+	ids := make([][]byte, len(rall)/2)
+	for i:=0; i<len(rall); i += 2 {
+		ekgs[i/2] = types.NewByter(rall[i])
+		ids[i/2] = rall[i+1]
 	}
-
-	return ekgsb, nil
+	return ekgs, ids, nil
 }
 
-// CleanClientEkgs takes in a client id and cleans up all of its ekgs, and the
-// set which keeps track of those ekgs.
+// CleanClientEkgs takes in a client id and cleans up all of the given ekgs for
+// it, and the set which keeps track of those ekgs.
 func CleanClientEkgs(cid stypes.ClientId) error {
-	ekgs, err := EkgsForClient(cid)
+	ekgs, _, err := EkgsForClient(cid)
 	if err != nil {
 		return err
 	}
+	return CleanClientEkgsShort(ekgs, cid)
+}
 
+// Shortcut for CleanClientEkgs is we've already called EkgsForClient before and
+// we simply want to pass that result in and not call it again. Note that this
+// function deletes all record of ekgs for the given client id, so the ekgs
+// passed in must comprise ALL the ekgs the client is hooked up to
+func CleanClientEkgsShort(ekgs []types.Byter, cid stypes.ClientId) error {
 	for i := range ekgs {
 		key := ekgs[i]
 		ekgKey := keyMaker.Namespace(ekgns, key)
 		remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cid)
-		if _, err = storage.RoutedCmd(key, remCmd); err != nil {
+		if _, err := storage.RoutedCmd(key, remCmd); err != nil {
 			return err
 		}
+	}
+
+	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cid)
+	clRemCmd := cmdFactory.KeyValueSetDel(clientEkgsKey)
+	thisnode := &config.StorageAddr
+	if _, err := storage.DirectedCmd(thisnode, clRemCmd); err != nil {
+		return err
 	}
 
 	return nil

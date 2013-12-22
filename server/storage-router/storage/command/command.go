@@ -85,6 +85,12 @@ type CommandFactory interface {
 	// value if the given key doesn't exist
 	KeyValueSetCard(key types.Byter) Command
 
+	// KeyValueSetMembers is a command which returns the (innerkey -> value)
+	// mapping held at the given set. It should be returned as a list of
+	// alternating innerkey's then value's. It should return an empty list if
+	// the set doesn't exist
+	KeyValueSetMembers(key types.Byter) Command
+
 	// KeyValueSetMemberValues is a command which returns the list of value
 	// portions of the (innerkey -> value) mappings in the set. It should return
 	// an empty list if the set doesn't exist

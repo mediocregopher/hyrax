@@ -74,9 +74,9 @@ func runBuiltInCommand(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	if builtin.CommandModifies(cmd.Command) ||
-		builtin.IsAdminCommand(cmd.Command) {
-
+	mods := builtin.CommandModifies(cmd.Command)
+	adm := builtin.IsAdminCommand(cmd.Command)
+	if mods || adm {
 		ok, err := auth.Auth(cmd)
 		if !ok {
 			return nil, autherr
@@ -85,7 +85,13 @@ func runBuiltInCommand(
 		}
 	}
 
-	return builtin.GetFunc(cmd.Command)(cid, cmd)
+	r, err := builtin.GetFunc(cmd.Command)(cid, cmd)
+
+	if mods && !adm {
+		dist.SendClientCommand(cmd)
+	}
+
+	return r, err
 }
 
 var directns = types.NewByter([]byte("dir"))
@@ -113,12 +119,16 @@ func runDirectCommand(
 		cmd.Args,
 	)
 
+	r, err := storage.RoutedCmd(cmd.StorageKey, dcmd)
+
 	if mods {
 		dist.SendClientCommand(cmd)
 	}
 
-	return storage.RoutedCmd(cmd.StorageKey, dcmd)
+	return r, err
 }
+
+var closedCmd = []byte("eclose")
 
 // ClientClosed takes care of all cleanup that's necessary when a client has
 // closed
@@ -127,8 +137,21 @@ func ClientClosed(cid stypes.ClientId) error {
 		return err
 	}
 
-	// TODO: Send out push messages for ekgs
-	if err := builtin.CleanClientEkgs(cid); err != nil {
+	ekgs, ids, err := builtin.EkgsForClient(cid)
+	if err != nil {
+		return err
+	}
+
+	for i := range ekgs {
+		cmd := &types.ClientCommand{
+			Command: closedCmd,
+			StorageKey: types.StorageKey(ekgs[i].Bytes()),
+			Id: ids[i],
+		}
+		dist.SendClientCommand(cmd)
+	}
+
+	if err := builtin.CleanClientEkgsShort(ekgs, cid); err != nil {
 		return err
 	}
 
