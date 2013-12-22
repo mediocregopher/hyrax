@@ -136,44 +136,28 @@ func AGlobalSecrets(
 	return secrets, nil
 }
 
-func argsToByterAndByteSlice(
-	cmd *types.ClientCommand) (types.Byter, []byte, error) {
-	var b1, b2 []byte
-	if len(cmd.Args) != 2 {
-		return nil, nil, wrongNumArgs
-	} else if b1s, ok := cmd.Args[0].(string); ok {
-		b1 = []byte(b1s)
-	} else if b2s, ok := cmd.Args[1].(string); ok {
-		b2 = []byte(b2s)
-	} else {
-		return nil, nil, wrongArgType
-	}
-
-	return types.NewByter(b1), b2, nil
-}
-
 // ASecretAdd adds a particular secret to an individual key
 func ASecretAdd(
 	_ stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
-	key, secret, err := argsToByterAndByteSlice(cmd)
+	secret, err := argsToByteSlice(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, auth.AddSecret(key, secret)
+	return nil, auth.AddSecret(cmd.StorageKey, secret)
 }
 
 // ASecretRem removes a particular secret from an individual key
 func ASecretRem(
 	_ stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
-	key, secret, err := argsToByterAndByteSlice(cmd)
+	secret, err := argsToByteSlice(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, auth.RemSecret(key, secret)
+	return nil, auth.RemSecret(cmd.StorageKey, secret)
 }
 
 // ASecrets returns all the particular secrets for an individual key
