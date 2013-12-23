@@ -1,10 +1,17 @@
 package builtin
 
 import (
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
+	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"strings"
 )
+
+// Some shortcuts which will be used by builtin functions
+var keyMaker = storage.KeyMaker
+var cmdFactory = storage.CommandFactory
+var thisnode = &config.StorageAddr
 
 type BuiltInFunc func(
 	stypes.ClientId,

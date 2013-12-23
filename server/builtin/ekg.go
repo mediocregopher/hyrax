@@ -1,17 +1,12 @@
 package builtin
 
 import (
-	"github.com/mediocregopher/hyrax/server/config"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
 var ekgns = []byte("ekg")
-
-// Some shortcuts
-var keyMaker = storage.KeyMaker
-var cmdFactory = storage.CommandFactory
 
 // EAdd adds the client's id (actual and given) to an ekg's set of things it's
 // watching, and adds the ekg's information to the client's set of ekgs its
@@ -21,7 +16,6 @@ func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	cidb := cid.Bytes()
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
-	thisnode := &config.StorageAddr
 	
 	clAdd := cmdFactory.KeyValueSetAdd(clientEkgsKey, key, cmd.Id)
 	if _, err := storage.DirectedCmd(thisnode, clAdd); err != nil {
@@ -39,7 +33,6 @@ func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	cidb := cid.Bytes()
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	clientEkgsKey := keyMaker.Namespace(ekgns, cid.Bytes())
-	thisnode := &config.StorageAddr
 
 	remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cidb)
 	r, err := storage.RoutedCmd(key, remCmd)
@@ -83,7 +76,6 @@ func EkgsForClient(cid stypes.ClientId) ([][]byte, [][]byte, error) {
 	cidb := cid.Bytes()
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
 	ekgsCmd := cmdFactory.KeyValueSetMembers(clientEkgsKey)
-	thisnode := &config.StorageAddr
 	r, err := storage.DirectedCmd(thisnode, ekgsCmd)
 	if err != nil {
 		return nil, nil, err
@@ -126,7 +118,6 @@ func CleanClientEkgsShort(ekgs [][]byte, cid stypes.ClientId) error {
 
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
 	clRemCmd := cmdFactory.KeyValueSetDel(clientEkgsKey)
-	thisnode := &config.StorageAddr
 	if _, err := storage.DirectedCmd(thisnode, clRemCmd); err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package builtin
 
 import (
-	"github.com/mediocregopher/hyrax/server/config"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
@@ -17,7 +16,6 @@ func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	cidb := cid.Bytes()
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
-	thisnode := &config.StorageAddr
 
 	clientAdd := storage.CommandFactory.GenericSetAdd(clientMonsKey, key)
 	if _, err := storage.DirectedCmd(thisnode, clientAdd); err != nil {
@@ -35,7 +33,6 @@ func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	cidb := cid.Bytes()
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
-	thisnode := &config.StorageAddr
 
 	monRem := storage.CommandFactory.GenericSetRem(monKey, cidb)
 	r, err := storage.DirectedCmd(thisnode, monRem)
@@ -54,7 +51,6 @@ func CleanMons(cid stypes.ClientId) error {
 	cidb := cid.Bytes()
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
 	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)	
-	thisnode := &config.StorageAddr
 	r, err := storage.DirectedCmd(thisnode, monlistCmd)
 	if err != nil {
 		return err
@@ -80,7 +76,6 @@ func CleanMons(cid stypes.ClientId) error {
 func ClientsForMon(key []byte) ([]stypes.ClientId, error) {
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	monsCmd := storage.CommandFactory.GenericSetMembers(monKey)
-	thisnode := &config.StorageAddr
 	r, err := storage.DirectedCmd(thisnode, monsCmd)
 	if err != nil {
 		return nil, err
