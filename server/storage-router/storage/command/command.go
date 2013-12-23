@@ -1,10 +1,5 @@
 package command
 
-import (
-	"github.com/mediocregopher/hyrax/types"
-)
-
-
 // CommandRet is returned from a Command in the RetCh. It's really just a tuple
 // around the return value and an error
 type CommandRet struct {
@@ -54,7 +49,7 @@ type CommandFactory interface {
 
 	// DirectCommand is for commands that the client is calling directly on the
 	// storage for itself.
-	DirectCommand(cmd []byte, key types.Byter, args []interface{}) Command
+	DirectCommand(cmd []byte, key []byte, args []interface{}) Command
 
 	// DirectCommandAllowed returns whether or not a direct command is allowed
 	// to be executed by a client
@@ -70,62 +65,59 @@ type CommandFactory interface {
 	// adds an (innerkey -> value) map (or overwrites it, if innerky was already
 	// mapped to something). It creates the set at key with this one mapping if
 	// it didn't exist previously.
-	KeyValueSetAdd(
-		key types.Byter,
-		innerKey types.Byter,
-		value types.Byter) Command
+	KeyValueSetAdd(key []byte, innerKey []byte, value []byte) Command
 
 	// KeyValueSetRemByInnerKey removes an (innerkey -> value) mapping from the
 	// keyval set located at key, or does nothing if that key, or that innerkey
 	// within the key, didn't exist.
-	KeyValueSetRemByInnerKey(key types.Byter, innerkey types.Byter) Command
+	KeyValueSetRemByInnerKey(key []byte, innerkey []byte) Command
 
 	// KeyValueSetCard is a command which returns the number of (innerkey ->
 	// value) mappings are in the set at the given key. It should return a zero
 	// value if the given key doesn't exist
-	KeyValueSetCard(key types.Byter) Command
+	KeyValueSetCard(key []byte) Command
 
 	// KeyValueSetMembers is a command which returns the (innerkey -> value)
 	// mapping held at the given set. It should be returned as a list of
 	// alternating innerkey's then value's. It should return an empty list if
 	// the set doesn't exist
-	KeyValueSetMembers(key types.Byter) Command
+	KeyValueSetMembers(key []byte) Command
 
 	// KeyValueSetMemberValues is a command which returns the list of value
 	// portions of the (innerkey -> value) mappings in the set. It should return
 	// an empty list if the set doesn't exist
-	KeyValueSetMemberValues(key types.Byter) Command
+	KeyValueSetMemberValues(key []byte) Command
 
 	// KeyValueSetDel is a command which deletes the entire set at the given
 	// key.  Nothing should happen if the set doesn't exist in the first place
-	KeyValueSetDel(key types.Byter) Command
+	KeyValueSetDel(key []byte) Command
 
 	// A generic set is your run-of-the-mill set, where each value in the set
 	// only appears once. GenericSetAdd adds a value to the set at key, and
 	// creates the set if it didn't previously exist.
-	GenericSetAdd(key, value types.Byter) Command
+	GenericSetAdd(key, value []byte) Command
 
 	// GenericSetRem removes the given value from the set at the given key.
 	// There is no error if the set did not exist.
-	GenericSetRem(key, value types.Byter) Command
+	GenericSetRem(key, value []byte) Command
 
 	// GenericSetIsMember is a command which returns whether or not the given
 	// value is in the set at the given key. The command should return a falsey
 	// value if the set did not exist.
-	GenericSetIsMember(key, value types.Byter) Command
+	GenericSetIsMember(key, value []byte) Command
 
 	// GenericSetCard is a command which returns the number of values in the set
 	// at the given key. It should return a zero value if the set doesn't exist.
-	GenericSetCard(key types.Byter) Command
+	GenericSetCard(key []byte) Command
 
 	// GenericSetMembers is a command which returns the list of values in the
 	// set at the given key. It should return an empty list if the set doesn't
 	// exist.
-	GenericSetMembers(key types.Byter) Command
+	GenericSetMembers(key []byte) Command
 
 	// GenericSetDel is a command which deletes the entire set at the given key.
 	// Nothing should happen if the set doesn't exist in the first place
-	GenericSetDel(key types.Byter) Command
+	GenericSetDel(key []byte) Command
 }
 
 // KeyMaker is responsible taking in keys for clients and creating new
@@ -136,11 +128,11 @@ type KeyMaker interface{
 	// Namespace takes a namespace and a key and returns a combination of them
 	// which makes sense for the storage backend. For some backends, this may
 	// simply ignore the namespace
-	Namespace(ns, key types.Byter) types.Byter
+	Namespace(ns, key []byte) []byte
 
 	// ConnNamespace is the same as Namespace except that it is used for
 	// metadata related to a specific client, so it may be formatted a bit
 	// different then Namespace's output for the same inputs
-	ClientNamespace(ns, key types.Byter) types.Byter
+	ClientNamespace(ns, key []byte) []byte
 
 }

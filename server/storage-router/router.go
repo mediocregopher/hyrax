@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/mediocregopher/hyrax/types"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 	"github.com/mediocregopher/hyrax/server/storage-router/bucket"
@@ -38,7 +37,7 @@ func GetBuckets() []*string {
 // Command will probably contain the key within it, the key passed here is used
 // only for routing the command to the proper storage unit. The return from the
 // command and an error are returned.
-func RoutedCmd(key types.Byter, cmd command.Command) (interface{}, error) {
+func RoutedCmd(key []byte, cmd command.Command) (interface{}, error) {
 	b, err := bucket.KeyBucket(key)
 	if err != nil {
 		return nil, err

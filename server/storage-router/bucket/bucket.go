@@ -3,7 +3,6 @@ package bucket
 import (
 	"sync"
 	"fmt"
-	"github.com/mediocregopher/hyrax/types"
 )
 
 var bList []*string
@@ -44,8 +43,7 @@ func Buckets() []*string {
 // KeyBucket hashes the given key with a Shift-Add-XOR hash, identifies which
 // bucket it belongs in based on this hash, and returns the string at that
 // bucket location.
-func KeyBucket(b types.Byter) (*string, error) {
-	bb := b.Bytes()
+func KeyBucket(bb []byte) (*string, error) {
 	h := uint(0)
 	for _, l := range bb {
 		h = h ^ ((h << 5) + (h >> 2) + uint(l))

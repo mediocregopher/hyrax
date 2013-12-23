@@ -169,7 +169,7 @@ func ASecrets(
 		return nil, err
 	}
 
-	secretsB, err := auth.GetSecrets(types.NewByter(keyB))
+	secretsB, err := auth.GetSecrets(keyB)
 	if err != nil {
 		return nil, err
 	}

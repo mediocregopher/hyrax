@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/mediocregopher/hyrax/types"
+	"bytes"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 )
 
@@ -40,13 +40,13 @@ func (c *RedisCommand) ExpandTransaction() []command.Command {
 }
 
 type RedisKeyMaker struct {}
-var keyjoin = types.SimpleByter([]byte(":"))
-var clientns = types.SimpleByter([]byte("cli"))
+var keyjoin = []byte(":")
+var clientns = []byte("cli")
 
-func (r *RedisKeyMaker) Namespace(ns, key types.Byter) types.Byter {
-	return types.ByterJoin(keyjoin, ns, key)
+func (r *RedisKeyMaker) Namespace(ns, key []byte) []byte {
+	return bytes.Join([][]byte{ns, key}, keyjoin)
 }
 
-func (r *RedisKeyMaker) ClientNamespace(ns, key types.Byter) types.Byter {
-	return types.ByterJoin(keyjoin, clientns, ns, key)
+func (r *RedisKeyMaker) ClientNamespace(ns, key []byte) []byte {
+	return bytes.Join([][]byte{clientns, ns, key}, keyjoin)
 }

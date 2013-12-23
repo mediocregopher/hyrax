@@ -33,7 +33,7 @@ func genClientCommand(
 
 	return &types.ClientCommand{
 		Command: cmd,
-		StorageKey: types.StorageKey(keyB),
+		StorageKey: keyB,
 		Args: argsi,
 		Id: id,
 		Secret: sumhex,

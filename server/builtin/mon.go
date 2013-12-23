@@ -7,15 +7,16 @@ import (
 	stypes "github.com/mediocregopher/hyrax/server/types"
 )
 
-var monns = types.SimpleByter([]byte("mon"))
+var monns = []byte("mon")
 
 //MAdd adds the client's id to the set of clients that are monitoring the key
 //(so it can receive alerts) and adds the key to the set of keys that the client
 //is monitoring (so it can clean up)
 func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey
+	cidb := cid.Bytes()
 	monKey := storage.KeyMaker.Namespace(monns, key)
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
 	thisnode := &config.StorageAddr
 
 	clientAdd := storage.CommandFactory.GenericSetAdd(clientMonsKey, key)
@@ -23,7 +24,7 @@ func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 		return nil, err
 	}
 
-	monAdd := storage.CommandFactory.GenericSetAdd(monKey, cid)
+	monAdd := storage.CommandFactory.GenericSetAdd(monKey, cidb)
 	return storage.DirectedCmd(thisnode, monAdd)
 }
 
@@ -31,11 +32,12 @@ func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 // key, and removes the key from the set of keys that the client is monitoring
 func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	key := cmd.StorageKey
+	cidb := cid.Bytes()
 	monKey := storage.KeyMaker.Namespace(monns, key)
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
 	thisnode := &config.StorageAddr
 
-	monRem := storage.CommandFactory.GenericSetRem(monKey, cid)
+	monRem := storage.CommandFactory.GenericSetRem(monKey, cidb)
 	r, err := storage.DirectedCmd(thisnode, monRem)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,8 @@ func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 // CleanMons takes in a client id and cleans up all of its monitors, and the set
 // which keeps track of those monitors
 func CleanMons(cid stypes.ClientId) error {
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cid)
+	cidb := cid.Bytes()
+	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
 	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)	
 	thisnode := &config.StorageAddr
 	r, err := storage.DirectedCmd(thisnode, monlistCmd)
@@ -59,9 +62,9 @@ func CleanMons(cid stypes.ClientId) error {
 
 	mons := r.([][]byte)
 	for i := range mons {
-		key := types.NewByter(mons[i])
+		key := mons[i]
 		monKey := storage.KeyMaker.Namespace(monns, key)
-		cleanKeyCmd := storage.CommandFactory.GenericSetRem(monKey, cid)
+		cleanKeyCmd := storage.CommandFactory.GenericSetRem(monKey, cidb)
 		if _, err = storage.DirectedCmd(thisnode, cleanKeyCmd); err != nil {
 			return err
 		}
@@ -74,7 +77,7 @@ func CleanMons(cid stypes.ClientId) error {
 
 // ClientsForMon takes in a key and returns all the client ids on this node that
 // are mon'ing that key
-func ClientsForMon(key types.Byter) ([]stypes.ClientId, error) {
+func ClientsForMon(key []byte) ([]stypes.ClientId, error) {
 	monKey := storage.KeyMaker.Namespace(monns, key)
 	monsCmd := storage.CommandFactory.GenericSetMembers(monKey)
 	thisnode := &config.StorageAddr

@@ -2,7 +2,6 @@ package redis
 
 import (
 	"time"
-	"errors"
 	"fmt"
 	"log"
 	"github.com/fzzy/radix/redis"
@@ -120,21 +119,4 @@ func (r *RedisConn) Close() error {
 	retCh := make(chan error)
 	r.closeCh <- retCh
 	return <- retCh
-}
-
-// RedisListToMap is used for converting the return of a HGETALL to a hash
-func RedisListToMap(l [][]byte) (map[string][]byte, error) {
-	llen := len(l)
-	if llen%2 != 0 {
-		return nil, errors.New("list has uneven number of elements")
-	}
-
-	m := map[string][]byte{}
-
-	halfllen := llen / 2
-	for i := 0; i < halfllen; i++ {
-		m[string(l[i*2])] = l[i*2+1]
-	}
-
-	return m, nil
 }

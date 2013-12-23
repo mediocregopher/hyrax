@@ -94,7 +94,7 @@ func runBuiltInCommand(
 	return r, err
 }
 
-var directns = types.NewByter([]byte("dir"))
+var directns = []byte("dir")
 
 // runDirectCommand takes a client id and a client command, does authentication
 // on the command if necessary, and runs the command directly on the correct
@@ -145,7 +145,7 @@ func ClientClosed(cid stypes.ClientId) error {
 	for i := range ekgs {
 		cmd := &types.ClientCommand{
 			Command: closedCmd,
-			StorageKey: types.StorageKey(ekgs[i].Bytes()),
+			StorageKey: ekgs[i],
 			Id: ids[i],
 		}
 		dist.SendClientCommand(cmd)

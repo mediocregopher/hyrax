@@ -2,7 +2,6 @@ package auth
 
 import (
 	"bytes"
-	"github.com/mediocregopher/hyrax/types"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 )
 
@@ -60,27 +59,27 @@ func GetGlobalSecrets() [][]byte {
 	return <- retCh
 }
 
-var secretns = types.NewByter([]byte("sec"))
+var secretns = []byte("sec")
 
 // AddSecret adds a secret to the set of valid secrets for a given key
-func AddSecret(key types.Byter, s []byte) error {
+func AddSecret(key, s []byte) error {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
-	addCmd := storage.CommandFactory.GenericSetAdd(secKey, types.NewByter(s))
+	addCmd := storage.CommandFactory.GenericSetAdd(secKey, s)
 	_, err := storage.RoutedCmd(key, addCmd)
 	return err
 }
 
 // RemSecret removes a secret from the set of valid secrets for a given key, if
 // it existed in it at all
-func RemSecret(key types.Byter, s []byte) error {
+func RemSecret(key, s []byte) error {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
-	remCmd := storage.CommandFactory.GenericSetRem(secKey, types.NewByter(s))
+	remCmd := storage.CommandFactory.GenericSetRem(secKey, s)
 	_, err := storage.RoutedCmd(key, remCmd)
 	return err
 }
 
 // GetSecrets returns the set of valid secrets for a given key
-func GetSecrets(key types.Byter) ([][]byte, error) {
+func GetSecrets(key []byte) ([][]byte, error) {
 	secKey := storage.KeyMaker.Namespace(secretns, key)
 	getCmd := storage.CommandFactory.GenericSetMembers(secKey)
 	r, err := storage.RoutedCmd(key, getCmd)

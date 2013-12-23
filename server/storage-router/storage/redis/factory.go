@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"github.com/mediocregopher/hyrax/types"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 )
 
@@ -41,11 +40,10 @@ func (r *RedisCommandFactory) Transaction(
 }
 
 func (r *RedisCommandFactory) DirectCommand(
-	cmd []byte,
-	key types.Byter,
+	cmd, key []byte,
 	args []interface{}) command.Command {
 
-	argv := append([]interface{}{key.Bytes()}, args...)
+	argv := append([]interface{}{key}, args...)
 	return r.createCmd(cmd, argv...)
 }
 
@@ -63,70 +61,57 @@ func (r *RedisCommandFactory) DirectCommandModifies(cmd []byte) bool {
 }
 
 func (r *RedisCommandFactory) KeyValueSetAdd(
-	key types.Byter,
-	innerkey types.Byter,
-	value types.Byter) command.Command {
+	key, innerkey, value []byte) command.Command {
 
-	return r.createCmd(HSET, key.Bytes(), innerkey.Bytes(), value.Bytes())
+	return r.createCmd(HSET, key, innerkey, value)
 }
 
 func (r *RedisCommandFactory) KeyValueSetRemByInnerKey(
-	key types.Byter,
-	innerkey types.Byter) command.Command {
+	key, innerkey []byte) command.Command {
 
-	return r.createCmd(HDEL, key.Bytes(),  innerkey.Bytes())
+	return r.createCmd(HDEL, key,  innerkey)
 }
 
-func (r *RedisCommandFactory) KeyValueSetCard(key types.Byter) command.Command {
-	return r.createCmd(HLEN, key.Bytes())
+func (r *RedisCommandFactory) KeyValueSetCard(key []byte) command.Command {
+	return r.createCmd(HLEN, key)
 }
 
-func (r *RedisCommandFactory) KeyValueSetMembers(
-	key types.Byter) command.Command {
-
-	return r.createCmd(HGETALL, key.Bytes())
+func (r *RedisCommandFactory) KeyValueSetMembers(key []byte) command.Command {
+	return r.createCmd(HGETALL, key)
 }
 
 func (r *RedisCommandFactory) KeyValueSetMemberValues(
-	key types.Byter) command.Command {
+	key []byte) command.Command {
 
-	return r.createCmd(HVALS, key.Bytes())
+	return r.createCmd(HVALS, key)
 }
 
-func (r *RedisCommandFactory) KeyValueSetDel(key types.Byter) command.Command {
-	return r.createCmd(DEL, key.Bytes())
+func (r *RedisCommandFactory) KeyValueSetDel(key []byte) command.Command {
+	return r.createCmd(DEL, key)
 }
 
-func (r *RedisCommandFactory) GenericSetAdd(
-	key types.Byter,
-	value types.Byter) command.Command {
-
-	return r.createCmd(SADD, key.Bytes(), value.Bytes())
+func (r *RedisCommandFactory) GenericSetAdd(key, value []byte) command.Command {
+	return r.createCmd(SADD, key, value)
 }
 
-func (r *RedisCommandFactory) GenericSetRem(
-	key types.Byter,
-	value types.Byter) command.Command {
-
-	return r.createCmd(SREM, key.Bytes(), value.Bytes())
+func (r *RedisCommandFactory) GenericSetRem(key, value []byte) command.Command {
+	return r.createCmd(SREM, key, value)
 }
 
 func (r *RedisCommandFactory) GenericSetIsMember(
-	key types.Byter,
-	value types.Byter) command.Command {
+	key, value []byte) command.Command {
 
-	return r.createCmd(SISMEMBER, key.Bytes(), value.Bytes())
+	return r.createCmd(SISMEMBER, key, value)
 }
 
-func (r *RedisCommandFactory) GenericSetCard(key types.Byter) command.Command {
-	return r.createCmd(SCARD, key.Bytes())
+func (r *RedisCommandFactory) GenericSetCard(key []byte) command.Command {
+	return r.createCmd(SCARD, key)
 }
 
-func (r *RedisCommandFactory) GenericSetMembers(
-	key types.Byter) command.Command {
-	return r.createCmd(SMEMBERS, key.Bytes())
+func (r *RedisCommandFactory) GenericSetMembers(key []byte) command.Command {
+	return r.createCmd(SMEMBERS, key)
 }
 
-func (r *RedisCommandFactory) GenericSetDel(key types.Byter) command.Command {
-	return r.createCmd(DEL, key.Bytes())
+func (r *RedisCommandFactory) GenericSetDel(key []byte) command.Command {
+	return r.createCmd(DEL, key)
 }
