@@ -1,7 +1,0 @@
-* Admin commands
-* Distribution
-    - storage distribution
-    - failover and error detection
-* Garbage collector
-* Abstract tcp behavior
-* Standardize errors
