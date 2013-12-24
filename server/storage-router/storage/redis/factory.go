@@ -23,12 +23,11 @@ var SCARD = []byte("SCARD")
 var MULTI = []byte("MULTI")
 var EXEC = []byte("EXEC")
 
-
 type RedisCommandFactory struct{}
 
-func (r *RedisCommandFactory) createCmd(	
+func (r *RedisCommandFactory) createCmd(
 	cmd []byte,
-	args ...interface{}) command.Command{
+	args ...interface{}) command.Command {
 
 	return NewRedisCommand(cmd, args)
 }
@@ -69,7 +68,7 @@ func (r *RedisCommandFactory) KeyValueSetAdd(
 func (r *RedisCommandFactory) KeyValueSetRemByInnerKey(
 	key, innerkey []byte) command.Command {
 
-	return r.createCmd(HDEL, key,  innerkey)
+	return r.createCmd(HDEL, key, innerkey)
 }
 
 func (r *RedisCommandFactory) KeyValueSetCard(key []byte) command.Command {

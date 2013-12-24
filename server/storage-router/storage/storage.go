@@ -1,11 +1,11 @@
 package storage
 
 import (
-	"time"
 	"errors"
+	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/redis"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/unit"
-	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
+	"time"
 )
 
 const UNITSIZE = 10
@@ -14,26 +14,26 @@ type LocatorFunc func([]*unit.StorageUnit) *unit.StorageUnit
 
 type commandWrap struct {
 	unitname *string
-	cmdb *command.CommandBundle
+	cmdb     *command.CommandBundle
 }
 
 type addUnitWrap struct {
 	uname string
-	u *unit.StorageUnit
+	u     *unit.StorageUnit
 }
 
 type storageManager struct {
-	units map[string]*unit.StorageUnit
+	units     map[string]*unit.StorageUnit
 	addUnitCh chan *addUnitWrap
 	remUnitCh chan string
-	cmdCh chan *commandWrap
+	cmdCh     chan *commandWrap
 }
 
 var sm = storageManager{
-	units: map[string]*unit.StorageUnit{},
+	units:     map[string]*unit.StorageUnit{},
 	addUnitCh: make(chan *addUnitWrap),
 	remUnitCh: make(chan string),
-	cmdCh: make(chan *commandWrap),
+	cmdCh:     make(chan *commandWrap),
 }
 
 var NewStorageUnitConn = redis.New
@@ -62,7 +62,7 @@ func (sm *storageManager) spin() {
 				//we have big problems anyway
 				unit.Cmd(c.cmdb)
 			} else {
-				err := errors.New("Unknown storage unit: "+*c.unitname)
+				err := errors.New("Unknown storage unit: " + *c.unitname)
 				c.cmdb.RetCh <- &command.CommandRet{nil, err}
 			}
 		}
@@ -76,7 +76,7 @@ func AddUnit(name, conntype, addr string, extra ...interface{}) error {
 	for i := range conns {
 		conns[i] = NewStorageUnitConn()
 	}
-	
+
 	unit, err := unit.NewStorageUnit(conns, conntype, addr, extra...)
 	if err != nil {
 		return err
@@ -95,14 +95,14 @@ func RemUnit(name string) {
 
 // Cmd takes in a command struct generated from a CommandFactory and executes
 // it on the StorageUnit named by unitname
-func Cmd(unitname *string, cmd command.Command) (interface{},error) {
+func Cmd(unitname *string, cmd command.Command) (interface{}, error) {
 	cmdb := command.CommandBundle{
-		Cmd: cmd,
+		Cmd:   cmd,
 		RetCh: make(chan *command.CommandRet),
 	}
 	cmdw := commandWrap{
 		unitname: unitname,
-		cmdb: &cmdb,
+		cmdb:     &cmdb,
 	}
 	select {
 	case sm.cmdCh <- &cmdw:
@@ -111,7 +111,7 @@ func Cmd(unitname *string, cmd command.Command) (interface{},error) {
 	}
 
 	select {
-	case ret := <- cmdb.RetCh:
+	case ret := <-cmdb.RetCh:
 		return ret.Ret, ret.Err
 	case <-time.After(10 * time.Second):
 		return nil, errors.New("Timeout receiving command results")

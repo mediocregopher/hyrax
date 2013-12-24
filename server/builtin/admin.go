@@ -5,8 +5,8 @@ import (
 	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/dist"
 	"github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // TODO make success condition not be nil

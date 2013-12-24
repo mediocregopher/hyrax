@@ -2,11 +2,11 @@ package net
 
 import (
 	"bufio"
+	"errors"
+	"github.com/mediocregopher/hyrax/translate"
+	"github.com/mediocregopher/hyrax/types"
 	"io"
 	"net"
-	"errors"
-	"github.com/mediocregopher/hyrax/types"
-	"github.com/mediocregopher/hyrax/translate"
 )
 
 type TcpClient struct {
@@ -28,10 +28,10 @@ func NewTcpClient(
 	}
 
 	c := &TcpClient{
-		conn: conn,
-		pushCh: pushCh,
+		conn:     conn,
+		pushCh:   pushCh,
 		cmdRetCh: make(chan *types.ClientReturn),
-		trans: t,
+		trans:    t,
 	}
 
 	go c.readSpin()
@@ -92,7 +92,7 @@ func (c *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
 		return nil, err
 	}
 
-	ret, ok := <- c.cmdRetCh
+	ret, ok := <-c.cmdRetCh
 	if !ok {
 		return nil, io.EOF
 	} else if ret.Error != nil {

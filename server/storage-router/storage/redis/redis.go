@@ -1,31 +1,31 @@
 package redis
 
 import (
-	"time"
 	"fmt"
-	"log"
 	"github.com/fzzy/radix/redis"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/unit"
+	"log"
+	"time"
 )
 
 type RedisConn struct {
-	conn *redis.Client
-	cmdCh chan *command.CommandBundle
+	conn    *redis.Client
+	cmdCh   chan *command.CommandBundle
 	closeCh chan chan error
 }
 
 func New() unit.StorageUnitConn {
 	return &RedisConn{
-		conn: nil,
-		cmdCh: make(chan *command.CommandBundle),
+		conn:    nil,
+		cmdCh:   make(chan *command.CommandBundle),
 		closeCh: make(chan chan error),
 	}
 }
 
 // Implements Connect for StorageUnitConn. Connects to redis over tcp and spawns
 // a handler go-routine
-func (r *RedisConn) Connect(conntype, addr string, _ ... interface{}) error {
+func (r *RedisConn) Connect(conntype, addr string, _ ...interface{}) error {
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
 		return err
@@ -40,13 +40,13 @@ func (r *RedisConn) spin() {
 	for {
 		select {
 
-		case retCh := <- r.closeCh:
+		case retCh := <-r.closeCh:
 			retCh <- r.conn.Close()
 			close(r.cmdCh)
 			close(r.closeCh)
 			return
 
-		case cmdb := <- r.cmdCh:
+		case cmdb := <-r.cmdCh:
 			rawret, err := r.cmd(cmdb.Cmd)
 			ret := command.CommandRet{rawret, err}
 			select {
@@ -118,5 +118,5 @@ func (r *RedisConn) Cmd(cmdb *command.CommandBundle) {
 func (r *RedisConn) Close() error {
 	retCh := make(chan error)
 	r.closeCh <- retCh
-	return <- retCh
+	return <-retCh
 }

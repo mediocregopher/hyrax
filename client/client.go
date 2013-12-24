@@ -3,20 +3,19 @@ package client
 import (
 	"errors"
 	"github.com/mediocregopher/hyrax/client/net"
-	"github.com/mediocregopher/hyrax/types"
 	"github.com/mediocregopher/hyrax/translate"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // Client is an interface to interact with a connection to hyrax
 type Client interface {
-	
+
 	// Cmd sends a command to hyrax and retrieves the result of the command,
 	// either the return value or an error
 	Cmd(*types.ClientCommand) (interface{}, error)
 
 	// Close closes any connection the client may have with hyrax
 	Close()
-
 }
 
 // NewClient takes in a format (ex. json), a connection type (ex. tcp) and an

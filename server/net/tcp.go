@@ -24,10 +24,10 @@ type TcpClient struct {
 func NewTcpClient(conn net.Conn, t translate.Translator) (*TcpClient, error) {
 	cid := client.NewClient()
 	c := &TcpClient{
-		id: cid,
+		id:     cid,
 		pushCh: make(chan *types.ClientCommand),
-		conn: conn,
-		trans: t,
+		conn:   conn,
+		trans:  t,
 	}
 	if err := crouter.Add(c); err != nil {
 		return nil, err
@@ -80,7 +80,8 @@ func (tc *TcpClient) Spin() {
 	workerReadCh := make(chan *tcpReadChRet)
 	readMore := true
 	bufReader := bufio.NewReader(tc.conn)
-	spin: for {
+spin:
+	for {
 
 		//readMore keeps track of whether or not a routine is already reading
 		//off the connection. If there isn't one we make another

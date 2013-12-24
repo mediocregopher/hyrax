@@ -30,7 +30,7 @@ type Command interface {
 // CommandBundle is a grouping of a Command and a channel on which the
 // CommandRet for that command will be returned.
 type CommandBundle struct {
-	Cmd Command
+	Cmd   Command
 	RetCh chan *CommandRet
 }
 
@@ -123,7 +123,7 @@ type CommandFactory interface {
 // KeyMaker is responsible taking in keys for clients and creating new
 // namespaced keys for them. Depending on the datastore this may not be needed,
 // but for ones like redis it is.
-type KeyMaker interface{
+type KeyMaker interface {
 
 	// Namespace takes a namespace and a key and returns a combination of them
 	// which makes sense for the storage backend. For some backends, this may
@@ -134,5 +134,4 @@ type KeyMaker interface{
 	// metadata related to a specific client, so it may be formatted a bit
 	// different then Namespace's output for the same inputs
 	ClientNamespace(ns, key []byte) []byte
-
 }

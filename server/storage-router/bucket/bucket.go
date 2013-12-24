@@ -1,8 +1,8 @@
 package bucket
 
 import (
-	"sync"
 	"fmt"
+	"sync"
 )
 
 var bList []*string
@@ -19,7 +19,7 @@ func Set(s *string, bIndex int) error {
 	if bIndex > bLen {
 		return fmt.Errorf("The bucket list length is %d, its size can only be increased by one, so it's maximum index right now is %d", bLen, bLen)
 	} else if bIndex == bLen {
-		bList = append(bList,s)
+		bList = append(bList, s)
 	} else {
 		bList[bIndex] = s
 	}

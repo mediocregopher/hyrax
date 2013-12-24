@@ -1,10 +1,10 @@
 package builtin
 
 import (
-	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/server/config"
-	"github.com/mediocregopher/hyrax/types"
+	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 	"strings"
 )
 
@@ -18,85 +18,75 @@ type BuiltInFunc func(
 	*types.ClientCommand) (interface{}, error)
 
 type builtInCommandInfo struct {
-	Func BuiltInFunc
+	Func     BuiltInFunc
 	Admin    bool
 	Modifies bool
 }
 
 var builtInMap = map[string]*builtInCommandInfo{
-	"madd":       &builtInCommandInfo{Func: MAdd},
-	"mrem":       &builtInCommandInfo{Func: MRem},
-	"eadd":       &builtInCommandInfo{Func: EAdd, Modifies: true},
-	"erem":       &builtInCommandInfo{Func: ERem, Modifies: true},
-	"emembers":   &builtInCommandInfo{Func: EMembers},
-	"ecard":      &builtInCommandInfo{Func: ECard},
+	"madd":     {Func: MAdd},
+	"mrem":     {Func: MRem},
+	"eadd":     {Func: EAdd, Modifies: true},
+	"erem":     {Func: ERem, Modifies: true},
+	"emembers": {Func: EMembers},
+	"ecard":    {Func: ECard},
 
-	"anodeadd":
-		&builtInCommandInfo{
-			Func: ANodeAdd,
-			Modifies: true,
-			Admin: true,
-		},
+	"anodeadd": {
+		Func:     ANodeAdd,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"anoderem":
-		&builtInCommandInfo{
-			Func: ANodeRem,
-			Modifies: true,
-			Admin: true,
-		},
+	"anoderem": {
+		Func:     ANodeRem,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"abucketset":
-		&builtInCommandInfo{
-			Func: ABucketSet,
-			Modifies: true,
-			Admin: true,
-		},
+	"abucketset": {
+		Func:     ABucketSet,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"abuckets":
-		&builtInCommandInfo{
-			Func: ABuckets,
-			Admin: true,
-		},
+	"abuckets": {
+		Func:  ABuckets,
+		Admin: true,
+	},
 
-	"aglobalsecretadd":
-		&builtInCommandInfo{
-			Func: AGlobalSecretAdd,
-			Modifies: true,
-			Admin: true,
-		},
+	"aglobalsecretadd": {
+		Func:     AGlobalSecretAdd,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"aglobalsecretrem":
-		&builtInCommandInfo{
-			Func: AGlobalSecretRem,
-			Modifies: true,
-			Admin: true,
-		},
+	"aglobalsecretrem": {
+		Func:     AGlobalSecretRem,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"aglobalsecrets":
-		&builtInCommandInfo{
-			Func: AGlobalSecrets,
-			Admin: true,
-		},
+	"aglobalsecrets": {
+		Func:  AGlobalSecrets,
+		Admin: true,
+	},
 
-	"asecretadd":
-		&builtInCommandInfo{
-			Func: ASecretAdd,
-			Modifies: true,
-			Admin: true,
-		},
+	"asecretadd": {
+		Func:     ASecretAdd,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"asecretrem":
-		&builtInCommandInfo{
-			Func: ASecretRem,
-			Modifies: true,
-			Admin: true,
-		},
+	"asecretrem": {
+		Func:     ASecretRem,
+		Modifies: true,
+		Admin:    true,
+	},
 
-	"asecrets":
-		&builtInCommandInfo{
-			Func: ASecrets,
-			Admin: true,
-		},
+	"asecrets": {
+		Func:  ASecrets,
+		Admin: true,
+	},
 }
 
 func getBuiltInCommandInfo(cmd []byte) (*builtInCommandInfo, bool) {

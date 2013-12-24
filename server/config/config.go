@@ -37,7 +37,6 @@ type ListenAddr struct {
 
 	// The actual address to listen for client connections on
 	Addr string
-
 }
 
 // The list of currently active ListenAddrs
@@ -79,7 +78,7 @@ func Load() error {
 	}
 
 	lasRaw := fc.GetStrs("listen-addr")
-	las := make([]ListenAddr,len(lasRaw))
+	las := make([]ListenAddr, len(lasRaw))
 	for i := range lasRaw {
 		la, err := parseListenAddr(lasRaw[i])
 		if err != nil {
@@ -109,11 +108,11 @@ func Load() error {
 }
 
 func parseListenAddr(param string) (*ListenAddr, error) {
-	pieces := strings.SplitN(param,"::",3)
+	pieces := strings.SplitN(param, "::", 3)
 	la := ListenAddr{
-		Type: pieces[0],
+		Type:   pieces[0],
 		Format: pieces[1],
-		Addr: pieces[2],
+		Addr:   pieces[2],
 	}
 
 	return &la, nil

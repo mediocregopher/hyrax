@@ -8,9 +8,9 @@ import (
 // StorageBucketSet is used to tell a node to add a storage unit to a particular
 // bucket
 type StorageBucketSet struct {
-	Bucket int
+	Bucket         int
 	ConnType, Addr string
-	Extra []interface{}
+	Extra          []interface{}
 }
 
 func init() {
@@ -26,6 +26,7 @@ type distWorker struct {
 	clientCmdCh chan *types.ClientCommand
 	setBucketCh chan *StorageBucketSet
 }
+
 var distWorkerInst distWorker
 
 // A channel where all StorageBucketSet commands being sent by other nodes get
@@ -45,8 +46,8 @@ func Init(addr string) error {
 	}
 
 	distWorkerInst = distWorker{
-		msgCh: msgCh,
-		errCh: errCh,
+		msgCh:       msgCh,
+		errCh:       errCh,
 		clientCmdCh: make(chan *types.ClientCommand),
 		setBucketCh: make(chan *StorageBucketSet),
 	}
@@ -73,7 +74,7 @@ func SendClientCommand(cmd *types.ClientCommand) {
 // Tells all nodes to add a storage bucket
 func SendSetBucket(bIndex int, conntype, addr string, extra ...interface{}) {
 	distWorkerInst.setBucketCh <- &StorageBucketSet{
-		Bucket: bIndex,
+		Bucket:   bIndex,
 		ConnType: conntype, Addr: addr,
 		Extra: extra,
 	}
@@ -82,13 +83,13 @@ func SendSetBucket(bIndex int, conntype, addr string, extra ...interface{}) {
 func (dw *distWorker) spin() {
 	for {
 		select {
-		case msg := <- dw.msgCh:
+		case msg := <-dw.msgCh:
 			handleMsg(msg)
-		case cmd := <- dw.clientCmdCh:
+		case cmd := <-dw.clientCmdCh:
 			mesh.SendAll(cmd)
-		case sbs := <- dw.setBucketCh:
+		case sbs := <-dw.setBucketCh:
 			mesh.SendAll(sbs)
-		case <- dw.errCh:
+		case <-dw.errCh:
 			// TODO do something with the error
 		}
 	}

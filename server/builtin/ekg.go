@@ -2,8 +2,8 @@ package builtin
 
 import (
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 var ekgns = []byte("ekg")
@@ -12,11 +12,11 @@ var ekgns = []byte("ekg")
 // watching, and adds the ekg's information to the client's set of ekgs its
 // hooked up to
 func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
-	key := cmd.StorageKey	
+	key := cmd.StorageKey
 	cidb := cid.Bytes()
 	ekgKey := keyMaker.Namespace(ekgns, key)
 	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
-	
+
 	clAdd := cmdFactory.KeyValueSetAdd(clientEkgsKey, key, cmd.Id)
 	if _, err := storage.DirectedCmd(thisnode, clAdd); err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func EkgsForClient(cid stypes.ClientId) ([][]byte, [][]byte, error) {
 	rall := r.([][]byte)
 	ekgs := make([][]byte, len(rall)/2)
 	ids := make([][]byte, len(rall)/2)
-	for i:=0; i<len(rall); i += 2 {
+	for i := 0; i < len(rall); i += 2 {
 		ekgs[i/2] = rall[i]
 		ids[i/2] = rall[i+1]
 	}

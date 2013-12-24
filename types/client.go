@@ -38,7 +38,6 @@ type ClientReturn struct {
 	// Return will be filled out if the command completed successfully. It will
 	// be filled with whatever was returned from the command
 	Return interface{} `json:"return,omitempty"`
-
 }
 
 // ErrorReturn takes in an error and returns a ClientReturn for it

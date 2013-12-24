@@ -32,9 +32,9 @@ type StorageUnitConn interface {
 // as a single group. It also multiplexes calls across the connections.
 type StorageUnit struct {
 	ConnType, Addr string
-	conns []StorageUnitConn
-	cmdCh chan *command.CommandBundle
-	closeCh chan chan error
+	conns          []StorageUnitConn
+	cmdCh          chan *command.CommandBundle
+	closeCh        chan chan error
 }
 
 // NewStorageUnit takes in a slice of zero'd StorageUnitConns, a connection
@@ -45,14 +45,14 @@ type StorageUnit struct {
 func NewStorageUnit(
 	sucs []StorageUnitConn,
 	conntype, addr string,
-	extra ...interface{}) (*StorageUnit,error) {
-	
+	extra ...interface{}) (*StorageUnit, error) {
+
 	su := StorageUnit{
 		ConnType: conntype,
-		Addr: addr,
-		conns: make([]StorageUnitConn, 0, len(sucs)),
-		cmdCh: make(chan *command.CommandBundle),
-		closeCh: make(chan chan error),
+		Addr:     addr,
+		conns:    make([]StorageUnitConn, 0, len(sucs)),
+		cmdCh:    make(chan *command.CommandBundle),
+		closeCh:  make(chan chan error),
 	}
 
 	for _, suc := range sucs {
@@ -60,12 +60,12 @@ func NewStorageUnit(
 			su.conns = append(su.conns, suc)
 		} else {
 			su.internalClose()
-			return nil,err
+			return nil, err
 		}
 	}
 
 	go su.spin()
-	return &su,nil
+	return &su, nil
 }
 
 func (su *StorageUnit) spin() {
@@ -110,7 +110,7 @@ func (su *StorageUnit) internalClose() error {
 func (su *StorageUnit) Close() error {
 	retCh := make(chan error)
 	su.closeCh <- retCh
-	return <- retCh
+	return <-retCh
 }
 
 // Cmd takes in a command bundle and performs the command in one of the
@@ -118,7 +118,7 @@ func (su *StorageUnit) Close() error {
 func (su *StorageUnit) Cmd(cmdb *command.CommandBundle) {
 	select {
 	case su.cmdCh <- cmdb:
-	case <- time.After(10 * time.Second):
+	case <-time.After(10 * time.Second):
 		err := fmt.Errorf(
 			"sending command to StorageUnit %s:%s timedout",
 			su.ConnType,

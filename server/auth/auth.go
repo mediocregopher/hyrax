@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/mediocregopher/hyrax/types"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // Auth checks whether the given command is authorized given its secret as-is.

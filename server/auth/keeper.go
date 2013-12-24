@@ -21,11 +21,11 @@ func init() {
 func keeper() {
 	for {
 		select {
-		case retCh := <- getSecretsCh:
+		case retCh := <-getSecretsCh:
 			retCh <- globalSecrets
-		case secret := <- addSecretCh:
-			globalSecrets = append(globalSecrets,secret)
-		case secret := <- remSecretCh:
+		case secret := <-addSecretCh:
+			globalSecrets = append(globalSecrets, secret)
+		case secret := <-remSecretCh:
 			newgs := make([][]byte, 0, len(globalSecrets))
 			for i := range globalSecrets {
 				if !bytes.Equal(globalSecrets[i], secret) {
@@ -56,7 +56,7 @@ func RemGlobalSecret(s []byte) {
 func GetGlobalSecrets() [][]byte {
 	retCh := make(chan [][]byte)
 	getSecretsCh <- retCh
-	return <- retCh
+	return <-retCh
 }
 
 var secretns = []byte("sec")

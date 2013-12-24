@@ -6,23 +6,23 @@ import (
 )
 
 type RedisCommand struct {
-	cmd  []byte
-	args []interface{}
+	cmd   []byte
+	args  []interface{}
 	trans []command.Command
 }
 
 func NewRedisCommand(cmd []byte, args []interface{}) command.Command {
 	return &RedisCommand{
-		cmd: cmd,
-		args: args,
+		cmd:   cmd,
+		args:  args,
 		trans: nil,
 	}
 }
 
 func NewRedisTransaction(cmds ...command.Command) command.Command {
 	return &RedisCommand{
-		cmd: nil,
-		args: nil,
+		cmd:   nil,
+		args:  nil,
 		trans: cmds,
 	}
 }
@@ -39,7 +39,8 @@ func (c *RedisCommand) ExpandTransaction() []command.Command {
 	return c.trans
 }
 
-type RedisKeyMaker struct {}
+type RedisKeyMaker struct{}
+
 var keyjoin = []byte(":")
 var clientns = []byte("cli")
 

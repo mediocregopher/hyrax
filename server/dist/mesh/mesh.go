@@ -16,7 +16,7 @@ type msg struct {
 }
 
 type meshListen struct {
-	inCh chan interface{}
+	inCh  chan interface{}
 	outCh chan interface{}
 	errCh chan error
 }
@@ -37,7 +37,7 @@ func Listen(addr string) (<-chan interface{}, <-chan error, error) {
 	}
 
 	ml := meshListen{
-		inCh: msgCh,
+		inCh:  msgCh,
 		outCh: make(chan interface{}),
 		errCh: errCh,
 	}

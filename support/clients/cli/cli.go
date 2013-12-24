@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/mediocregopher/hyrax/client"
-	"github.com/mediocregopher/hyrax/types"
-	"github.com/mediocregopher/flagconfig"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"github.com/mediocregopher/flagconfig"
+	"github.com/mediocregopher/hyrax/client"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 func printError(err error) {
@@ -16,7 +16,7 @@ func printError(err error) {
 
 func genClientCommand(
 	cmd, keyB, id, secretKey []byte,
-	args... []byte) *types.ClientCommand {
+	args ...[]byte) *types.ClientCommand {
 
 	argsi := make([]interface{}, len(args))
 	for i := range args {
@@ -32,11 +32,11 @@ func genClientCommand(
 	hex.Encode(sumhex, sum)
 
 	return &types.ClientCommand{
-		Command: cmd,
+		Command:    cmd,
 		StorageKey: keyB,
-		Args: argsi,
-		Id: id,
-		Secret: sumhex,
+		Args:       argsi,
+		Id:         id,
+		Secret:     sumhex,
 	}
 }
 

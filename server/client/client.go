@@ -6,8 +6,8 @@ import (
 	"github.com/mediocregopher/hyrax/server/builtin"
 	"github.com/mediocregopher/hyrax/server/dist"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 func init() {
@@ -15,8 +15,9 @@ func init() {
 }
 
 var idCh = make(chan stypes.ClientId)
+
 func idMakerSpin() {
-	for i := uint64(0) ;; i++ {
+	for i := uint64(0); ; i++ {
 		// TODO do something with the error here (even though it'll never
 		// happen)
 		cid, _ := stypes.ClientIdFromUint64(i)
@@ -27,7 +28,7 @@ func idMakerSpin() {
 // NewClient returns a unique client id that a client can use to identify
 // itself in later commands
 func NewClient() stypes.ClientId {
-	return <- idCh
+	return <-idCh
 }
 
 // Client is an interface which must be implemented by clients to hyrax (go
@@ -144,9 +145,9 @@ func ClientClosed(cid stypes.ClientId) error {
 
 	for i := range ekgs {
 		cmd := &types.ClientCommand{
-			Command: closedCmd,
+			Command:    closedCmd,
 			StorageKey: ekgs[i],
-			Id: ids[i],
+			Id:         ids[i],
 		}
 		dist.SendClientCommand(cmd)
 	}

@@ -2,8 +2,8 @@ package builtin
 
 import (
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
-	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 var monns = []byte("mon")
@@ -50,7 +50,7 @@ func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 func CleanMons(cid stypes.ClientId) error {
 	cidb := cid.Bytes()
 	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
-	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)	
+	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)
 	r, err := storage.DirectedCmd(thisnode, monlistCmd)
 	if err != nil {
 		return err

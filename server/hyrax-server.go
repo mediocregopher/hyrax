@@ -8,8 +8,8 @@ import (
 	"github.com/mediocregopher/hyrax/server/net"
 	"github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/translate"
-	"strings"
 	"log"
+	"strings"
 )
 
 func main() {

@@ -1,8 +1,8 @@
 package translate
 
 import (
-	. "github.com/mediocregopher/hyrax/types"
 	"github.com/mediocregopher/gojson"
+	. "github.com/mediocregopher/hyrax/types"
 )
 
 // JsonTranslator can encode/decode all messages required by hyrax

@@ -1,9 +1,9 @@
 package translate
 
 import (
+	"fmt"
 	"github.com/mediocregopher/hyrax/types"
 	"strings"
-	"fmt"
 )
 
 // A translator takes in raw data of some known format and translates it into
@@ -25,7 +25,6 @@ type Translator interface {
 	// FromClientReturn takes in a client return and encodes it into a byte
 	// slice, or returns an error if it can't
 	FromClientReturn(*types.ClientReturn) ([]byte, error)
-
 }
 
 // StringToTranslator takes in a string which is supposed to identify which

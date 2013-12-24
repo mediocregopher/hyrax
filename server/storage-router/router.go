@@ -1,9 +1,9 @@
 package router
 
 import (
+	"github.com/mediocregopher/hyrax/server/storage-router/bucket"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/command"
-	"github.com/mediocregopher/hyrax/server/storage-router/bucket"
 	"github.com/mediocregopher/hyrax/server/storage-router/storage/redis"
 )
 
@@ -28,7 +28,7 @@ func SetBucket(bIndex int, conntype, addr string, extra ...interface{}) error {
 	return nil
 }
 
-// GetBuckets returns a copy of the current bucket 
+// GetBuckets returns a copy of the current bucket
 func GetBuckets() []*string {
 	return bucket.Buckets()
 }
