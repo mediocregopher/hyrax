@@ -1,3 +1,4 @@
+---
 path: github.com/mediocregopher/hyrax
 deps:
     - loc: https://github.com/mediocregopher/radix.git
