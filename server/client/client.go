@@ -25,9 +25,9 @@ func idMakerSpin() {
 	}
 }
 
-// NewClient returns a unique client id that a client can use to identify
+// NewClientId returns a unique client id that a client can use to identify
 // itself in later commands
-func NewClient() stypes.ClientId {
+func NewClientId() stypes.ClientId {
 	return <-idCh
 }
 

@@ -2,150 +2,99 @@ package net
 
 import (
 	"bufio"
+	"log"
+	"github.com/mediocregopher/manatcp"
+	"time"
+
 	"github.com/mediocregopher/hyrax/server/client"
 	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
-	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
-	"net"
+	"github.com/mediocregopher/hyrax/translate"
 )
 
-// TcpClient holds a tcp connection into the hyrax server, and implements the
-// Client interface
-type TcpClient struct {
-	id     stypes.ClientId
-	pushCh chan *types.ClientCommand
-	conn   net.Conn
-	trans  translate.Translator
+type tcpListener struct {
+	trans translate.Translator
 }
 
-// Returns a new TcpClient structure, having populated it with all necessary
-// fields and added it to the client router
-func NewTcpClient(conn net.Conn, t translate.Translator) (*TcpClient, error) {
-	cid := client.NewClient()
-	c := &TcpClient{
-		id:     cid,
-		pushCh: make(chan *types.ClientCommand),
-		conn:   conn,
-		trans:  t,
+func (tl *tcpListener) Connected (
+	lc *manatcp.ListenerConn) (manatcp.ServerClient, bool) {
+
+	cid := client.NewClientId()
+	c := tcpClient{
+		cmdPushCh: make(chan *types.ClientCommand),
+		lconn:     lc,
+		id:        cid,
+		trans:     tl.trans,
 	}
-	if err := crouter.Add(c); err != nil {
-		return nil, err
+	if err := crouter.Add(&c); err != nil {
+		log.Printf("tcpListener got %s adding to crouter", err) 
+		return nil, true
 	}
 
-	return c, nil
-}
-
-func (tc *TcpClient) ClientId() stypes.ClientId {
-	return tc.id
-}
-
-func (tc *TcpClient) CommandPushChannel() chan<- *types.ClientCommand {
-	return tc.pushCh
-}
-
-func (tc *TcpClient) write(b []byte) error {
-	//TODO write deadline
-	if _, err := tc.conn.Write(b); err != nil {
-		return err
-	}
-
-	if _, err := tc.conn.Write([]byte("\n")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (tc *TcpClient) writeClientReturn(cr *types.ClientReturn) error {
-	b, err := tc.trans.FromClientReturn(cr)
-	if err != nil {
-		return err
-	}
-
-	return tc.write(b)
-}
-
-func (tc *TcpClient) writeErr(err error) error {
-	cr := types.ClientReturn{Error: []byte(err.Error())}
-	return tc.writeClientReturn(&cr)
-}
-
-type tcpReadChRet struct {
-	msg []byte
-	err error
-}
-
-func (tc *TcpClient) Spin() {
-	workerReadCh := make(chan *tcpReadChRet)
-	readMore := true
-	bufReader := bufio.NewReader(tc.conn)
-spin:
-	for {
-
-		//readMore keeps track of whether or not a routine is already reading
-		//off the connection. If there isn't one we make another
-		if readMore {
-			go func() {
-				b, err := bufReader.ReadBytes('\n')
-				workerReadCh <- &tcpReadChRet{b, err}
-			}()
-			readMore = false
-		}
-
-		select {
-
-		case cmd := <-tc.pushCh:
-			b, _ := tc.trans.FromClientCommand(cmd)
-			if err := tc.write(b); err != nil {
-				break spin
-			}
-
-		case rcr := <-workerReadCh:
-			readMore = true
-			msg, err := rcr.msg, rcr.err
-			if err != nil {
-				break spin
-			} else if msg != nil {
-				cc, err := tc.trans.ToClientCommand(msg)
-				if err != nil {
-					if err = tc.writeErr(err); err != nil {
-						break spin
-					}
-					continue
-				}
-
-				cr := client.RunCommand(tc.id, cc)
-				if err = tc.writeClientReturn(cr); err != nil {
-					break spin
-				}
-			}
-		}
-	}
-
-	tc.conn.Close()
-	client.ClientClosed(tc.id)
+	go c.pushProxy()
+	return &c, false	
 }
 
 func TcpListen(addr string, trans translate.Translator) error {
-	listener, err := net.Listen("tcp", addr)
+	_, err := manatcp.Listen(&tcpListener{trans}, addr)
+	return err
+}
+
+type tcpClient struct {
+	cmdPushCh chan *types.ClientCommand
+	lconn     *manatcp.ListenerConn
+	id        stypes.ClientId
+	trans     translate.Translator
+}
+
+func (tc *tcpClient) pushProxy() {
+	for cmd := range tc.cmdPushCh {
+		tc.lconn.PushCh <- cmd
+	}
+}
+
+func (tc *tcpClient) ClientId() stypes.ClientId {
+	return tc.id
+}
+
+func (tc *tcpClient) CommandPushChannel() chan<- *types.ClientCommand {
+	return tc.cmdPushCh
+}
+
+func (tc *tcpClient) Read(buf *bufio.Reader) (interface{}, bool) {
+	b, err := buf.ReadBytes('\n')
+	return b, err != nil
+}
+
+func (tc *tcpClient) Write(buf *bufio.Writer, clientRet interface{}) bool {
+	b, err := tc.trans.FromClientReturn(clientRet.(*types.ClientReturn))
 	if err != nil {
-		return err
+		log.Printf("tcpClient got %s from FromClientReturn(%v)", err, clientRet)
+		return false
 	}
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			// TODO log error
-			continue
-		}
-
-		c, err := NewTcpClient(conn, trans)
-		if err != nil {
-			// TODO log error
-			continue
-		}
-
-		go c.Spin()
+	if _, err := buf.Write(b); err != nil {
+		return true
 	}
+	if _, err := buf.Write([]byte("\n")); err != nil {
+		return true
+	}
+	return false
+}
+
+func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
+	cc, err := tc.trans.ToClientCommand(cmdRaw.([]byte))
+	if err != nil {
+		return types.ErrorReturn(err), true, false
+	}
+	return client.RunCommand(tc.id, cc), true, false
+}
+
+func (tc *tcpClient) Closing() {
+	client.ClientClosed(tc.id)
+	crouter.RemByClient(tc)
+	// We sleep some seconds just in case anything is still pushing to the
+	// command channel
+	time.Sleep(5 * time.Second)
+	close(tc.cmdPushCh)
 }

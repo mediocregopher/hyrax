@@ -20,3 +20,8 @@ deps:
       type: git
       ref: v0.0.0
       path: github.com/mediocregopher/gojson
+
+    - loc: https://github.com/mediocregopher/manatcp.git
+      type: git
+      ref: v0.2.1
+      path: github.com/mediocregopher/manatcp
