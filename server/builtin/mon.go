@@ -1,93 +1,122 @@
 package builtin
 
 import (
-	storage "github.com/mediocregopher/hyrax/server/storage-router"
+	"sync"
+
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
 
-var monns = []byte("mon")
+// TODO two-way-map
+
+// A mapping of keys being monitored to ClientIds
+var monKeyToClientIds = map[string]map[uint64]bool{}
+
+// A mapping of ClientIds to keys being monitored
+var monClientIdToKeys = map[uint64]map[string]bool{}
+
+// Lock which coordinates access to the mappings
+var monLock sync.RWMutex
 
 //MAdd adds the client's id to the set of clients that are monitoring the key
 //(so it can receive alerts) and adds the key to the set of keys that the client
 //is monitoring (so it can clean up)
 func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
-	key := cmd.StorageKey
-	cidb := cid.Bytes()
-	monKey := storage.KeyMaker.Namespace(monns, key)
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
-
-	clientAdd := storage.CommandFactory.GenericSetAdd(clientMonsKey, key)
-	if _, err := storage.DirectedCmd(thisnode, clientAdd); err != nil {
-		return nil, err
+	key := string(cmd.StorageKey)
+	cidi := cid.Uint64()
+	monLock.Lock()
+	defer monLock.Unlock()
+	if clientIdsM, ok := monKeyToClientIds[key]; ok {
+		clientIdsM[cidi] = true
+	} else {
+		monKeyToClientIds[key] = map[uint64]bool{cidi: true}
 	}
-
-	monAdd := storage.CommandFactory.GenericSetAdd(monKey, cidb)
-	return storage.DirectedCmd(thisnode, monAdd)
+	if keysM, ok := monClientIdToKeys[cidi]; ok {
+		keysM[key] = true
+	} else {
+		monClientIdToKeys[cidi] = map[string]bool{key: true}
+	}
+	return []byte("OK"), nil
 }
 
 // MRem removes the client's id from the set of clients that are monitoring the
 // key, and removes the key from the set of keys that the client is monitoring
 func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
-	key := cmd.StorageKey
-	cidb := cid.Bytes()
-	monKey := storage.KeyMaker.Namespace(monns, key)
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
+	key := string(cmd.StorageKey)
+	cidi := cid.Uint64()
+	monLock.Lock()
+	defer monLock.Unlock()
 
-	monRem := storage.CommandFactory.GenericSetRem(monKey, cidb)
-	r, err := storage.DirectedCmd(thisnode, monRem)
-	if err != nil {
-		return nil, err
+	// If the key isn't monitored, don't bother
+	clientIdsM, ok := monKeyToClientIds[key]
+	if !ok {
+		return []byte("OK"), nil
 	}
 
-	clientRem := storage.CommandFactory.GenericSetRem(clientMonsKey, key)
-	_, err = storage.DirectedCmd(thisnode, clientRem)
-	return r, err
+	if len(clientIdsM) == 1 {
+		delete(monKeyToClientIds, key)
+	}  else {
+		delete(clientIdsM, cidi)
+	}
+
+	keysM := monClientIdToKeys[cidi]
+	if len(keysM) == 1 {
+		delete(monClientIdToKeys, cidi)
+	} else {
+		delete(keysM, key)
+	}
+
+	return []byte("OK"), nil
 }
 
 // CleanMons takes in a client id and cleans up all of its monitors, and the set
 // which keeps track of those monitors
 func CleanMons(cid stypes.ClientId) error {
-	cidb := cid.Bytes()
-	clientMonsKey := storage.KeyMaker.ClientNamespace(monns, cidb)
-	monlistCmd := storage.CommandFactory.GenericSetMembers(clientMonsKey)
-	r, err := storage.DirectedCmd(thisnode, monlistCmd)
-	if err != nil {
-		return err
+	cidi := cid.Uint64()
+	monLock.Lock()
+	defer monLock.Unlock()
+
+
+	// If the client isn't monitoring any keys, bail
+	keysM, ok := monClientIdToKeys[cidi]
+	if !ok {
+		return nil
 	}
 
-	mons := r.([][]byte)
-	for i := range mons {
-		key := mons[i]
-		monKey := storage.KeyMaker.Namespace(monns, key)
-		cleanKeyCmd := storage.CommandFactory.GenericSetRem(monKey, cidb)
-		if _, err = storage.DirectedCmd(thisnode, cleanKeyCmd); err != nil {
-			return err
+	var clientIdsM map[uint64]bool
+	for key := range keysM {
+		clientIdsM = monKeyToClientIds[key]
+		if len(clientIdsM) == 1 {
+			delete(monKeyToClientIds, key)
+		} else {
+			delete(clientIdsM, cidi)
 		}
 	}
 
-	delClientMonCmd := storage.CommandFactory.GenericSetDel(clientMonsKey)
-	_, err = storage.DirectedCmd(thisnode, delClientMonCmd)
-	return err
+	return nil
 }
 
 // ClientsForMon takes in a key and returns all the client ids on this node that
 // are mon'ing that key
-func ClientsForMon(key []byte) ([]stypes.ClientId, error) {
-	monKey := storage.KeyMaker.Namespace(monns, key)
-	monsCmd := storage.CommandFactory.GenericSetMembers(monKey)
-	r, err := storage.DirectedCmd(thisnode, monsCmd)
-	if err != nil {
-		return nil, err
+func ClientsForMon(keyb []byte) ([]stypes.ClientId, error) {
+	key := string(keyb)
+	monLock.RLock()
+	defer monLock.RUnlock()
+
+	clientIdsM, ok := monKeyToClientIds[key]
+	if !ok {
+		return []stypes.ClientId{}, nil
 	}
 
-	ids := r.([][]byte)
-	cids := make([]stypes.ClientId, len(ids))
-	for i := range ids {
-		cids[i], err = stypes.ClientIdFromBytes(ids[i])
+	cids := make([]stypes.ClientId, 0, len(clientIdsM))
+	for cidi := range clientIdsM {
+		cid, err := stypes.ClientIdFromUint64(cidi)
 		if err != nil {
 			return nil, err
 		}
+		cids = append(cids, cid)
 	}
+
 	return cids, nil
+
 }
