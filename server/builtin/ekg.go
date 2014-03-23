@@ -1,51 +1,75 @@
 package builtin
 
 import (
-	storage "github.com/mediocregopher/hyrax/server/storage-router"
+	"sync"
+
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
 
 var ekgns = []byte("ekg")
 
+// A mapping of ekgs to ClientIds and their names
+var ekgKeyToClientIdsNames = map[string]map[uint64][]byte{}
+
+// A mapping of ClientIds to the ekgs the client is on and the names it's using
+// for each ekg
+var ekgClientIdToKeysNames = map[uint64]map[string][]byte{}
+
+// Lock which coordinates access to the mappings
+var ekgLock sync.RWMutex
+
 // EAdd adds the client's id (actual and given) to an ekg's set of things it's
 // watching, and adds the ekg's information to the client's set of ekgs its
 // hooked up to
 func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
-	key := cmd.StorageKey
-	cidb := cid.Bytes()
-	ekgKey := keyMaker.Namespace(ekgns, key)
-	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
+	key := string(cmd.StorageKey)
+	cidi := cid.Uint64()
+	name := cmd.Id
+	ekgLock.Lock()
+	defer ekgLock.Unlock()
 
-	clAdd := cmdFactory.KeyValueSetAdd(clientEkgsKey, key, cmd.Id)
-	if _, err := storage.DirectedCmd(thisnode, clAdd); err != nil {
-		return nil, err
+	if clientIdsM, ok := ekgKeyToClientIdsNames[key]; ok {
+		clientIdsM[cidi] = name
+	} else {
+		ekgKeyToClientIdsNames[key] = map[uint64][]byte{cidi: name}
 	}
-
-	addCmd := storage.CommandFactory.KeyValueSetAdd(ekgKey, cidb, cmd.Id)
-	return storage.RoutedCmd(key, addCmd)
+	if keysM, ok := ekgClientIdToKeysNames[cidi]; ok {
+		keysM[key] = name
+	} else {
+		ekgClientIdToKeysNames[cidi] = map[string][]byte{key: name}
+	}
+	return []byte("OK"), nil
 }
 
 // ERem removes the client's id from an ekg's set of things it's watching, and
 // removes the ekg's information from the client's set of ekgs its hooked up to
 func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
-	key := cmd.StorageKey
-	cidb := cid.Bytes()
-	ekgKey := keyMaker.Namespace(ekgns, key)
-	clientEkgsKey := keyMaker.Namespace(ekgns, cid.Bytes())
+	key := string(cmd.StorageKey)
+	cidi := cid.Uint64()
+	ekgLock.Lock()
+	defer ekgLock.Unlock()
 
-	remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cidb)
-	r, err := storage.RoutedCmd(key, remCmd)
-	if err != nil {
-		return nil, err
+	// If the client isn't on the ekg, don't bother
+	clientIdsM, ok := ekgKeyToClientIdsNames[key]
+	if !ok {
+		return []byte("OK"), nil
 	}
 
-	clRem := cmdFactory.KeyValueSetRemByInnerKey(clientEkgsKey, key)
-	if _, err := storage.DirectedCmd(thisnode, clRem); err != nil {
-		return nil, err
+	if len(clientIdsM) == 1 {
+		delete(ekgKeyToClientIdsNames, key)
+	} else {
+		delete(clientIdsM, cidi)
 	}
 
-	return r, nil
+	keysM := ekgClientIdToKeysNames[cidi]
+	if len(keysM) == 1 {
+		delete(ekgClientIdToKeysNames, cidi)
+	} else {
+		delete(keysM, key)
+	}
+
+	return []byte("OK"), nil
 }
 
 // EMembers returns the list of ids being monitored by an ekg
@@ -53,10 +77,20 @@ func EMembers(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	key := cmd.StorageKey
-	ekgKey := keyMaker.Namespace(ekgns, key)
-	memsCmd := cmdFactory.KeyValueSetMemberValues(ekgKey)
-	return storage.RoutedCmd(key, memsCmd)
+	key := string(cmd.StorageKey)
+	ekgLock.RLock()
+	defer ekgLock.RUnlock()
+
+	clientIdsM, ok := ekgKeyToClientIdsNames[key]
+	if !ok {
+		return [][]byte{}, nil
+	}
+
+	names := make([][]byte, 0, len(clientIdsM))
+	for _, name := range clientIdsM {
+		names = append(names, name)
+	}
+	return names, nil
 }
 
 // ECard returns the number of client/id combinations being monitored
@@ -64,29 +98,35 @@ func ECard(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	key := cmd.StorageKey
-	ekgKey := keyMaker.Namespace(ekgns, key)
-	cardCmd := cmdFactory.KeyValueSetCard(ekgKey)
-	return storage.RoutedCmd(key, cardCmd)
+	key := string(cmd.StorageKey)
+	ekgLock.RLock()
+	defer ekgLock.RUnlock()
+
+	clientIdsM, ok := ekgKeyToClientIdsNames[key]
+	if !ok {
+		return 0, nil
+	}
+	return len(clientIdsM), nil
 }
 
 // EkgsForClient returns a list of all the ekgs a particular client is hooked up
 // to, and all the ids the client is associated with for those ekgs
 func EkgsForClient(cid stypes.ClientId) ([][]byte, [][]byte, error) {
-	cidb := cid.Bytes()
-	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
-	ekgsCmd := cmdFactory.KeyValueSetMembers(clientEkgsKey)
-	r, err := storage.DirectedCmd(thisnode, ekgsCmd)
-	if err != nil {
-		return nil, nil, err
+	cidi := cid.Uint64()
+	ekgLock.RLock()
+	defer ekgLock.RUnlock()
+
+	keysM, ok := ekgClientIdToKeysNames[cidi]
+	if !ok {
+		empty := [][]byte{}
+		return empty, empty, nil
 	}
 
-	rall := r.([][]byte)
-	ekgs := make([][]byte, len(rall)/2)
-	ids := make([][]byte, len(rall)/2)
-	for i := 0; i < len(rall); i += 2 {
-		ekgs[i/2] = rall[i]
-		ids[i/2] = rall[i+1]
+	ekgs := make([][]byte, 0, len(keysM))
+	ids := make([][]byte, 0, len(keysM))
+	for key, id := range keysM {
+		ekgs = append(ekgs, []byte(key))
+		ids = append(ids, id)
 	}
 	return ekgs, ids, nil
 }
@@ -106,21 +146,14 @@ func CleanClientEkgs(cid stypes.ClientId) error {
 // function deletes all record of ekgs for the given client id, so the ekgs
 // passed in must comprise ALL the ekgs the client is hooked up to
 func CleanClientEkgsShort(ekgs [][]byte, cid stypes.ClientId) error {
-	cidb := cid.Bytes()
-	for i := range ekgs {
-		key := ekgs[i]
-		ekgKey := keyMaker.Namespace(ekgns, key)
-		remCmd := cmdFactory.KeyValueSetRemByInnerKey(ekgKey, cidb)
-		if _, err := storage.RoutedCmd(key, remCmd); err != nil {
-			return err
-		}
-	}
+	cidi := cid.Uint64()
+	ekgLock.Lock()
+	defer ekgLock.Unlock()
 
-	clientEkgsKey := keyMaker.ClientNamespace(ekgns, cidb)
-	clRemCmd := cmdFactory.KeyValueSetDel(clientEkgsKey)
-	if _, err := storage.DirectedCmd(thisnode, clRemCmd); err != nil {
-		return err
+	for _, keyb := range ekgs {
+		delete(ekgKeyToClientIdsNames[string(keyb)], cidi)
 	}
+	delete(ekgClientIdToKeysNames, cidi)
 
 	return nil
 }
