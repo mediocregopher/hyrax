@@ -18,12 +18,12 @@ var monClientIdToKeys = map[uint64]map[string]bool{}
 // Lock which coordinates access to the mappings
 var monLock sync.RWMutex
 
-//MAdd adds the client's id to the set of clients that are monitoring the key
-//(so it can receive alerts) and adds the key to the set of keys that the client
-//is monitoring (so it can clean up)
-func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
+//MAdd adds the client to the set of clients that are monitoring the key (so it
+//can receive alerts) and adds the key to the set of keys that the client is
+//monitoring (so it can clean up)
+func MAdd(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
-	cidi := cid.Uint64()
+	cidi := c.ClientId().Uint64()
 	monLock.Lock()
 	defer monLock.Unlock()
 	if clientIdsM, ok := monKeyToClientIds[key]; ok {
@@ -39,11 +39,11 @@ func MAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	return []byte("OK"), nil
 }
 
-// MRem removes the client's id from the set of clients that are monitoring the
-// key, and removes the key from the set of keys that the client is monitoring
-func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
+// MRem removes the client from the set of clients that are monitoring the key,
+// and removes the key from the set of keys that the client is monitoring
+func MRem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
-	cidi := cid.Uint64()
+	cidi := c.ClientId().Uint64()
 	monLock.Lock()
 	defer monLock.Unlock()
 
@@ -69,10 +69,10 @@ func MRem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	return []byte("OK"), nil
 }
 
-// CleanMons takes in a client id and cleans up all of its monitors, and the set
+// CleanMons takes in a client and cleans up all of its monitors, and the set
 // which keeps track of those monitors
-func CleanMons(cid stypes.ClientId) error {
-	cidi := cid.Uint64()
+func CleanMons(c stypes.Client) error {
+	cidi := c.ClientId().Uint64()
 	monLock.Lock()
 	defer monLock.Unlock()
 
@@ -96,9 +96,9 @@ func CleanMons(cid stypes.ClientId) error {
 	return nil
 }
 
-// ClientsForMon takes in a key and returns all the client ids on this node that
+// ClientIdsForMon takes in a key and returns all the clients on this node that
 // are mon'ing that key
-func ClientsForMon(keyb []byte) ([]stypes.ClientId, error) {
+func ClientIdsForMon(keyb []byte) ([]stypes.ClientId, error) {
 	key := string(keyb)
 	monLock.RLock()
 	defer monLock.RUnlock()

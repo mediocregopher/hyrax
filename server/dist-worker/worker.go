@@ -21,7 +21,7 @@ func spin() {
 		case cmd := <-dist.ClientCommands:
 			cmd.Secret = nil
 			// TODO Do something with the error
-			cids, _ := core.ClientsForMon(cmd.StorageKey)
+			cids, _ := core.ClientIdsForMon(cmd.StorageKey)
 			for i := range cids {
 				if c, ok := crouter.Get(cids[i]); ok {
 					c.CommandPushCh() <- cmd

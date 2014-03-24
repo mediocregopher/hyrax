@@ -14,7 +14,7 @@ var cmdFactory = storage.CommandFactory
 var thisnode = &config.StorageAddr
 
 type BuiltInFunc func(
-	stypes.ClientId,
+	stypes.Client,
 	*types.ClientCommand) (interface{}, error)
 
 type builtInCommandInfo struct {

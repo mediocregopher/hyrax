@@ -19,12 +19,11 @@ var ekgClientIdToKeysNames = map[uint64]map[string][]byte{}
 // Lock which coordinates access to the mappings
 var ekgLock sync.RWMutex
 
-// EAdd adds the client's id (actual and given) to an ekg's set of things it's
-// watching, and adds the ekg's information to the client's set of ekgs its
-// hooked up to
-func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
+// EAdd adds the client to an ekg's set of things it's watching, and adds the
+// ekg's information to the client's set of ekgs its hooked up to
+func EAdd(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
-	cidi := cid.Uint64()
+	cidi := c.ClientId().Uint64()
 	name := cmd.Id
 	ekgLock.Lock()
 	defer ekgLock.Unlock()
@@ -42,11 +41,11 @@ func EAdd(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 	return []byte("OK"), nil
 }
 
-// ERem removes the client's id from an ekg's set of things it's watching, and
+// ERem removes the client from an ekg's set of things it's watching, and
 // removes the ekg's information from the client's set of ekgs its hooked up to
-func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
+func ERem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
-	cidi := cid.Uint64()
+	cidi := c.ClientId().Uint64()
 	ekgLock.Lock()
 	defer ekgLock.Unlock()
 
@@ -73,10 +72,7 @@ func ERem(cid stypes.ClientId, cmd *types.ClientCommand) (interface{}, error) {
 }
 
 // EMembers returns the list of ids being monitored by an ekg
-func EMembers(
-	cid stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
-
+func EMembers(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
 	ekgLock.RLock()
 	defer ekgLock.RUnlock()
@@ -94,10 +90,7 @@ func EMembers(
 }
 
 // ECard returns the number of client/id combinations being monitored
-func ECard(
-	cid stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
-
+func ECard(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	key := string(cmd.StorageKey)
 	ekgLock.RLock()
 	defer ekgLock.RUnlock()
@@ -111,8 +104,8 @@ func ECard(
 
 // EkgsForClient returns a list of all the ekgs a particular client is hooked up
 // to, and all the ids the client is associated with for those ekgs
-func EkgsForClient(cid stypes.ClientId) ([][]byte, [][]byte, error) {
-	cidi := cid.Uint64()
+func EkgsForClient(c stypes.Client) ([][]byte, [][]byte, error) {
+	cidi := c.ClientId().Uint64()
 	ekgLock.RLock()
 	defer ekgLock.RUnlock()
 
@@ -131,22 +124,22 @@ func EkgsForClient(cid stypes.ClientId) ([][]byte, [][]byte, error) {
 	return ekgs, ids, nil
 }
 
-// CleanClientEkgs takes in a client id and cleans up all of the given ekgs for
-// it, and the set which keeps track of those ekgs.
-func CleanClientEkgs(cid stypes.ClientId) error {
-	ekgs, _, err := EkgsForClient(cid)
+// CleanClientEkgs takes in a client and cleans up all of the given ekgs for it,
+// and the set which keeps track of those ekgs.
+func CleanClientEkgs(c stypes.Client) error {
+	ekgs, _, err := EkgsForClient(c)
 	if err != nil {
 		return err
 	}
-	return CleanClientEkgsShort(ekgs, cid)
+	return CleanClientEkgsShort(ekgs, c)
 }
 
 // Shortcut for CleanClientEkgs is we've already called EkgsForClient before and
 // we simply want to pass that result in and not call it again. Note that this
-// function deletes all record of ekgs for the given client id, so the ekgs
-// passed in must comprise ALL the ekgs the client is hooked up to
-func CleanClientEkgsShort(ekgs [][]byte, cid stypes.ClientId) error {
-	cidi := cid.Uint64()
+// function deletes all record of ekgs for the given client, so the ekgs passed
+// in must comprise ALL the ekgs the client is hooked up to
+func CleanClientEkgsShort(ekgs [][]byte, c stypes.Client) error {
+	cidi := c.ClientId().Uint64()
 	ekgLock.Lock()
 	defer ekgLock.Unlock()
 

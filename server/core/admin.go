@@ -26,9 +26,7 @@ func argsToAddr(cmd *types.ClientCommand) (*string, error) {
 
 // ANodeAdd uses the first argument as a node address, and adds that address to
 // the hyrax mesh this one is in.
-func ANodeAdd(
-	_ stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
+func ANodeAdd(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	node, err := argsToAddr(cmd)
 	if err != nil {
 		return nil, err
@@ -39,9 +37,7 @@ func ANodeAdd(
 
 // ANodeRem uses the first argument as a node address, and removes that node
 // from the hyrax mesh, if it was in there to begin with
-func ANodeRem(
-	_ stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
+func ANodeRem(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	node, err := argsToAddr(cmd)
 	if err != nil {
 		return nil, err
@@ -57,7 +53,7 @@ func ANodeRem(
 // The second and third arguments are the connection type and address, and the
 // rest are extra that are passed through depending on the storage type
 func ABucketSet(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	if len(cmd.Args) >= 3 {
 		return nil, wrongNumArgs
@@ -81,7 +77,7 @@ func ABucketSet(
 }
 
 // ABuckets returns the current bucket list
-func ABuckets(_ stypes.ClientId, _ *types.ClientCommand) (interface{}, error) {
+func ABuckets(_ stypes.Client, _ *types.ClientCommand) (interface{}, error) {
 	return router.GetBuckets, nil
 }
 
@@ -98,7 +94,7 @@ func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {
 // AGlobalSecretAdd adds a global secret to every node in the mesh's global
 // secret list
 func AGlobalSecretAdd(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
@@ -112,7 +108,7 @@ func AGlobalSecretAdd(
 // AGlobalSecretRem removes a global secret from every node in the mesh's global
 // secret list
 func AGlobalSecretRem(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
@@ -126,7 +122,7 @@ func AGlobalSecretRem(
 // AGlobalSecrets returns the list of currently active secrets on this node (and
 // presumably every other node)
 func AGlobalSecrets(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	secretsB := auth.GetGlobalSecrets()
 	secrets := make([]string, len(secretsB))
@@ -138,7 +134,7 @@ func AGlobalSecrets(
 
 // ASecretAdd adds a particular secret to an individual key
 func ASecretAdd(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
@@ -150,7 +146,7 @@ func ASecretAdd(
 
 // ASecretRem removes a particular secret from an individual key
 func ASecretRem(
-	_ stypes.ClientId,
+	_ stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
@@ -161,9 +157,7 @@ func ASecretRem(
 }
 
 // ASecrets returns all the particular secrets for an individual key
-func ASecrets(
-	_ stypes.ClientId,
-	cmd *types.ClientCommand) (interface{}, error) {
+func ASecrets(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	keyB, err := argsToByteSlice(cmd)
 	if err != nil {
 		return nil, err
