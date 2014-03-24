@@ -13,11 +13,6 @@ import (
 )
 
 func main() {
-	err := config.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if config.FirstNode {
 		secrets := config.InitSecrets
 		log.Println("This is the first node, loading up the secrets")

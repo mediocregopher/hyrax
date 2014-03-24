@@ -46,6 +46,7 @@ type tcpClient struct {
 	lconn     *manatcp.ListenerConn
 	id        stypes.ClientId
 	trans     translate.Translator
+	closeCh   chan struct{}
 }
 
 func (tc *tcpClient) pushProxy() {
@@ -58,8 +59,12 @@ func (tc *tcpClient) ClientId() stypes.ClientId {
 	return tc.id
 }
 
-func (tc *tcpClient) CommandPushChannel() chan<- *types.ClientCommand {
+func (tc *tcpClient) CommandPushCh() chan<- *types.ClientCommand {
 	return tc.cmdPushCh
+}
+
+func (tc *tcpClient) ClosingCh() <-chan struct{} {
+	return tc.closeCh
 }
 
 func (tc *tcpClient) Read(buf *bufio.Reader) (interface{}, bool) {
@@ -97,4 +102,5 @@ func (tc *tcpClient) Closing() {
 	// command channel
 	time.Sleep(5 * time.Second)
 	close(tc.cmdPushCh)
+	close(tc.closeCh)
 }

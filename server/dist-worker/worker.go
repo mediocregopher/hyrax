@@ -24,7 +24,7 @@ func spin() {
 			cids, _ := builtin.ClientsForMon(cmd.StorageKey)
 			for i := range cids {
 				if c, ok := crouter.Get(cids[i]); ok {
-					c.CommandPushChannel() <- cmd
+					c.CommandPushCh() <- cmd
 				} else {
 					// TODO error because client with id wasn't found
 				}

@@ -2,20 +2,22 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"github.com/mediocregopher/flagconfig"
 	"strings"
 )
 
-// The address hyrax should listen on for other hyrax nodes to connect
-var MeshListenAddr string
+// Address to listen for incoming push events on
+var IncomingListenAddr string
 
-// The address to advertise to other hyrax nodes that we're listening for new
-// mesh connections on
-var MeshAdvertiseAddr string
+// The set of other node's IncomingListenAddr this node should connect to
+var PushTo []string
 
-// Whether or not this is the first node active in the pool. If it is then
-// StorageAddr and InitSecrets will be populated as well
-var FirstNode bool
+// Address to listen for connections which will receive outoing push events
+var OutgoingListenAddr string
+
+// The set of other nodes' OutoingListenAddrs this node should connect to
+var PullFrom []string
 
 // The address this hyrax node, and others should use to connect to this one's
 // backend storage (redis).
@@ -42,22 +44,31 @@ type ListenAddr struct {
 // The list of currently active ListenAddrs
 var ListenAddrs []ListenAddr
 
+func init() {
+	if err := Load(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Load() error {
 	fc := flagconfig.New("hyrax")
 	fc.StrParam(
-		"mesh-listen-addr",
-		"The address hyrax should listen on for other hyrax nodes to connect",
+		"incoming-listen-addr",
+		"The address hyrax should listen on for connections which will send push events",
 		":9379",
 	)
-	fc.StrParam(
-		"mesh-advertise-addr",
-		"The address to advertise to other hyrax nodes that we're listening for new mesh connections on",
-		"127.0.0.1:9379",
+	fc.StrParams(
+		"push-to",
+		"Address of another node's incoming-listen-addr that this node will forward push events to",
 	)
-	fc.FlagParam(
-		"first-node",
-		"Set if this is the first node active in the pool. If it is then the init-secrets parameter is required as well",
-		false,
+	fc.StrParam(
+		"outgoing-listen-addr",
+		"The address hyrax should listen on for connections which will have push events sent to them",
+		":9479",
+	)
+	fc.StrParams(
+		"pull-from",
+		"Address of another node's outgoing-listen-addr that this node will receive push events from. Can be specified multiple times",
 	)
 	fc.StrParams(
 		"init-secret",
@@ -98,9 +109,10 @@ func Load() error {
 		is[i] = []byte(isRaw[i])
 	}
 
-	MeshListenAddr = fc.GetStr("mesh-listen-addr")
-	MeshAdvertiseAddr = fc.GetStr("mesh-advertise-addr")
-	FirstNode = fn
+	IncomingListenAddr = fc.GetStr("incoming-listen-addr")
+	PushTo = fc.GetStrs("push-to")
+	OutgoingListenAddr = fc.GetStr("outgoing-listen-addr")
+	PullFrom = fc.GetStrs("pull-from")
 	InitSecrets = is
 	StorageAddr = fc.GetStr("storage-addr")
 	ListenAddrs = las

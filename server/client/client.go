@@ -38,9 +38,13 @@ type Client interface {
 	// ClientId returns the ClientId of a given client (again, go figure)
 	ClientId() stypes.ClientId
 
-	// CommandPushChannel returns a channel where commands that are to be pushed
+	// CommandPushCh returns a channel where commands that are to be pushed
 	// to the client should be pushed on to
-	CommandPushChannel() chan<- *types.ClientCommand
+	CommandPushCh() chan<- *types.ClientCommand
+
+	// ClosingCh returns a channel which will have close() called on it when the
+	// connection is closed
+	ClosingCh() <-chan struct{}
 }
 
 // RunCommand takes in a client id and a client command, figures out what type
