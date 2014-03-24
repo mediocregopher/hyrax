@@ -6,7 +6,7 @@ import (
 	"github.com/mediocregopher/manatcp"
 	"time"
 
-	"github.com/mediocregopher/hyrax/server/client"
+	"github.com/mediocregopher/hyrax/server/core"
 	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
@@ -20,7 +20,7 @@ type tcpListener struct {
 func (tl *tcpListener) Connected (
 	lc *manatcp.ListenerConn) (manatcp.ServerClient, bool) {
 
-	cid := client.NewClientId()
+	cid := stypes.NewClientId()
 	c := tcpClient{
 		cmdPushCh: make(chan *types.ClientCommand),
 		lconn:     lc,
@@ -92,11 +92,11 @@ func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
 	if err != nil {
 		return types.ErrorReturn(err), true, false
 	}
-	return client.RunCommand(tc.id, cc), true, false
+	return core.RunCommand(tc.id, cc), true, false
 }
 
 func (tc *tcpClient) Closing() {
-	client.ClientClosed(tc.id)
+	core.ClientClosed(tc.id)
 	crouter.RemByClient(tc)
 	// We sleep some seconds just in case anything is still pushing to the
 	// command channel

@@ -1,51 +1,13 @@
-package client
+package core
 
 import (
 	"errors"
 	"github.com/mediocregopher/hyrax/server/auth"
-	"github.com/mediocregopher/hyrax/server/builtin"
 	"github.com/mediocregopher/hyrax/server/dist"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
-
-func init() {
-	go idMakerSpin()
-}
-
-var idCh = make(chan stypes.ClientId)
-
-func idMakerSpin() {
-	for i := uint64(0); ; i++ {
-		// TODO do something with the error here (even though it'll never
-		// happen)
-		cid, _ := stypes.ClientIdFromUint64(i)
-		idCh <- cid
-	}
-}
-
-// NewClientId returns a unique client id that a client can use to identify
-// itself in later commands
-func NewClientId() stypes.ClientId {
-	return <-idCh
-}
-
-// Client is an interface which must be implemented by clients to hyrax (go
-// figure)
-type Client interface {
-
-	// ClientId returns the ClientId of a given client (again, go figure)
-	ClientId() stypes.ClientId
-
-	// CommandPushCh returns a channel where commands that are to be pushed
-	// to the client should be pushed on to
-	CommandPushCh() chan<- *types.ClientCommand
-
-	// ClosingCh returns a channel which will have close() called on it when the
-	// connection is closed
-	ClosingCh() <-chan struct{}
-}
 
 // RunCommand takes in a client id and a client command, figures out what type
 // of command it is (builtin or direct) and routes the arguments to the
@@ -58,7 +20,7 @@ func RunCommand(
 	var err error
 	if storage.CommandFactory.DirectCommandAllowed(cmd.Command) {
 		r, err = runDirectCommand(cid, cmd)
-	} else if builtin.IsBuiltInCommand(cmd.Command) {
+	} else if IsBuiltInCommand(cmd.Command) {
 		r, err = runBuiltInCommand(cid, cmd)
 	} else {
 		err = errors.New("command not supported")
@@ -79,8 +41,8 @@ func runBuiltInCommand(
 	cid stypes.ClientId,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	mods := builtin.CommandModifies(cmd.Command)
-	adm := builtin.IsAdminCommand(cmd.Command)
+	mods := CommandModifies(cmd.Command)
+	adm := IsAdminCommand(cmd.Command)
 	if mods || adm {
 		ok, err := auth.Auth(cmd)
 		if !ok {
@@ -90,7 +52,7 @@ func runBuiltInCommand(
 		}
 	}
 
-	r, err := builtin.GetFunc(cmd.Command)(cid, cmd)
+	r, err := GetFunc(cmd.Command)(cid, cmd)
 
 	if mods && !adm {
 		dist.SendClientCommand(cmd)
@@ -133,32 +95,3 @@ func runDirectCommand(
 	return r, err
 }
 
-var closedCmd = []byte("eclose")
-
-// ClientClosed takes care of all cleanup that's necessary when a client has
-// closed
-func ClientClosed(cid stypes.ClientId) error {
-	if err := builtin.CleanMons(cid); err != nil {
-		return err
-	}
-
-	ekgs, ids, err := builtin.EkgsForClient(cid)
-	if err != nil {
-		return err
-	}
-
-	for i := range ekgs {
-		cmd := &types.ClientCommand{
-			Command:    closedCmd,
-			StorageKey: ekgs[i],
-			Id:         ids[i],
-		}
-		dist.SendClientCommand(cmd)
-	}
-
-	if err := builtin.CleanClientEkgsShort(ekgs, cid); err != nil {
-		return err
-	}
-
-	return nil
-}

@@ -4,6 +4,25 @@ import (
 	"strconv"
 )
 
+var idCh = make(chan ClientId)
+
+func init() {
+	go func() {
+		for i := uint64(0); ; i++ {
+			// TODO do something with the error here (even though it'll never
+			// happen)
+			cid, _ := ClientIdFromUint64(i)
+			idCh <- cid
+		}
+	}()
+}
+
+// NewClientId returns a unique client id that a client can use to identify
+// itself in later commands
+func NewClientId() ClientId {
+	return <-idCh
+}
+
 // ClientId is a unique value that's given to every client of this hyrax node
 type ClientId uint64
 

@@ -2,17 +2,16 @@ package router
 
 import (
 	"errors"
-	"github.com/mediocregopher/hyrax/server/client"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"sync"
 )
 
-var router = map[uint64]client.Client{}
+var router = map[uint64]stypes.Client{}
 var routerL = sync.RWMutex{}
 
 // Add takes in a client and adds it to the global set of clients. Returns an
 // error if the client's id was already set in the router
-func Add(c client.Client) error {
+func Add(c stypes.Client) error {
 	routerL.Lock()
 	defer routerL.Unlock()
 
@@ -36,7 +35,7 @@ func RemById(cid stypes.ClientId) {
 
 // RemByClient takes in a client and removes it from the router, assuming it was
 // in the router in the first place
-func RemByClient(c client.Client) {
+func RemByClient(c stypes.Client) {
 	routerL.Lock()
 	defer routerL.Unlock()
 
@@ -44,7 +43,7 @@ func RemByClient(c client.Client) {
 }
 
 // Get attempts to retrieve a client based on its ClientId from the router
-func Get(cid stypes.ClientId) (client.Client, bool) {
+func Get(cid stypes.ClientId) (stypes.Client, bool) {
 	routerL.RLock()
 	defer routerL.RUnlock()
 	c, ok := router[cid.Uint64()]
