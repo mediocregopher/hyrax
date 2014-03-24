@@ -3,106 +3,98 @@ package net
 import (
 	"bufio"
 	"errors"
+	"io"
+	"github.com/mediocregopher/manatcp"
+
 	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
-	"io"
-	"net"
 )
 
 type TcpClient struct {
-	conn     net.Conn
-	pushCh   chan *types.ClientCommand
-	cmdRetCh chan *types.ClientReturn
-	trans    translate.Translator
+	trans translate.Translator
+	conn  *manatcp.Conn
 }
 
-// Returns a new tcp client for hyrax which can be used to interact with a hyrax
-// node. A push channel of nil indicates that you don't care about push messages
-func NewTcpClient(
-	t translate.Translator,
-	addr string,
+func NewTcpClient(t translate.Translator, addr string,
 	pushCh chan *types.ClientCommand) (*TcpClient, error) {
-	conn, err := net.Dial("tcp", addr)
+	
+	tc := TcpClient{trans: t}
+	conn, err := manatcp.Dial(&tc, addr)
 	if err != nil {
 		return nil, err
 	}
 
-	c := &TcpClient{
-		conn:     conn,
-		pushCh:   pushCh,
-		cmdRetCh: make(chan *types.ClientReturn),
-		trans:    t,
-	}
-
-	go c.readSpin()
-	return c, nil
-}
-
-// TODO I need to make a generic library for this crap
-func (c *TcpClient) readSpin() {
-	bufReader := bufio.NewReader(c.conn)
-
-	for {
-		b, err := bufReader.ReadBytes('\n')
-		if err != nil {
-			break
-		}
-		cmd, err := c.trans.ToClientCommand(b)
-		if err != nil {
-			continue
-		} else if cmd.Command != nil {
-			if c.pushCh != nil {
-				c.pushCh <- cmd
+	tc.conn = conn
+	go func() {
+		for cci := range conn.PushCh {
+			if pushCh != nil {
+				pushCh <- cci.(*types.ClientCommand)
 			}
-			continue
 		}
-
-		ret, err := c.trans.ToClientReturn(b)
-		if err != nil {
-			c.cmdRetCh <- types.ErrorReturn(err)
-		} else {
-			c.cmdRetCh <- ret
-		}
-	}
-	c.conn.Close()
-	if c.pushCh != nil {
-		close(c.pushCh)
-	}
-	close(c.cmdRetCh)
+	}()
+	return &tc, nil
 }
 
-func (c *TcpClient) write(b []byte) error {
-	if _, err := c.conn.Write(b); err != nil {
-		return err
-	}
-
-	if _, err := c.conn.Write([]byte("\n")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Cmd sends the given command to the connection and returns the response
-func (c *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
-	b, err := c.trans.FromClientCommand(cmd)
+func (tc *TcpClient) Read(buf *bufio.Reader) (interface{}, error, bool) {
+	b, err := buf.ReadBytes('\n')
 	if err != nil {
-		return nil, err
-	} else if err := c.write(b); err != nil {
-		return nil, err
+		return nil, err, true
 	}
 
-	ret, ok := <-c.cmdRetCh
-	if !ok {
-		return nil, io.EOF
-	} else if ret.Error != nil {
-		return nil, errors.New(string(ret.Error))
-	} else {
-		return ret.Return, nil
+	// Try to decode ClientCommand. We know it was a ClientCommand if Command is
+	// actually set
+	cc, err := tc.trans.ToClientCommand(b)
+	if err != nil {
+		return nil, err, false
+	} else if cc.Command != nil {
+		return cc, nil, false
 	}
+
+	cr, err := tc.trans.ToClientReturn(b)
+	if err != nil {
+		return nil, err, false
+	}
+	return cr, nil, false
 }
 
-// Close closes the tcp client
-func (c *TcpClient) Close() {
-	c.conn.Close()
+func (tc *TcpClient) IsPush(lc interface{}) bool {
+	_, ok := lc.(*types.ClientCommand)
+	return ok
+}
+
+func (tc *TcpClient) Write(buf *bufio.Writer, item interface{}) (error, bool) {
+	b, err := tc.trans.FromClientCommand(item.(*types.ClientCommand))
+	if err != nil {
+		return err, false
+	}
+
+	if _, err := buf.Write(b); err != nil {
+		return err, true
+	}
+
+	return nil, false
+}
+
+func (tc *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
+	cri, err, closed := tc.conn.Cmd(cmd)
+	if closed {
+		return nil, io.EOF
+	} else if err != nil {
+		return nil, err
+	}
+
+	cr, ok := cri.(*types.ClientReturn)
+	if !ok {
+		return nil, errors.New("Did not receive CommandReturn back")
+	}
+
+	if cr.Error != nil {
+		return nil, errors.New(string(cr.Error))
+	}
+
+	return cr.Return, nil
+}
+
+func (tc *TcpClient) Close() {
+	tc.conn.Close()
 }

@@ -18,7 +18,7 @@ type Translator interface {
 	// slice, or returns an error if it can't
 	FromClientCommand(*types.ClientCommand) ([]byte, error)
 
-	// ToClientReturn takes in some bytes and decodes them into a ClientCommand,
+	// ToClientReturn takes in some bytes and decodes them into a ClientReturn,
 	// or returns an error
 	ToClientReturn([]byte) (*types.ClientReturn, error)
 

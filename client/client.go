@@ -11,7 +11,8 @@ import (
 type Client interface {
 
 	// Cmd sends a command to hyrax and retrieves the result of the command,
-	// either the return value or an error
+	// either the return value or an error. The error will be io.EOF if and only
+	// if the connection has been closed
 	Cmd(*types.ClientCommand) (interface{}, error)
 
 	// Close closes any connection the client may have with hyrax
