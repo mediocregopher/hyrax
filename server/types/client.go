@@ -19,4 +19,3 @@ type Client interface {
 	// connection is closed
 	ClosingCh() <-chan struct{}
 }
-

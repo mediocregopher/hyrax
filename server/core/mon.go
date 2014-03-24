@@ -3,9 +3,9 @@ package core
 import (
 	"sync"
 
+	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
-	"github.com/mediocregopher/hyrax/server/core/keychanges"
 )
 
 // TODO two-way-map
@@ -67,7 +67,7 @@ func MRem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 
 	if len(clientIdsM) == 1 {
 		delete(monKeyToClientIds, key)
-	}  else {
+	} else {
 		delete(clientIdsM, cidi)
 	}
 
@@ -87,7 +87,6 @@ func CleanMons(c stypes.Client) error {
 	cidi := c.ClientId().Uint64()
 	monLock.Lock()
 	defer monLock.Unlock()
-
 
 	// If the client isn't monitoring any keys, bail
 	keysM, ok := monClientIdToKeys[cidi]

@@ -3,8 +3,8 @@ package net
 import (
 	"bufio"
 	"errors"
-	"io"
 	"github.com/mediocregopher/manatcp"
+	"io"
 
 	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
@@ -17,7 +17,7 @@ type TcpClient struct {
 
 func NewTcpClient(t translate.Translator, addr string,
 	pushCh chan *types.ClientCommand) (*TcpClient, error) {
-	
+
 	tc := TcpClient{trans: t}
 	conn, err := manatcp.Dial(&tc, addr)
 	if err != nil {

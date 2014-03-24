@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/mediocregopher/hyrax/types"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // All key changes go through here
@@ -69,7 +69,7 @@ func proxySpin(proxyCh chan *types.ClientCommand, c stypes.Client) {
 	closeCh := c.ClosingCh()
 	for cc := range proxyCh {
 		select {
-		case pushCh<- cc:
+		case pushCh <- cc:
 		case <-closeCh:
 			// Must be grounded by another go-routine in order prevent
 			// race-condition where spinner is writing to proxyCh while

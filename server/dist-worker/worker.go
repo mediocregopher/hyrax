@@ -1,9 +1,9 @@
 package distworker
 
 import (
+	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/server/core"
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
-	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/server/dist"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 )

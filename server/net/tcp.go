@@ -2,22 +2,22 @@ package net
 
 import (
 	"bufio"
-	"log"
 	"github.com/mediocregopher/manatcp"
+	"log"
 	"time"
 
-	"github.com/mediocregopher/hyrax/server/core"
 	crouter "github.com/mediocregopher/hyrax/server/client-router"
+	"github.com/mediocregopher/hyrax/server/core"
 	stypes "github.com/mediocregopher/hyrax/server/types"
-	"github.com/mediocregopher/hyrax/types"
 	"github.com/mediocregopher/hyrax/translate"
+	"github.com/mediocregopher/hyrax/types"
 )
 
 type tcpListener struct {
 	trans translate.Translator
 }
 
-func (tl *tcpListener) Connected (
+func (tl *tcpListener) Connected(
 	lc *manatcp.ListenerConn) (manatcp.ServerClient, bool) {
 
 	cid := stypes.NewClientId()
@@ -28,12 +28,12 @@ func (tl *tcpListener) Connected (
 		trans:     tl.trans,
 	}
 	if err := crouter.Add(&c); err != nil {
-		log.Printf("tcpListener got %s adding to crouter", err) 
+		log.Printf("tcpListener got %s adding to crouter", err)
 		return nil, true
 	}
 
 	go c.pushProxy()
-	return &c, false	
+	return &c, false
 }
 
 func TcpListen(addr string, trans translate.Translator) error {

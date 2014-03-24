@@ -91,4 +91,3 @@ func runDirectCommand(
 
 	return r, err
 }
-
