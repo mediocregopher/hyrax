@@ -19,9 +19,10 @@ var monClientIdToKeys = map[uint64]map[string]bool{}
 // Lock which coordinates access to the mappings
 var monLock sync.RWMutex
 
-// MAll adds the client to the set of clients that are monitoring ALL keys. This
-// hooks into a separate funtionality than the normal mon commands, so it will
-// stack with them (aka, duplicate pushes if you also monitor individual keys)
+// MAll adds the client to the set of clients that are monitoring key changes
+// originating from this server. This hooks into a separate funtionality than
+// the normal mon commands, so it will stack with them (aka, duplicate pushes if
+// you also monitor individual keys)
 func MAll(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	err := keychanges.AddClient(c)
 	if err != nil {

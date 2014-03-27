@@ -3,7 +3,7 @@ package core
 import (
 	"errors"
 	"github.com/mediocregopher/hyrax/server/auth"
-	"github.com/mediocregopher/hyrax/server/dist"
+	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
@@ -13,16 +13,7 @@ import (
 // command it is (builtin or direct) and routes the arguments to the appropriate
 // function.
 func RunCommand(c stypes.Client, cmd *types.ClientCommand) *types.ClientReturn {
-	var r interface{}
-	var err error
-	if storage.CommandFactory.DirectCommandAllowed(cmd.Command) {
-		r, err = runDirectCommand(c, cmd)
-	} else if IsBuiltInCommand(cmd.Command) {
-		r, err = runBuiltInCommand(c, cmd)
-	} else {
-		err = errors.New("command not supported")
-	}
-
+	r, err := dispatchCommand(c, cmd)
 	if err != nil {
 		return &types.ClientReturn{Error: []byte(err.Error())}
 	}
@@ -30,29 +21,33 @@ func RunCommand(c stypes.Client, cmd *types.ClientCommand) *types.ClientReturn {
 	return &types.ClientReturn{Return: r}
 }
 
-var autherr = errors.New("auth failed")
-
-// runBuiltinCommand takes in a client and a builtin command struct and runs it,
-// assuming auth checks out.
-func runBuiltInCommand(
-	c stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
-
+func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	mods := CommandModifies(cmd.Command)
 	adm := IsAdminCommand(cmd.Command)
 	if mods || adm {
 		ok, err := auth.Auth(cmd)
 		if !ok {
-			return nil, autherr
+			return nil, errors.New("auth failed")
 		} else if err != nil {
 			return nil, err
 		}
 	}
+	// Before this cmd can get sent outside this go-routine we want to make sure
+	// the secret is cleared
+	cmd.Secret = nil
 
-	r, err := GetFunc(cmd.Command)(c, cmd)
+	var r interface{}
+	var err error
+	if storage.CommandFactory.DirectCommandAllowed(cmd.Command) {
+		r, err = dispatchDirectCommand(c, cmd)
+	} else if IsBuiltInCommand(cmd.Command) {
+		r, err = GetFunc(cmd.Command)(c, cmd)
+	} else {
+		err = errors.New("command not supported")
+	}
 
 	if mods && !adm {
-		dist.SendClientCommand(cmd)
+		keychanges.Ch() <- cmd
 	}
 
 	return r, err
@@ -63,19 +58,9 @@ var directns = []byte("dir")
 // runDirectCommand takes a client and a client command, does authentication on
 // the command if necessary, and runs the command directly on the correct
 // storage unit for the command's key
-func runDirectCommand(
+func dispatchDirectCommand(
 	c stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
-
-	mods := storage.CommandFactory.DirectCommandModifies(cmd.Command)
-	if mods {
-		ok, err := auth.Auth(cmd)
-		if !ok {
-			return nil, autherr
-		} else if err != nil {
-			return nil, err
-		}
-	}
 
 	dcmd := storage.CommandFactory.DirectCommand(
 		cmd.Command,
@@ -83,11 +68,5 @@ func runDirectCommand(
 		cmd.Args,
 	)
 
-	r, err := storage.RoutedCmd(cmd.StorageKey, dcmd)
-
-	if mods {
-		dist.SendClientCommand(cmd)
-	}
-
-	return r, err
+	return storage.RoutedCmd(cmd.StorageKey, dcmd)
 }

@@ -3,7 +3,6 @@ package distworker
 import (
 	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/server/core"
-	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	"github.com/mediocregopher/hyrax/server/dist"
 	storage "github.com/mediocregopher/hyrax/server/storage-router"
 )
@@ -22,7 +21,6 @@ func spin() {
 		case cmd := <-dist.ClientCommands:
 			cmd.Secret = nil
 			// TODO Do something with the error
-			keychanges.Ch() <- cmd
 			cids, _ := core.ClientIdsForMon(cmd.StorageKey)
 			for i := range cids {
 				if c, ok := crouter.Get(cids[i]); ok {
