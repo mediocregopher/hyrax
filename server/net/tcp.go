@@ -97,7 +97,6 @@ func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
 
 func (tc *tcpClient) Closing() {
 	core.ClientClosed(tc)
-	crouter.RemByClient(tc)
 	// We sleep some seconds just in case anything is still pushing to the
 	// command channel
 	time.Sleep(5 * time.Second)

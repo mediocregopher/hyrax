@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/mediocregopher/hyrax/server/dist"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/types"
 )
 
@@ -33,5 +34,6 @@ func ClientClosed(c stypes.Client) error {
 		return err
 	}
 
-	return nil
+	crouter.RemByClient(c)
+	return crouter.UnsubscribeAll(c)
 }
