@@ -91,7 +91,7 @@ func Load() error {
 	lasRaw := fc.GetStrs("listen-addr")
 	las := make([]ListenAddr, len(lasRaw))
 	for i := range lasRaw {
-		la, err := parseListenAddr(lasRaw[i])
+		la, err := ParseListenAddr(lasRaw[i])
 		if err != nil {
 			return err
 		}
@@ -119,7 +119,7 @@ func Load() error {
 	return nil
 }
 
-func parseListenAddr(param string) (*ListenAddr, error) {
+func ParseListenAddr(param string) (*ListenAddr, error) {
 	pieces := strings.SplitN(param, "::", 3)
 	la := ListenAddr{
 		Type:   pieces[0],

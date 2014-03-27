@@ -1,7 +1,11 @@
 package client
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
+
 	"github.com/mediocregopher/hyrax/client/net"
 	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
@@ -39,3 +43,32 @@ func NewClient(
 		return nil, errors.New("unknown connection type")
 	}
 }
+
+// Given a command and a secret used to generate the hash for a command, does
+// all the work of actually creating a ClientCommand
+func CreateClientCommand(
+	cmd, keyB, id, secretKey []byte,
+	args ...[]byte) *types.ClientCommand {
+
+	argsi := make([]interface{}, len(args))
+	for i := range args {
+		argsi[i] = interface{}(args[i])
+	}
+
+	mac := hmac.New(sha1.New, secretKey)
+	mac.Write(cmd)
+	mac.Write(keyB)
+	mac.Write(id)
+	sum := mac.Sum(nil)
+	sumhex := make([]byte, hex.EncodedLen(len(sum)))
+	hex.Encode(sumhex, sum)
+
+	return &types.ClientCommand{
+		Command:    cmd,
+		StorageKey: keyB,
+		Args:       argsi,
+		Id:         id,
+		Secret:     sumhex,
+	}
+}
+

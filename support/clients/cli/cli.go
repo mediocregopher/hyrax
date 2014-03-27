@@ -1,9 +1,6 @@
 package main
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"github.com/mediocregopher/flagconfig"
 	"github.com/mediocregopher/hyrax/client"
@@ -12,32 +9,6 @@ import (
 
 func printError(err error) {
 	fmt.Println("ERR:", err)
-}
-
-func genClientCommand(
-	cmd, keyB, id, secretKey []byte,
-	args ...[]byte) *types.ClientCommand {
-
-	argsi := make([]interface{}, len(args))
-	for i := range args {
-		argsi[i] = interface{}(args[i])
-	}
-
-	mac := hmac.New(sha1.New, secretKey)
-	mac.Write(cmd)
-	mac.Write(keyB)
-	mac.Write(id)
-	sum := mac.Sum(nil)
-	sumhex := make([]byte, hex.EncodedLen(len(sum)))
-	hex.Encode(sumhex, sum)
-
-	return &types.ClientCommand{
-		Command:    cmd,
-		StorageKey: keyB,
-		Args:       argsi,
-		Id:         id,
-		Secret:     sumhex,
-	}
 }
 
 func main() {
@@ -84,7 +55,7 @@ func main() {
 		args[i] = []byte(argsStrs[i])
 	}
 
-	ccmd := genClientCommand(cmd, keyB, id, secretKey, args...)
+	ccmd := client.CreateClientCommand(cmd, keyB, id, secretKey, args...)
 
 	ret, err := c.Cmd(ccmd)
 	if err != nil {
