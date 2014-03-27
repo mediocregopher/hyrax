@@ -7,8 +7,6 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
-var ekgns = []byte("ekg")
-
 // A mapping of ekgs to ClientIds and their names
 var ekgKeyToClientIdsNames = map[string]map[uint64][]byte{}
 
