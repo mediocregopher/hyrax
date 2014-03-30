@@ -1,34 +1,26 @@
 package config
 
 import (
-	"fmt"
 	"github.com/mediocregopher/flagconfig"
 	"log"
 
 	"github.com/mediocregopher/hyrax/types"
 )
 
-// Address to listen for incoming push events on
-var IncomingListenAddr string
-
-// The set of other node's IncomingListenAddr this node should connect to
-var PushTo []string
-
-// Address to listen for connections which will receive outoing push events
-var OutgoingListenAddr string
-
-// The set of other nodes' OutoingListenAddrs this node should connect to
-var PullFrom []string
-
-// The address this hyrax node, and others should use to connect to this one's
-// backend storage (redis).
+// Address of storage
 var StorageAddr string
 
 // Initial secrets to load in if this is the first-node
 var InitSecrets [][]byte
 
-// The list of currently active ListenAddrs
-var ListenAddrs []types.ListenAddr
+// The list of endpoints this node should server
+var ListenEndpoints []types.ListenEndpoint
+
+// The list of endpoints this node will send local key change events to
+var PushToEndpoints []types.ListenEndpoint
+
+// The list of endpoints this node will pull global key change events from
+var PullFromEndpoints []types.ListenEndpoint
 
 func init() {
 	if err := Load(); err != nil {
@@ -38,24 +30,6 @@ func init() {
 
 func Load() error {
 	fc := flagconfig.New("hyrax")
-	fc.StrParam(
-		"incoming-listen-addr",
-		"The address hyrax should listen on for connections which will send push events",
-		":9379",
-	)
-	fc.StrParams(
-		"push-to",
-		"Address of another node's incoming-listen-addr that this node will forward push events to",
-	)
-	fc.StrParam(
-		"outgoing-listen-addr",
-		"The address hyrax should listen on for connections which will have push events sent to them",
-		":9479",
-	)
-	fc.StrParams(
-		"pull-from",
-		"Address of another node's outgoing-listen-addr that this node will receive push events from. Can be specified multiple times",
-	)
 	fc.StrParams(
 		"init-secret",
 		"A global secret key as a string. Can be specified multiple times if this is a first-node",
@@ -66,42 +40,55 @@ func Load() error {
 		"127.0.0.1:6379",
 	)
 	fc.StrParams(
-		"listen-addr",
+		"listen-endpoint",
 		"The type, address, and format to listen for client connections on, separated by a \"::\". At the moment the only type is tcp, the only format is json. Can be specified multiple times",
 		"tcp::json:::2379",
+	)
+	fc.StrParams(
+		"push-to-endpoint",
+		"The endpoint address (see listen-endpoint for format) this node will send local keychange events to. Can be specified multiple times",
+	)
+	fc.StrParams(
+		"pull-from-endpoint",
+		"The endpoint address (see listen-endpoint for format) this node will pull global keychange events from. Can be specified multiple times",
 	)
 	if err := fc.Parse(); err != nil {
 		return err
 	}
 
-	lasRaw := fc.GetStrs("listen-addr")
-	las := make([]types.ListenAddr, len(lasRaw))
-	for i := range lasRaw {
-		la, err := types.ListenAddrFromString(lasRaw[i])
-		if err != nil {
-			return err
-		}
-		las[i] = *la
-	}
-
-	fn := fc.GetFlag("first-node")
 	isRaw := fc.GetStrs("init-secret")
-	if fn && len(isRaw) == 0 {
-		return fmt.Errorf("first-node set but no init-secrets specified")
-	}
-
 	is := make([][]byte, len(isRaw))
 	for i := range isRaw {
 		is[i] = []byte(isRaw[i])
 	}
 
-	IncomingListenAddr = fc.GetStr("incoming-listen-addr")
-	PushTo = fc.GetStrs("push-to")
-	OutgoingListenAddr = fc.GetStr("outgoing-listen-addr")
-	PullFrom = fc.GetStrs("pull-from")
 	InitSecrets = is
 	StorageAddr = fc.GetStr("storage-addr")
-	ListenAddrs = las
+
+	var err error
+	if ListenEndpoints, err = endpts(fc, "listen-endpoint"); err != nil {
+		return err
+	}
+	if PushToEndpoints, err = endpts(fc, "push-to-endpoint"); err != nil {
+		return err
+	}
+	if PullFromEndpoints, err = endpts(fc, "pull-from-endpoint"); err != nil {
+		return err
+	}
 	return nil
 }
 
+func endpts(
+	fc *flagconfig.FlagConfig, param string) ([]types.ListenEndpoint, error) {
+
+	lesRaw := fc.GetStrs(param)
+	les := make([]types.ListenEndpoint, len(lesRaw))
+	for i := range lesRaw {
+		le, err := types.ListenEndpointFromString(lesRaw[i])
+		if err != nil {
+			return nil, err
+		}
+		les[i] = *le
+	}
+	return les, nil
+}

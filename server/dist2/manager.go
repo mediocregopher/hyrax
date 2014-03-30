@@ -29,7 +29,7 @@ type Manager struct {
 }
 
 type managerClient struct {
-	la       *types.ListenAddr
+	le       *types.ListenEndpoint
 	cl       client.Client
 	pushCh   chan *types.ClientCommand
 	closeCh  chan struct{}
@@ -86,7 +86,7 @@ func (m* Manager) spin() {
 }
 
 func (m *Manager) ensureClient(listenAddr string) error {
-	la, err := types.ListenAddrFromString(listenAddr)
+	le, err := types.ListenEndpointFromString(listenAddr)
 	if err != nil {
 		return err
 	}
@@ -96,13 +96,13 @@ func (m *Manager) ensureClient(listenAddr string) error {
 	}
 
 	pushCh := make(chan *types.ClientCommand)
-	cl, err := client.NewClient(la, pushCh)
+	cl, err := client.NewClient(le, pushCh)
 	if err != nil {
 		return err
 	}
 
 	mcl := managerClient{
-		la:      la,
+		le:      le,
 		cl:      cl,
 		pushCh:  pushCh,
 		closeCh: make(chan struct{}),
@@ -200,7 +200,7 @@ func (mcl *managerClient) resurrect() bool {
 
 	go func() {
 		for {
-			cl, err := client.NewClient(mcl.la, mcl.pushCh)
+			cl, err := client.NewClient(mcl.le, mcl.pushCh)
 			if err != nil {
 				// TODO log error
 				time.Sleep(2 * time.Second)

@@ -28,16 +28,16 @@ type Client interface {
 // in a push channel, which can be nil if you want to ignore push messages. It
 // returns a Client created from your specifications, or an error.
 func NewClient(
-	la *types.ListenAddr, pushCh chan *types.ClientCommand) (Client, error) {
+	le *types.ListenEndpoint, pushCh chan *types.ClientCommand) (Client, error) {
 
-	trans, err := translate.StringToTranslator(la.Format)
+	trans, err := translate.StringToTranslator(le.Format)
 	if err != nil {
 		return nil, err
 	}
 
-	switch la.Type {
+	switch le.Type {
 	case "tcp":
-		return net.NewTcpClient(trans, la.Addr, pushCh)
+		return net.NewTcpClient(trans, le.Addr, pushCh)
 	default:
 		return nil, errors.New("unknown connection type")
 	}

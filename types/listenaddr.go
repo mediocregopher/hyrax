@@ -4,11 +4,11 @@ import (
 	"strings"
 )
 
-// ListenAddr is a structure containing all the information needed to create or
-// connect to a hyrax endpoint
-type ListenAddr struct {
+// ListenEndpoint is a structure containing all the information needed to create
+// or connect to a hyrax endpoint
+type ListenEndpoint struct {
 
-	// The type of the listen address. At the moment the only option is tcp
+	// The type of the endpoint. At the moment the only option is tcp
 	Type string
 
 	// The format to expect data to come in as. At the moment the only option is
@@ -19,23 +19,23 @@ type ListenAddr struct {
 	Addr string
 }
 
-func NewListenAddr(conntype, format, addr string) *ListenAddr {
-	return &ListenAddr{conntype, format, addr}
+func NewListenEndpoint(conntype, format, addr string) *ListenEndpoint {
+	return &ListenEndpoint{conntype, format, addr}
 }
 
-// Takes a flat string and parses out a ListenAddr
-func ListenAddrFromString(param string) (*ListenAddr, error) {
+// Takes a flat string and parses out a ListenEndpoint
+func ListenEndpointFromString(param string) (*ListenEndpoint, error) {
 	pieces := strings.SplitN(param, "::", 3)
-	la := ListenAddr{
+	le := ListenEndpoint{
 		Type:   pieces[0],
 		Format: pieces[1],
 		Addr:   pieces[2],
 	}
 
-	return &la, nil
+	return &le, nil
 }
 
-func (la *ListenAddr) String() string {
-	parts := []string{la.Type, la.Format, la.Addr}
+func (le *ListenEndpoint) String() string {
+	parts := []string{le.Type, le.Format, le.Addr}
 	return strings.Join(parts, "::")
 }
