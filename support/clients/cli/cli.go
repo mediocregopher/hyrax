@@ -38,7 +38,8 @@ func main() {
 		pushCh = make(chan *types.ClientCommand)
 	}
 
-	c, err := client.NewClient(format, conntype, addr, pushCh)
+	la := types.NewListenAddr(conntype, format, addr)
+	c, err := client.NewClient(la, pushCh)
 	if err != nil {
 		printError(err)
 		return

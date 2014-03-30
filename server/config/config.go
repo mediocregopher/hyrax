@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/mediocregopher/flagconfig"
 	"log"
-	"strings"
+
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // Address to listen for incoming push events on
@@ -26,23 +27,8 @@ var StorageAddr string
 // Initial secrets to load in if this is the first-node
 var InitSecrets [][]byte
 
-// ListenAddr is a structure containing all the information needed to create a
-// listener
-type ListenAddr struct {
-
-	// The type of the listen address. At the moment the only option is tcp
-	Type string
-
-	// The format to expect data to come in as. At the moment the only option is
-	// json
-	Format string
-
-	// The actual address to listen for client connections on
-	Addr string
-}
-
 // The list of currently active ListenAddrs
-var ListenAddrs []ListenAddr
+var ListenAddrs []types.ListenAddr
 
 func init() {
 	if err := Load(); err != nil {
@@ -89,9 +75,9 @@ func Load() error {
 	}
 
 	lasRaw := fc.GetStrs("listen-addr")
-	las := make([]ListenAddr, len(lasRaw))
+	las := make([]types.ListenAddr, len(lasRaw))
 	for i := range lasRaw {
-		la, err := ParseListenAddr(lasRaw[i])
+		la, err := types.ListenAddrFromString(lasRaw[i])
 		if err != nil {
 			return err
 		}
@@ -119,13 +105,3 @@ func Load() error {
 	return nil
 }
 
-func ParseListenAddr(param string) (*ListenAddr, error) {
-	pieces := strings.SplitN(param, "::", 3)
-	la := ListenAddr{
-		Type:   pieces[0],
-		Format: pieces[1],
-		Addr:   pieces[2],
-	}
-
-	return &la, nil
-}

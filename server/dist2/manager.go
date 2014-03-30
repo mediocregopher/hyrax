@@ -2,7 +2,6 @@ package dist2
 
 import (
 	"github.com/mediocregopher/hyrax/client"
-	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/types"
 	"time"
 )
@@ -30,7 +29,7 @@ type Manager struct {
 }
 
 type managerClient struct {
-	la       *config.ListenAddr
+	la       *types.ListenAddr
 	cl       client.Client
 	pushCh   chan *types.ClientCommand
 	closeCh  chan struct{}
@@ -87,7 +86,7 @@ func (m* Manager) spin() {
 }
 
 func (m *Manager) ensureClient(listenAddr string) error {
-	la, err := config.ParseListenAddr(listenAddr)
+	la, err := types.ListenAddrFromString(listenAddr)
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (m *Manager) ensureClient(listenAddr string) error {
 	}
 
 	pushCh := make(chan *types.ClientCommand)
-	cl, err := client.NewClient(la.Format, la.Type, la.Addr, pushCh)
+	cl, err := client.NewClient(la, pushCh)
 	if err != nil {
 		return err
 	}
@@ -201,11 +200,7 @@ func (mcl *managerClient) resurrect() bool {
 
 	go func() {
 		for {
-			cl, err := client.NewClient(
-				mcl.la.Format,
-				mcl.la.Type,
-				mcl.la.Addr,
-				mcl.pushCh)
+			cl, err := client.NewClient(mcl.la, mcl.pushCh)
 			if err != nil {
 				// TODO log error
 				time.Sleep(2 * time.Second)
