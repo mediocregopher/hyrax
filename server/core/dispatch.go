@@ -47,7 +47,7 @@ func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, er
 	}
 
 	if mods && !adm {
-		keychanges.Ch() <- cmd
+		keychanges.PubLocal(cmd)
 	}
 
 	return r, err

@@ -1,88 +1,89 @@
 package keychanges
 
 import (
-	"log"
-	"sync"
-
+	"github.com/mediocregopher/hyrax/server/pubsub"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
 
-// All key changes go through here
-var keyChangeCh = make(chan *types.ClientCommand)
+// The channel to use in the PubSub objects when we're only using the PubSub as
+// a giant single channel (like in global and local)
+const single = ""
 
-// Set of all clients and their proxy channels who are listening for key change
-// events
-var keyChangeClients = map[uint64]chan *types.ClientCommand{}
+var global = pubsub.New()
+var local = pubsub.New()
+var mon = pubsub.New()
 
-// For synchronizing changes to keyChangeClients
-var keyChangeLock = sync.RWMutex{}
-
-// A channel on which commands which will modify keys in the data store should
-// be pushed to
-func Ch() chan<- *types.ClientCommand {
-	return keyChangeCh
+// Subscribes a client to global key change events. These are events which are
+// being broadcast out to every node in the cluster.
+func SubscribeGlobal(cl stypes.Client) error {
+	return global.Subscribe(cl, single)
 }
 
-func init() {
-	// Spawn the spinner
-	go func() {
-		for cc := range keyChangeCh {
-			keyChangeLock.RLock()
-			for _, proxyCh := range keyChangeClients {
-				proxyCh <- cc
-			}
-			keyChangeLock.RUnlock()
-		}
-	}()
+// Unsubscribes a client from receiving global key change events, if it was
+// receiving any at all
+func UnsubscribeGlobal(cl stypes.Client) error {
+	return global.Unsubscribe(cl, single)
 }
 
-// Registers a client as wanting key change events pushed to them
-func AddClient(c stypes.Client) error {
-	cid := c.ClientId().Uint64()
-	keyChangeLock.Lock()
-	defer keyChangeLock.Unlock()
-	if _, ok := keyChangeClients[cid]; ok {
-		return nil
+// Publishes a key change globally, both to those subscribed to global key
+// changes and those subscribed (mon'd) to the actual key being changed
+func PubGlobal(cc *types.ClientCommand) error {
+	if err := global.Publish(cc, single); err != nil {
+		return err
 	}
 
-	proxyCh := make(chan *types.ClientCommand)
-	go proxySpin(proxyCh, c)
-	keyChangeClients[cid] = proxyCh
+	keyStr := string(cc.StorageKey)
+	return mon.Publish(cc, keyStr)
+}
+
+// Subscribes a client to local key change events, which are events that
+// originated on this server.
+func SubscribeLocal(cl stypes.Client) error {
+	return local.Subscribe(cl, single)
+}
+
+// Unsubscribes a client from receiving local key change events, if it was
+// receiving any at all
+func UnsubscribeLocal(cl stypes.Client) error {
+	return local.Unsubscribe(cl, single)
+}
+
+// Publishes a key change to those subscribed to local key change events
+func PubLocal(cc *types.ClientCommand) error {
+	return local.Publish(cc, single)
+}
+
+// Subscribes a client to receive keychange events about a particular key
+func Mon(cl stypes.Client, keys ...[]byte) error {
+	keysStr := make([]string, len(keys))
+	for i := range keys {
+		keysStr[i] = string(keys[i])
+	}
+	return mon.Subscribe(cl, keysStr...)
+}
+
+// Unsubscribes a client from particular keys, if it was subscribed at all
+func Unmon(cl stypes.Client, keys ...[]byte) error {
+	keysStr := make([]string, len(keys))
+	for i := range keys {
+		keysStr[i] = string(keys[i])
+	}
+	return mon.Unsubscribe(cl, keysStr...)
+}
+
+// Unsubscribes a client from any key change events it might be receiving
+func UnsubscribeAll(cl stypes.Client) error {
+	if err := global.Unsubscribe(cl, single); err != nil {
+		return err
+	}
+
+	if err := local.Unsubscribe(cl, single); err != nil {
+		return err
+	}
+
+	if err := mon.UnsubscribeAll(cl); err != nil {
+		return err
+	}
 	return nil
-}
-
-// Unregisters a client from having key change events pushed to them
-func RemoveClient(c stypes.Client) error {
-	cid := c.ClientId().Uint64()
-	keyChangeLock.Lock()
-	defer keyChangeLock.Unlock()
-	if proxyCh, ok := keyChangeClients[cid]; ok {
-		close(proxyCh)
-		delete(keyChangeClients, cid)
-	}
-	return nil
-}
-
-func proxySpin(proxyCh chan *types.ClientCommand, c stypes.Client) {
-	pushCh := c.CommandPushCh()
-	closeCh := c.ClosingCh()
-	for cc := range proxyCh {
-		select {
-		case pushCh <- cc:
-		case <-closeCh:
-			// Must be grounded by another go-routine in order prevent
-			// race-condition where spinner is writing to proxyCh while
-			// RemoveClient is waiting to delete it
-			go ground(proxyCh)
-			if err := RemoveClient(c); err != nil {
-				log.Printf("Error removing key change client: %s", err)
-			}
-		}
-	}
-}
-
-func ground(ch chan *types.ClientCommand) {
-	for _ = range ch {
-	}
 }
