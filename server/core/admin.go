@@ -32,7 +32,7 @@ func AListenToMe(
 		return nil, err
 	}
 
-	return []byte("OK"), LocalManager.EnsureClient(listenEndpoint)
+	return OK, LocalManager.EnsureClient(listenEndpoint)
 }
 
 // If another node calls AIGNOREME it is insisting that we stop caring about its
@@ -42,7 +42,7 @@ func AIgnoreMe(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []byte("OK"), LocalManager.CloseClient(listenEndpoint)
+	return OK, LocalManager.CloseClient(listenEndpoint)
 }
 
 func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {
@@ -66,7 +66,7 @@ func AGlobalSecretAdd(
 	}
 
 	auth.AddGlobalSecret(secret)
-	return nil, nil
+	return OK, nil
 }
 
 // AGlobalSecretRem removes a global secret from every node in the mesh's global
@@ -80,7 +80,7 @@ func AGlobalSecretRem(
 	}
 
 	auth.RemGlobalSecret(secret)
-	return nil, nil
+	return OK, nil
 }
 
 // AGlobalSecrets returns the list of currently active secrets on this node (and
@@ -105,7 +105,7 @@ func ASecretAdd(
 		return nil, err
 	}
 
-	return nil, auth.AddSecret(cmd.StorageKey, secret)
+	return OK, auth.AddSecret(cmd.StorageKey, secret)
 }
 
 // ASecretRem removes a particular secret from an individual key
@@ -117,7 +117,7 @@ func ASecretRem(
 		return nil, err
 	}
 
-	return nil, auth.RemSecret(cmd.StorageKey, secret)
+	return OK, auth.RemSecret(cmd.StorageKey, secret)
 }
 
 // ASecrets returns all the particular secrets for an individual key

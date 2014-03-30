@@ -36,7 +36,7 @@ func EAdd(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	} else {
 		ekgClientIdToKeysNames[cidi] = map[string][]byte{key: name}
 	}
-	return []byte("OK"), nil
+	return OK, nil
 }
 
 // ERem removes the client from an ekg's set of things it's watching, and
@@ -50,7 +50,7 @@ func ERem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	// If the client isn't on the ekg, don't bother
 	clientIdsM, ok := ekgKeyToClientIdsNames[key]
 	if !ok {
-		return []byte("OK"), nil
+		return OK, nil
 	}
 
 	if len(clientIdsM) == 1 {
@@ -66,7 +66,7 @@ func ERem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 		delete(keysM, key)
 	}
 
-	return []byte("OK"), nil
+	return OK, nil
 }
 
 // EMembers returns the list of ids being monitored by an ekg

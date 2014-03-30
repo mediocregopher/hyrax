@@ -13,6 +13,8 @@ var keyMaker = storage.KeyMaker
 var cmdFactory = storage.CommandFactory
 var thisnode = &config.StorageAddr
 
+var OK = []byte("OK")
+
 type BuiltInFunc func(
 	stypes.Client,
 	*types.ClientCommand) (interface{}, error)
