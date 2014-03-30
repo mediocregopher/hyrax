@@ -1,4 +1,4 @@
-package dist2
+package dist
 
 import (
 	"github.com/mediocregopher/hyrax/client"
@@ -11,6 +11,11 @@ type call struct {
 	retCh      chan error
 }
 
+type setCmdCall struct {
+	cmd  []byte
+	args []interface{}
+}
+
 // Manages connections to other hyrax nodes which will perform some command
 // periodically. If the connections are cut it will attempt to reconnect them
 // periodically as well.
@@ -21,9 +26,11 @@ type Manager struct {
 	// channel
 	PushCh  chan *types.ClientCommand
 	cmd     []byte
+	args    []interface{}
 	period  time.Duration
 
 	ensureCh   chan *call
+	setCmdCh   chan *setCmdCall
 	closeCh    chan *call
 	closeAllCh chan *call
 }
@@ -35,13 +42,15 @@ type managerClient struct {
 	closeCh  chan struct{}
 }
 
-func New(cmd string) *Manager {
+func New(cmd string, args ...interface{}) *Manager {
 	m := Manager{
 		clients:    map[string]*managerClient{},
 		PushCh:     make(chan *types.ClientCommand),
 		cmd:        []byte(cmd),
+		args:       args,
 		period:     5 * time.Second,
 		ensureCh:   make(chan *call),
+		setCmdCh:   make(chan *setCmdCall),
 		closeCh:    make(chan *call),
 		closeAllCh: make(chan *call),
 	}
@@ -58,6 +67,12 @@ func (m *Manager) EnsureClient(listenEndpoint string) error {
 	return <-c.retCh
 }
 
+// Tells the manager to change what command it is periodically sending to the
+// other nodes in the cluster
+func (m *Manager) SetCommand(cmd string, args ...interface{}) {
+	m.setCmdCh <- &setCmdCall{[]byte(cmd), args}
+}
+
 // Closes the connection to the given listenEndpoint (see EnsureClient)
 func (m *Manager) CloseClient(listenEndpoint string) error {
 	c := call{listenEndpoint, make(chan error)}
@@ -72,11 +87,14 @@ func (m *Manager) CloseAll() error {
 	return <-c.retCh
 }
 
-func (m* Manager) spin() {
+func (m *Manager) spin() {
 	for {
 		select {
 		case c := <-m.ensureCh:
 			c.retCh <- m.ensureClient(c.listenEndpoint)
+		case c := <-m.setCmdCh:
+			m.cmd = c.cmd
+			m.args = c.args
 		case c := <-m.closeCh:
 			c.retCh <- m.closeClient(c.listenEndpoint)
 		case c := <-m.closeAllCh:
@@ -140,7 +158,7 @@ spinloop:
 			m.PushCh <- cc
 		case <-ticker.C:
 			// TODO secret
-			cmd := client.CreateClientCommand(m.cmd, nil, nil, nil)
+			cmd := client.CreateClientCommand(m.cmd, nil, nil, nil, m.args...)
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
 				mcl.cl.Close()
 				break spinloop

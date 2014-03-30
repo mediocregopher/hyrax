@@ -32,7 +32,7 @@ func AListenToMe(
 		return nil, err
 	}
 
-	return OK, LocalManager.EnsureClient(listenEndpoint)
+	return OK, PullFromLocalManager.EnsureClient(listenEndpoint)
 }
 
 // If another node calls AIGNOREME it is insisting that we stop caring about its
@@ -42,7 +42,7 @@ func AIgnoreMe(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return OK, LocalManager.CloseClient(listenEndpoint)
+	return OK, PullFromLocalManager.CloseClient(listenEndpoint)
 }
 
 func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {

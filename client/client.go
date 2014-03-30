@@ -47,12 +47,7 @@ func NewClient(
 // all the work of actually creating a ClientCommand
 func CreateClientCommand(
 	cmd, keyB, id, secretKey []byte,
-	args ...[]byte) *types.ClientCommand {
-
-	argsi := make([]interface{}, len(args))
-	for i := range args {
-		argsi[i] = interface{}(args[i])
-	}
+	args ...interface{}) *types.ClientCommand {
 
 	mac := hmac.New(sha1.New, secretKey)
 	mac.Write(cmd)
@@ -65,7 +60,7 @@ func CreateClientCommand(
 	return &types.ClientCommand{
 		Command:    cmd,
 		StorageKey: keyB,
-		Args:       argsi,
+		Args:       args,
 		Id:         id,
 		Secret:     sumhex,
 	}

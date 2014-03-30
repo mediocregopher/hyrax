@@ -51,7 +51,7 @@ func main() {
 	secretKey := []byte(fc.GetStr("secret-key"))
 
 	argsStrs := fc.GetStrs("arg")
-	args := make([][]byte, len(argsStrs))
+	args := make([]interface{}, len(argsStrs))
 	for i := range argsStrs {
 		args[i] = []byte(argsStrs[i])
 	}

@@ -22,6 +22,9 @@ var PushToEndpoints []types.ListenEndpoint
 // The list of endpoints this node will pull global key change events from
 var PullFromEndpoints []types.ListenEndpoint
 
+// The endpoint to advertise to other nodes that they should connect to
+var MyEndpoint types.ListenEndpoint
+
 func init() {
 	if err := Load(); err != nil {
 		log.Fatal(err)
@@ -52,6 +55,11 @@ func Load() error {
 		"pull-from-endpoint",
 		"The endpoint address (see listen-endpoint for format) this node will pull global keychange events from. Can be specified multiple times",
 	)
+	fc.StrParam(
+		"my-endpoint",
+		"The endpoint address (see listen-endpoint for format) this node will advertise to other nodes that they should connect to",
+		"tcp::json::localhost:2379",
+	)
 	if err := fc.Parse(); err != nil {
 		return err
 	}
@@ -75,6 +83,14 @@ func Load() error {
 	if PullFromEndpoints, err = endpts(fc, "pull-from-endpoint"); err != nil {
 		return err
 	}
+
+	myEndpointRaw := fc.GetStr("my-endpoint")
+	myEndpoint, err := types.ListenEndpointFromString(myEndpointRaw)
+	if err != nil {
+		return err
+	}
+	MyEndpoint = *myEndpoint
+
 	return nil
 }
 
