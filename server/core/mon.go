@@ -3,8 +3,12 @@ package core
 import (
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	stypes "github.com/mediocregopher/hyrax/server/types"
+	"github.com/mediocregopher/hyrax/server/dist2"
 	"github.com/mediocregopher/hyrax/types"
 )
+
+var GlobalManager = dist2.New("MGLOBAL")
+var LocalManager = dist2.New("MLOCAL")
 
 // MGlobal adds the client to the set of clients that are monitoring key changes
 // happening all over the cluster. This hooks into a separate funtionality than

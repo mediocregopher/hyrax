@@ -3,8 +3,6 @@ package core
 import (
 	"errors"
 	"github.com/mediocregopher/hyrax/server/auth"
-	"github.com/mediocregopher/hyrax/server/dist"
-	"github.com/mediocregopher/hyrax/server/storage-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
@@ -14,71 +12,37 @@ import (
 var wrongNumArgs = errors.New("wrong number of arguments")
 var wrongArgType = errors.New("wrong argument type")
 
-func argsToAddr(cmd *types.ClientCommand) (*string, error) {
+func argsToEndpoint(cmd *types.ClientCommand) (string, error) {
 	if len(cmd.Args) != 1 {
-		return nil, wrongNumArgs
+		return "", wrongNumArgs
 	} else if addr, ok := cmd.Args[0].(string); ok {
-		return &addr, nil
+		return addr, nil
 	} else {
-		return nil, wrongArgType
+		return "", wrongArgType
 	}
 }
 
-// ANodeAdd uses the first argument as a node address, and adds that address to
-// the hyrax mesh this one is in.
-func ANodeAdd(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
-	node, err := argsToAddr(cmd)
+// If another node calls ALISTENTOME it is insisting that we ask it for its
+// local keychange events
+func AListenToMe(
+	_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+
+	listenEndpoint, err := argsToEndpoint(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, dist.AddNode(node)
+	return []byte("OK"), LocalManager.EnsureClient(listenEndpoint)
 }
 
-// ANodeRem uses the first argument as a node address, and removes that node
-// from the hyrax mesh, if it was in there to begin with
-func ANodeRem(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
-	node, err := argsToAddr(cmd)
+// If another node calls AIGNOREME it is insisting that we stop caring about its
+// local keychange events
+func AIgnoreMe(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+	listenEndpoint, err := argsToEndpoint(cmd)
 	if err != nil {
 		return nil, err
 	}
-
-	dist.RemNode(node)
-	return nil, nil
-}
-
-// TODO command to list nodes
-
-// ABucketSet sets the storage bucket at the index given as the first argument.
-// The second and third arguments are the connection type and address, and the
-// rest are extra that are passed through depending on the storage type
-func ABucketSet(
-	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
-	if len(cmd.Args) >= 3 {
-		return nil, wrongNumArgs
-	}
-
-	var ok bool
-	var bucket int
-	var conntype, addr string
-	var extra []interface{}
-
-	if bucket, ok = cmd.Args[0].(int); !ok {
-		return nil, wrongArgType
-	} else if conntype, ok = cmd.Args[1].(string); !ok {
-		return nil, wrongArgType
-	} else if addr, ok = cmd.Args[2].(string); !ok {
-		return nil, wrongArgType
-	}
-
-	extra = cmd.Args[3:]
-	return nil, router.SetBucket(bucket, conntype, addr, extra...)
-}
-
-// ABuckets returns the current bucket list
-func ABuckets(_ stypes.Client, _ *types.ClientCommand) (interface{}, error) {
-	return router.GetBuckets, nil
+	return []byte("OK"), LocalManager.CloseClient(listenEndpoint)
 }
 
 func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {

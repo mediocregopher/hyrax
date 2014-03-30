@@ -24,6 +24,8 @@ type builtInCommandInfo struct {
 }
 
 var builtInMap = map[string]*builtInCommandInfo{
+	"mglobal":  {Func: MGlobal, Admin: true},
+	"mlocal":   {Func: MLocal, Admin: true},
 	"madd":     {Func: MAdd},
 	"mrem":     {Func: MRem},
 	"eadd":     {Func: EAdd, Modifies: true},
@@ -31,28 +33,8 @@ var builtInMap = map[string]*builtInCommandInfo{
 	"emembers": {Func: EMembers},
 	"ecard":    {Func: ECard},
 
-	"anodeadd": {
-		Func:     ANodeAdd,
-		Modifies: true,
-		Admin:    true,
-	},
-
-	"anoderem": {
-		Func:     ANodeRem,
-		Modifies: true,
-		Admin:    true,
-	},
-
-	"abucketset": {
-		Func:     ABucketSet,
-		Modifies: true,
-		Admin:    true,
-	},
-
-	"abuckets": {
-		Func:  ABuckets,
-		Admin: true,
-	},
+	"alistentome": {Func: AListenToMe, Admin: true},
+	"aignoreme":   {Func: AIgnoreMe, Admin: true},
 
 	"aglobalsecretadd": {
 		Func:     AGlobalSecretAdd,

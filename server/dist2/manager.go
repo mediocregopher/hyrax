@@ -7,7 +7,7 @@ import (
 )
 
 type call struct {
-	listenAddr string
+	listenEndpoint string
 	retCh      chan error
 }
 
@@ -52,15 +52,15 @@ func New(cmd string) *Manager {
 // Takes in the listen address, which is the same as that given in
 // server/config. Ensures there is a client connected to that address which is
 // periodically calling the manager's command
-func (m *Manager) EnsureClient(listenAddr string) error {
-	c := call{listenAddr, make(chan error)}
+func (m *Manager) EnsureClient(listenEndpoint string) error {
+	c := call{listenEndpoint, make(chan error)}
 	m.ensureCh <- &c
 	return <-c.retCh
 }
 
-// Closes the connection to the given listenAddr (see EnsureClient)
-func (m *Manager) CloseClient(listenAddr string) error {
-	c := call{listenAddr, make(chan error)}
+// Closes the connection to the given listenEndpoint (see EnsureClient)
+func (m *Manager) CloseClient(listenEndpoint string) error {
+	c := call{listenEndpoint, make(chan error)}
 	m.closeCh <- &c
 	return <-c.retCh
 }
@@ -76,22 +76,22 @@ func (m* Manager) spin() {
 	for {
 		select {
 		case c := <-m.ensureCh:
-			c.retCh <- m.ensureClient(c.listenAddr)
+			c.retCh <- m.ensureClient(c.listenEndpoint)
 		case c := <-m.closeCh:
-			c.retCh <- m.closeClient(c.listenAddr)
+			c.retCh <- m.closeClient(c.listenEndpoint)
 		case c := <-m.closeAllCh:
 			c.retCh <-m.closeAll()
 		}
 	}
 }
 
-func (m *Manager) ensureClient(listenAddr string) error {
-	le, err := types.ListenEndpointFromString(listenAddr)
+func (m *Manager) ensureClient(listenEndpoint string) error {
+	le, err := types.ListenEndpointFromString(listenEndpoint)
 	if err != nil {
 		return err
 	}
 
-	if _, ok := m.clients[listenAddr]; ok {
+	if _, ok := m.clients[listenEndpoint]; ok {
 		return nil
 	}
 
@@ -107,13 +107,13 @@ func (m *Manager) ensureClient(listenAddr string) error {
 		pushCh:  pushCh,
 		closeCh: make(chan struct{}),
 	}
-	m.clients[listenAddr] = &mcl
+	m.clients[listenEndpoint] = &mcl
 	go m.clientSpin(&mcl)
 	return nil
 }
 
-func (m *Manager) closeClient(listenAddr string) error {
-	if mcl, ok := m.clients[listenAddr]; ok {
+func (m *Manager) closeClient(listenEndpoint string) error {
+	if mcl, ok := m.clients[listenEndpoint]; ok {
 		close(mcl.closeCh)
 	}
 	return nil
