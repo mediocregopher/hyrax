@@ -2,7 +2,6 @@ package core
 
 import (
 	stypes "github.com/mediocregopher/hyrax/server/types"
-	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	"github.com/mediocregopher/hyrax/types"
 )
@@ -32,6 +31,5 @@ func ClientClosed(c stypes.Client) error {
 		return err
 	}
 
-	crouter.RemByClient(c)
 	return keychanges.UnsubscribeAll(c)
 }

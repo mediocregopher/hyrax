@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	crouter "github.com/mediocregopher/hyrax/server/client-router"
 	"github.com/mediocregopher/hyrax/server/core"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/translate"
@@ -26,10 +25,6 @@ func (tl *tcpListener) Connected(
 		lconn:     lc,
 		id:        cid,
 		trans:     tl.trans,
-	}
-	if err := crouter.Add(&c); err != nil {
-		log.Printf("tcpListener got %s adding to crouter", err)
-		return nil, true
 	}
 
 	go c.pushProxy()
