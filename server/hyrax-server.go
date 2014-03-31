@@ -5,7 +5,6 @@ import (
 	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/server/core"
 	"github.com/mediocregopher/hyrax/server/net"
-	"github.com/mediocregopher/hyrax/server/storage-router"
 	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
 	"log"
@@ -20,9 +19,8 @@ func main() {
 		auth.AddGlobalSecret(secret)
 	}
 
-	storageAddr := config.StorageAddr
-	log.Println("Connecting to storage unit at", storageAddr)
-	if err := router.SetBucket(0, "tcp", storageAddr); err != nil {
+	log.Println("Connecting to datastore at: ", config.StorageInfo)
+	if err := core.SetupStorage(); err != nil {
 		log.Fatal(err)
 	}
 

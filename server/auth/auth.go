@@ -17,16 +17,16 @@ func Auth(cmd *types.ClientCommand) (bool, error) {
 		}
 	}
 
-	keySecrets, err := GetSecrets(cmd.StorageKey)
-	if err != nil {
-		return false, err
-	}
+	//keySecrets, err := GetSecrets(cmd.StorageKey)
+	//if err != nil {
+	//	return false, err
+	//}
 
-	for _, secret := range keySecrets {
-		if ok := checkSecret(secret, cmd); ok {
-			return true, nil
-		}
-	}
+	//for _, secret := range keySecrets {
+	//	if ok := checkSecret(secret, cmd); ok {
+	//		return true, nil
+	//	}
+	//}
 
 	return false, nil
 }

@@ -97,45 +97,45 @@ func AGlobalSecrets(
 }
 
 // ASecretAdd adds a particular secret to an individual key
-func ASecretAdd(
-	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
-	secret, err := argsToByteSlice(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return OK, auth.AddSecret(cmd.StorageKey, secret)
-}
+//func ASecretAdd(
+//	_ stypes.Client,
+//	cmd *types.ClientCommand) (interface{}, error) {
+//	secret, err := argsToByteSlice(cmd)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return OK, auth.AddSecret(cmd.StorageKey, secret)
+//}
 
 // ASecretRem removes a particular secret from an individual key
-func ASecretRem(
-	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
-	secret, err := argsToByteSlice(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return OK, auth.RemSecret(cmd.StorageKey, secret)
-}
+//func ASecretRem(
+//	_ stypes.Client,
+//	cmd *types.ClientCommand) (interface{}, error) {
+//	secret, err := argsToByteSlice(cmd)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return OK, auth.RemSecret(cmd.StorageKey, secret)
+//}
 
 // ASecrets returns all the particular secrets for an individual key
-func ASecrets(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
-	keyB, err := argsToByteSlice(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	secretsB, err := auth.GetSecrets(keyB)
-	if err != nil {
-		return nil, err
-	}
-
-	secrets := make([]string, len(secretsB))
-	for i := range secretsB {
-		secrets[i] = string(secretsB[i])
-	}
-
-	return secrets, nil
-}
+//func ASecrets(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+//	keyB, err := argsToByteSlice(cmd)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	secretsB, err := auth.GetSecrets(keyB)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	secrets := make([]string, len(secretsB))
+//	for i := range secretsB {
+//		secrets[i] = string(secretsB[i])
+//	}
+//
+//	return secrets, nil
+//}

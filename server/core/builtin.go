@@ -1,17 +1,10 @@
 package core
 
 import (
-	"github.com/mediocregopher/hyrax/server/config"
-	storage "github.com/mediocregopher/hyrax/server/storage-router"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 	"strings"
 )
-
-// Some shortcuts which will be used by builtin functions
-var keyMaker = storage.KeyMaker
-var cmdFactory = storage.CommandFactory
-var thisnode = &config.StorageAddr
 
 var OK = []byte("OK")
 
@@ -55,22 +48,22 @@ var builtInMap = map[string]*builtInCommandInfo{
 		Admin: true,
 	},
 
-	"asecretadd": {
-		Func:     ASecretAdd,
-		Modifies: true,
-		Admin:    true,
-	},
+	//"asecretadd": {
+	//	Func:     ASecretAdd,
+	//	Modifies: true,
+	//	Admin:    true,
+	//},
 
-	"asecretrem": {
-		Func:     ASecretRem,
-		Modifies: true,
-		Admin:    true,
-	},
+	//"asecretrem": {
+	//	Func:     ASecretRem,
+	//	Modifies: true,
+	//	Admin:    true,
+	//},
 
-	"asecrets": {
-		Func:  ASecrets,
-		Admin: true,
-	},
+	//"asecrets": {
+	//	Func:  ASecrets,
+	//	Admin: true,
+	//},
 }
 
 func getBuiltInCommandInfo(cmd []byte) (*builtInCommandInfo, bool) {
@@ -78,34 +71,34 @@ func getBuiltInCommandInfo(cmd []byte) (*builtInCommandInfo, bool) {
 	return cinfo, ok
 }
 
-// IsBuiltInCommand returns whether or not the given command is a valid builtin
+// CommandIsBuiltIn returns whether or not the given command is a valid builtin
 // one
-func IsBuiltInCommand(cmd []byte) bool {
+func CommandIsBuiltIn(cmd []byte) bool {
 	_, ok := getBuiltInCommandInfo(cmd)
 	return ok
 }
 
-// CommandModifies returns whether or not a given builtin command modifies the
-// backend state, or false if it's not a valid builtin command
-func CommandModifies(cmd []byte) bool {
+// BuiltInCommandModfies returns whether or not a given builtin command modifies
+// the backend state, or false if it's not a valid builtin command
+func BuiltInCommandModifies(cmd []byte) bool {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Modifies
 	}
 	return false
 }
 
-// IsAdminCommand returns whether or not a given builtin command is an admin
+// BuiltInIsAdmin returns whether or not a given builtin command is an admin
 // only command, or false if it's not a valid builtin command
-func IsAdminCommand(cmd []byte) bool {
+func BuiltInIsAdmin(cmd []byte) bool {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Admin
 	}
 	return false
 }
 
-// GetFunc returns the function for a given builtin command, or nil if the
-// command isn't a valid builtin command
-func GetFunc(cmd []byte) BuiltInFunc {
+// GetBuiltInFunc returns the function for a given builtin command, or nil if
+// the command isn't a valid builtin command
+func GetBuiltInFunc(cmd []byte) BuiltInFunc {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Func
 	}

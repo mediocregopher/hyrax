@@ -7,8 +7,8 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
-// Address of storage
-var StorageAddr string
+// Information for connecting to the storage instance
+var StorageInfo string
 
 // Initial secrets to load in if this is the first-node
 var InitSecrets [][]byte
@@ -38,8 +38,8 @@ func Load() error {
 		"A global secret key as a string. Can be specified multiple times if this is a first-node",
 	)
 	fc.StrParam(
-		"storage-addr",
-		"The address this hyrax node, and others should use to connect to this one's backend storage (redis).",
+		"storage-info",
+		"Info needed for connecting to the datastore(s). For redis this is just the address redis is listening on",
 		"127.0.0.1:6379",
 	)
 	fc.StrParams(
@@ -71,7 +71,7 @@ func Load() error {
 	}
 
 	InitSecrets = is
-	StorageAddr = fc.GetStr("storage-addr")
+	StorageInfo = fc.GetStr("storage-info")
 
 	var err error
 	if ListenEndpoints, err = endpts(fc, "listen-endpoint"); err != nil {
