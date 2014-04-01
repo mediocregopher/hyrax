@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
+
 	"github.com/mediocregopher/hyrax/types"
 )
 

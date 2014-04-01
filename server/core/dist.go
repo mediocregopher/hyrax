@@ -73,7 +73,6 @@ func Clusterize() error {
 		return err
 	}
 
-
 	return nil
 }
 

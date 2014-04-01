@@ -2,6 +2,7 @@ package translate
 
 import (
 	"github.com/mediocregopher/gojson"
+
 	. "github.com/mediocregopher/hyrax/types"
 )
 

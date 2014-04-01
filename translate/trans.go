@@ -2,8 +2,9 @@ package translate
 
 import (
 	"fmt"
-	"github.com/mediocregopher/hyrax/types"
 	"strings"
+
+	"github.com/mediocregopher/hyrax/types"
 )
 
 // A translator takes in raw data of some known format and translates it into

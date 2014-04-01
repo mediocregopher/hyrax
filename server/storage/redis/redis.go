@@ -18,15 +18,15 @@ type RedisConn struct {
 
 // A command into the redis connection, implements the Command interface
 type RedisCommand struct {
-	cmd   []byte
-	args  []interface{}
+	cmd  []byte
+	args []interface{}
 }
 
 // Returns a new RedisCommand with the given arguments
 func NewRedisCommand(cmd []byte, args []interface{}) storage.Command {
 	return &RedisCommand{
-		cmd:   cmd,
-		args:  args,
+		cmd:  cmd,
+		args: args,
 	}
 }
 

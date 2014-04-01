@@ -1,8 +1,8 @@
 package core
 
 import (
-	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
+	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
 

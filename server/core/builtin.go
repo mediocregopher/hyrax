@@ -1,9 +1,10 @@
 package core
 
 import (
+	"strings"
+
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
-	"strings"
 )
 
 var OK = []byte("OK")

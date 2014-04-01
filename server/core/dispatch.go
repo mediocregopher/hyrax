@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+
 	"github.com/mediocregopher/hyrax/server/auth"
 	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
@@ -88,7 +89,7 @@ func dispatchStorageCmd(
 	c stypes.Client,
 	cmd *types.ClientCommand) (interface{}, error) {
 
-	args := make([]interface{}, 1, len(cmd.Args) + 1)
+	args := make([]interface{}, 1, len(cmd.Args)+1)
 	args[0] = cmd.StorageKey
 	args = append(args, cmd.Args...)
 	dcmd := storageUnit.NewCommand(cmd.Command, args)

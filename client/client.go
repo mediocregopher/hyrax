@@ -65,4 +65,3 @@ func CreateClientCommand(
 		Secret:     sumhex,
 	}
 }
-

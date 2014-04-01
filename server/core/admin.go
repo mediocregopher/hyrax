@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+
 	"github.com/mediocregopher/hyrax/server/auth"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"

@@ -15,8 +15,8 @@ import (
 type PubSub struct {
 	subClients map[string]map[stypes.Client]bool
 	clientSubs map[stypes.Client]map[string]bool
-	subChs map[string]chan *types.ClientCommand
-	subLock sync.RWMutex
+	subChs     map[string]chan *types.ClientCommand
+	subLock    sync.RWMutex
 }
 
 // Returns a new PubSub system
@@ -24,7 +24,7 @@ func New() *PubSub {
 	return &PubSub{
 		subClients: map[string]map[stypes.Client]bool{},
 		clientSubs: map[stypes.Client]map[string]bool{},
-		subChs: map[string]chan *types.ClientCommand{},
+		subChs:     map[string]chan *types.ClientCommand{},
 	}
 }
 
@@ -38,7 +38,7 @@ func (ps *PubSub) subSpin(sub string) {
 		gslog.Errorf("Missing data for sub %s in pubsub", sub)
 		return
 	}
-	
+
 	for cmd := range subCh {
 		ps.subLock.RLock()
 		for client := range clients {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/mediocregopher/flagconfig"
+
 	"github.com/mediocregopher/hyrax/client"
 	"github.com/mediocregopher/hyrax/types"
 )

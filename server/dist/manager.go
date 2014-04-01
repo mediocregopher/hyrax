@@ -10,7 +10,7 @@ import (
 
 type call struct {
 	listenEndpoint string
-	retCh      chan error
+	retCh          chan error
 }
 
 type setCmdCall struct {
@@ -26,10 +26,10 @@ type Manager struct {
 
 	// All push messages on any clients being managed will be pused down this
 	// channel
-	PushCh  chan *types.ClientCommand
-	cmd     []byte
-	args    []interface{}
-	period  time.Duration
+	PushCh chan *types.ClientCommand
+	cmd    []byte
+	args   []interface{}
+	period time.Duration
 
 	ensureCh   chan *call
 	setCmdCh   chan *setCmdCall
@@ -38,10 +38,10 @@ type Manager struct {
 }
 
 type managerClient struct {
-	le       *types.ListenEndpoint
-	cl       client.Client
-	pushCh   chan *types.ClientCommand
-	closeCh  chan struct{}
+	le      *types.ListenEndpoint
+	cl      client.Client
+	pushCh  chan *types.ClientCommand
+	closeCh chan struct{}
 }
 
 func New(cmd string, args ...interface{}) *Manager {
@@ -100,7 +100,7 @@ func (m *Manager) spin() {
 		case c := <-m.closeCh:
 			c.retCh <- m.closeClient(c.listenEndpoint)
 		case c := <-m.closeAllCh:
-			c.retCh <-m.closeAll()
+			c.retCh <- m.closeAll()
 		}
 	}
 }
@@ -145,7 +145,6 @@ func (m *Manager) closeAll() error {
 	}
 	return nil
 }
-
 
 func (m *Manager) clientSpin(mcl *managerClient) {
 	ticker := time.NewTicker(m.period)
