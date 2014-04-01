@@ -6,7 +6,7 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
-var closedCmd = []byte("eclose")
+var closedCmd = "eclose"
 
 // ClientClosed takes care of all cleanup that's necessary when a client has
 // closed

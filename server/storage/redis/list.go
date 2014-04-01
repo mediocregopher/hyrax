@@ -101,7 +101,7 @@ var commandMap = map[string]*CommandInfo{
 	"zscore":           {},
 }
 
-func getCommandInfo(cmd []byte) (*CommandInfo, bool) {
-	cinfo, ok := commandMap[strings.ToLower(string(cmd))]
+func getCommandInfo(cmd string) (*CommandInfo, bool) {
+	cinfo, ok := commandMap[strings.ToLower(cmd)]
 	return cinfo, ok
 }

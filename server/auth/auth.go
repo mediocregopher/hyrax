@@ -34,11 +34,11 @@ func Auth(cmd *types.ClientCommand) (bool, error) {
 
 func checkSecret(secret []byte, cmd *types.ClientCommand) bool {
 	mac := hmac.New(sha1.New, secret)
-	mac.Write(cmd.Command)
-	mac.Write(cmd.StorageKey)
-	mac.Write(cmd.Id)
+	mac.Write([]byte(cmd.Command))
+	mac.Write([]byte(cmd.StorageKey))
+	mac.Write([]byte(cmd.Id))
 	sum := mac.Sum(nil)
 	sumhex := make([]byte, hex.EncodedLen(len(sum)))
 	hex.Encode(sumhex, sum)
-	return hmac.Equal(sumhex, cmd.Secret)
+	return hmac.Equal(sumhex, []byte(cmd.Secret))
 }

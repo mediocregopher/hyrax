@@ -14,7 +14,7 @@ type call struct {
 }
 
 type setCmdCall struct {
-	cmd  []byte
+	cmd  string
 	args []interface{}
 }
 
@@ -27,7 +27,7 @@ type Manager struct {
 	// All push messages on any clients being managed will be pused down this
 	// channel
 	PushCh chan *types.ClientCommand
-	cmd    []byte
+	cmd    string
 	args   []interface{}
 	period time.Duration
 
@@ -48,7 +48,7 @@ func New(cmd string, args ...interface{}) *Manager {
 	m := Manager{
 		clients:    map[string]*managerClient{},
 		PushCh:     make(chan *types.ClientCommand),
-		cmd:        []byte(cmd),
+		cmd:        cmd,
 		args:       args,
 		period:     5 * time.Second,
 		ensureCh:   make(chan *call),
@@ -72,7 +72,7 @@ func (m *Manager) EnsureClient(listenEndpoint string) error {
 // Tells the manager to change what command it is periodically sending to the
 // other nodes in the cluster
 func (m *Manager) SetCommand(cmd string, args ...interface{}) {
-	m.setCmdCh <- &setCmdCall{[]byte(cmd), args}
+	m.setCmdCh <- &setCmdCall{cmd, args}
 }
 
 // Closes the connection to the given listenEndpoint (see EnsureClient)
@@ -159,7 +159,7 @@ spinloop:
 			m.PushCh <- cc
 		case <-ticker.C:
 			// TODO secret
-			cmd := client.CreateClientCommand(m.cmd, nil, nil, nil, m.args...)
+			cmd := client.CreateClientCommand(m.cmd, "", "", "", m.args...)
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
 				mcl.cl.Close()
 				break spinloop
@@ -179,7 +179,7 @@ spinloop:
 	for {
 		if doCmd {
 			// TODO secret
-			cmd := client.CreateClientCommand(m.cmd, nil, nil, nil)
+			cmd := client.CreateClientCommand(m.cmd, "", "", "")
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
 				gslog.Errorf("managerClient Cmd(%v): %s", cmd, err)
 				resurrect = true

@@ -18,19 +18,19 @@ type RedisConn struct {
 
 // A command into the redis connection, implements the Command interface
 type RedisCommand struct {
-	cmd  []byte
+	cmd  string
 	args []interface{}
 }
 
 // Returns a new RedisCommand with the given arguments
-func NewRedisCommand(cmd []byte, args []interface{}) storage.Command {
+func NewRedisCommand(cmd string, args []interface{}) storage.Command {
 	return &RedisCommand{
 		cmd:  cmd,
 		args: args,
 	}
 }
 
-func (c *RedisCommand) Cmd() []byte {
+func (c *RedisCommand) Cmd() string {
 	return c.cmd
 }
 
@@ -84,7 +84,7 @@ func (r *RedisConn) spin() {
 }
 
 func (r *RedisConn) cmd(cmd storage.Command) (interface{}, error) {
-	reply := r.conn.Cmd(string(cmd.Cmd()), cmd.Args()...)
+	reply := r.conn.Cmd(cmd.Cmd(), cmd.Args()...)
 	return decodeReply(reply)
 }
 
@@ -127,25 +127,25 @@ func (r *RedisConn) Cmd(cmdb *storage.CommandBundle) {
 }
 
 // Implements NewCommand for Storage
-func (_ *RedisConn) NewCommand(cmd []byte, args []interface{}) storage.Command {
+func (_ *RedisConn) NewCommand(cmd string, args []interface{}) storage.Command {
 	return NewRedisCommand(cmd, args)
 }
 
 // Implements CommandAllowed for Storage
-func (_ *RedisConn) CommandAllowed(cmd []byte) bool {
+func (_ *RedisConn) CommandAllowed(cmd string) bool {
 	_, ok := getCommandInfo(cmd)
 	return ok
 }
 
 // Implements CommandModifies for Storage
-func (_ *RedisConn) CommandModifies(cmd []byte) bool {
+func (_ *RedisConn) CommandModifies(cmd string) bool {
 	cinfo, ok := getCommandInfo(cmd)
 	return ok && cinfo.Modifies
 }
 
 // Implements CommandIsAdmin for Storage. Redis has no administrative commands
 // which are allowed so this is always false
-func (_ *RedisConn) CommandIsAdmin(_ []byte) bool {
+func (_ *RedisConn) CommandIsAdmin(_ string) bool {
 	return false
 }
 

@@ -46,16 +46,15 @@ func NewClient(
 // Given a command and a secret used to generate the hash for a command, does
 // all the work of actually creating a ClientCommand
 func CreateClientCommand(
-	cmd, keyB, id, secretKey []byte,
+	cmd, keyB, id, secretKey string,
 	args ...interface{}) *types.ClientCommand {
 
-	mac := hmac.New(sha1.New, secretKey)
-	mac.Write(cmd)
-	mac.Write(keyB)
-	mac.Write(id)
+	mac := hmac.New(sha1.New, []byte(secretKey))
+	mac.Write([]byte(cmd))
+	mac.Write([]byte(keyB))
+	mac.Write([]byte(id))
 	sum := mac.Sum(nil)
-	sumhex := make([]byte, hex.EncodedLen(len(sum)))
-	hex.Encode(sumhex, sum)
+	sumhex := hex.EncodeToString(sum)
 
 	return &types.ClientCommand{
 		Command:    cmd,

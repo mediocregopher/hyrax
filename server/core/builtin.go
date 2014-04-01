@@ -7,7 +7,7 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
-var OK = []byte("OK")
+var OK = "OK"
 
 type BuiltInFunc func(
 	stypes.Client,
@@ -67,21 +67,21 @@ var builtInMap = map[string]*builtInCommandInfo{
 	//},
 }
 
-func getBuiltInCommandInfo(cmd []byte) (*builtInCommandInfo, bool) {
-	cinfo, ok := builtInMap[strings.ToLower(string(cmd))]
+func getBuiltInCommandInfo(cmd string) (*builtInCommandInfo, bool) {
+	cinfo, ok := builtInMap[strings.ToLower(cmd)]
 	return cinfo, ok
 }
 
 // CommandIsBuiltIn returns whether or not the given command is a valid builtin
 // one
-func CommandIsBuiltIn(cmd []byte) bool {
+func CommandIsBuiltIn(cmd string) bool {
 	_, ok := getBuiltInCommandInfo(cmd)
 	return ok
 }
 
 // BuiltInCommandModfies returns whether or not a given builtin command modifies
 // the backend state, or false if it's not a valid builtin command
-func BuiltInCommandModifies(cmd []byte) bool {
+func BuiltInCommandModifies(cmd string) bool {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Modifies
 	}
@@ -90,7 +90,7 @@ func BuiltInCommandModifies(cmd []byte) bool {
 
 // BuiltInIsAdmin returns whether or not a given builtin command is an admin
 // only command, or false if it's not a valid builtin command
-func BuiltInIsAdmin(cmd []byte) bool {
+func BuiltInIsAdmin(cmd string) bool {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Admin
 	}
@@ -99,7 +99,7 @@ func BuiltInIsAdmin(cmd []byte) bool {
 
 // GetBuiltInFunc returns the function for a given builtin command, or nil if
 // the command isn't a valid builtin command
-func GetBuiltInFunc(cmd []byte) BuiltInFunc {
+func GetBuiltInFunc(cmd string) BuiltInFunc {
 	if cinfo, ok := getBuiltInCommandInfo(cmd); ok {
 		return cinfo.Func
 	}

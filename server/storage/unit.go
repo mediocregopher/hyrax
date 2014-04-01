@@ -21,7 +21,7 @@ type Command interface {
 
 	// Cmd returns the basic command that's going to be executed. This will
 	// differ depending on backend
-	Cmd() []byte
+	Cmd() string
 
 	// Args is a list of arguments to the command. This will also differ
 	// depending on platform.
@@ -53,22 +53,22 @@ type Storage interface {
 	// Given the command and arguments for an action on the datastore, returns a
 	// Command instance. This method should not actually affect anything about
 	// the Storage connection.
-	NewCommand([]byte, []interface{}) Command
+	NewCommand(string, []interface{}) Command
 
 	// Returns whether or not a command is allowed to be called under any
 	// circumstances. This method should not actually affect anything about the
 	// Storage connection.
-	CommandAllowed([]byte) bool
+	CommandAllowed(string) bool
 
 	// Returns whether or not a command will modify state within the datastore
 	// (and therefore potentially require authentication). This method should
 	// not actually affect anything about the Storage connection.
-	CommandModifies([]byte) bool
+	CommandModifies(string) bool
 
 	// Returns whether or not a command requires administrative privileges (and
 	// therefore potentially require authentication). This method should not
 	// actually affect anything about the Storage connection.
-	CommandIsAdmin([]byte) bool
+	CommandIsAdmin(string) bool
 
 	// Close tells the connection that it's no longer needed. It should close
 	// any external resources it has open and tell all internal go-routines to
@@ -184,20 +184,20 @@ func (su *StorageUnit) Cmd(cmd Command) (interface{}, error) {
 }
 
 // Returns a new Command instance based on the given command and arguments
-func (su *StorageUnit) NewCommand(cmd []byte, args []interface{}) Command {
+func (su *StorageUnit) NewCommand(cmd string, args []interface{}) Command {
 	return su.conns[0].NewCommand(cmd, args)
 }
 
 // Returns whether or not a command is allowed to be run at all on the datastore
-func (su *StorageUnit) CommandAllowed(cmd []byte) bool {
+func (su *StorageUnit) CommandAllowed(cmd string) bool {
 	return su.conns[0].CommandAllowed(cmd)
 }
 
 // Returns whether or not a command modifies state on the datastore
-func (su *StorageUnit) CommandModifies(cmd []byte) bool {
+func (su *StorageUnit) CommandModifies(cmd string) bool {
 	return su.conns[0].CommandModifies(cmd)
 }
 
-func (su *StorageUnit) CommandIsAdmin(cmd []byte) bool {
+func (su *StorageUnit) CommandIsAdmin(cmd string) bool {
 	return su.conns[0].CommandIsAdmin(cmd)
 }

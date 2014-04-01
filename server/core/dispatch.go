@@ -39,7 +39,7 @@ func SetupStorage() error {
 func RunCommand(c stypes.Client, cmd *types.ClientCommand) *types.ClientReturn {
 	r, err := dispatchCommand(c, cmd)
 	if err != nil {
-		return &types.ClientReturn{Error: []byte(err.Error())}
+		return types.ErrorReturn(err)
 	}
 
 	return &types.ClientReturn{Return: r}
@@ -47,7 +47,7 @@ func RunCommand(c stypes.Client, cmd *types.ClientCommand) *types.ClientReturn {
 
 func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 
-	var modifies, isAdmin func([]byte) bool
+	var modifies, isAdmin func(string) bool
 	var dispatch func(stypes.Client, *types.ClientCommand) (interface{}, error)
 	if CommandIsBuiltIn(cmd.Command) {
 		modifies = BuiltInCommandModifies
@@ -73,7 +73,7 @@ func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, er
 	}
 	// Before this cmd can get sent outside this go-routine we want to make sure
 	// the secret is cleared
-	cmd.Secret = nil
+	cmd.Secret = ""
 
 	r, err := dispatch(c, cmd)
 	if err != nil && mods && !adm {

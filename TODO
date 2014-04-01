@@ -10,4 +10,3 @@
   goroutine
 * make pubsub more efficient
 * address all TODO notes in the code
-* Revisit the json []byte stuff

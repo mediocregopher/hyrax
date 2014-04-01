@@ -33,8 +33,7 @@ func PubGlobal(cc *types.ClientCommand) error {
 		return err
 	}
 
-	keyStr := string(cc.StorageKey)
-	return mon.Publish(cc, keyStr)
+	return mon.Publish(cc, cc.StorageKey)
 }
 
 // Subscribes a client to local key change events, which are events that
@@ -55,19 +54,19 @@ func PubLocal(cc *types.ClientCommand) error {
 }
 
 // Subscribes a client to receive keychange events about a particular key
-func Mon(cl stypes.Client, keys ...[]byte) error {
+func Mon(cl stypes.Client, keys ...string) error {
 	keysStr := make([]string, len(keys))
 	for i := range keys {
-		keysStr[i] = string(keys[i])
+		keysStr[i] = keys[i]
 	}
 	return mon.Subscribe(cl, keysStr...)
 }
 
 // Unsubscribes a client from particular keys, if it was subscribed at all
-func Unmon(cl stypes.Client, keys ...[]byte) error {
+func Unmon(cl stypes.Client, keys ...string) error {
 	keysStr := make([]string, len(keys))
 	for i := range keys {
-		keysStr[i] = string(keys[i])
+		keysStr[i] = keys[i]
 	}
 	return mon.Unsubscribe(cl, keysStr...)
 }

@@ -46,15 +46,15 @@ func main() {
 		return
 	}
 
-	cmd := []byte(fc.GetStr("cmd"))
-	keyB := []byte(fc.GetStr("key"))
-	id := []byte(fc.GetStr("id"))
-	secretKey := []byte(fc.GetStr("secret-key"))
+	cmd := fc.GetStr("cmd")
+	keyB := fc.GetStr("key")
+	id := fc.GetStr("id")
+	secretKey := fc.GetStr("secret-key")
 
 	argsStrs := fc.GetStrs("arg")
 	args := make([]interface{}, len(argsStrs))
 	for i := range argsStrs {
-		args[i] = []byte(argsStrs[i])
+		args[i] = argsStrs[i]
 	}
 
 	ccmd := client.CreateClientCommand(cmd, keyB, id, secretKey, args...)
@@ -71,9 +71,9 @@ func main() {
 		for pushed := range pushCh {
 			fmt.Printf(
 				"PUSH from '%s' %s %s %v\n",
-				string(pushed.Id),
-				string(pushed.Command),
-				string(pushed.StorageKey),
+				pushed.Id,
+				pushed.Command,
+				pushed.StorageKey,
 				pushed.Args,
 			)
 		}

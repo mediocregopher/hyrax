@@ -16,7 +16,7 @@ func main() {
 	secrets := config.InitSecrets
 	gslog.Info("Loading up the secrets")
 	for _, secret := range secrets {
-		gslog.Info("Loading secret:", string(secret))
+		gslog.Info("Loading secret:", secret)
 		auth.AddGlobalSecret(secret)
 	}
 

@@ -46,7 +46,7 @@ func (tc *TcpClient) Read(buf *bufio.Reader) (interface{}, error, bool) {
 	cc, err := tc.trans.ToClientCommand(b)
 	if err != nil {
 		return nil, err, false
-	} else if cc.Command != nil {
+	} else if cc.Command != "" {
 		return cc, nil, false
 	}
 
@@ -88,8 +88,8 @@ func (tc *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
 		return nil, errors.New("Did not receive CommandReturn back")
 	}
 
-	if cr.Error != nil {
-		return nil, errors.New(string(cr.Error))
+	if cr.Error != "" {
+		return nil, errors.New(cr.Error)
 	}
 
 	return cr.Return, nil
