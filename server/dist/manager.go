@@ -1,9 +1,11 @@
 package dist
 
 import (
+	"github.com/grooveshark/golib/gslog"
+	"time"
+
 	"github.com/mediocregopher/hyrax/client"
 	"github.com/mediocregopher/hyrax/types"
-	"time"
 )
 
 type call struct {
@@ -180,7 +182,7 @@ spinloop:
 			// TODO secret
 			cmd := client.CreateClientCommand(m.cmd, nil, nil, nil)
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
-				// TODO log error
+				gslog.Errorf("managerClient Cmd(%v): %s", cmd, err)
 				resurrect = true
 			}
 			doCmd = false
@@ -220,7 +222,7 @@ func (mcl *managerClient) resurrect() bool {
 		for {
 			cl, err := client.NewClient(mcl.le, mcl.pushCh)
 			if err != nil {
-				// TODO log error
+				gslog.Errorf("Error reconnecting to %s: %s", mcl.le, err)
 				time.Sleep(2 * time.Second)
 				continue
 			}

@@ -1,8 +1,9 @@
 package pubsub
 
 import (
-	"time"
+	"github.com/grooveshark/golib/gslog"
 	"sync"
+	"time"
 
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
@@ -34,7 +35,7 @@ func (ps *PubSub) subSpin(sub string) {
 	ps.subLock.RUnlock()
 
 	if !ok1 || !ok2 {
-		// TODO log error
+		gslog.Errorf("Missing data for sub %s in pubsub", sub)
 		return
 	}
 	
@@ -44,7 +45,7 @@ func (ps *PubSub) subSpin(sub string) {
 			select {
 			case client.CommandPushCh() <- cmd:
 			case <-time.After(10 * time.Second):
-				// TODO log error
+				gslog.Warnf("Timeout pubbing to %p for sub %s", client, sub)
 			}
 		}
 		ps.subLock.RUnlock()
@@ -95,7 +96,7 @@ func (ps *PubSub) Unsubscribe(cl stypes.Client, subs ...string) error {
 		delete(cs, sub)
 		sc, ok := ps.subClients[sub]
 		if !ok {
-			// TODO log error
+			gslog.Errorf("No subClients for sub %s", sub)
 			continue
 		}
 		delete(sc, cl)

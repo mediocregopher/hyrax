@@ -1,7 +1,8 @@
 package storage
 
 import (
-	"fmt"
+	"errors"
+	"github.com/grooveshark/golib/gslog"
 	"time"
 )
 
@@ -169,26 +170,16 @@ func (su *StorageUnit) Cmd(cmd Command) (interface{}, error) {
 	select {
 	case su.cmdCh <- cmdb:
 	case <-time.After(10 * time.Second):
-		// TODO logging
-		err := fmt.Errorf(
-			"sending command to StorageUnit %s:%s timedout",
-			su.ConnType,
-			su.Addr,
-		)
-		return nil, err
+		gslog.Errorf("send command %s:%s timeout", su.ConnType, su.Addr)
+		return nil, errors.New("timeout")
 	}
 
 	select {
 	case cret := <-cmdb.RetCh:
 		return cret.Ret, cret.Err
 	case <-time.After(10 * time.Second):
-		// TODO logging
-		err := fmt.Errorf(
-			"receiving response from StorageUnit %s:%s timedout",
-			su.ConnType,
-			su.Addr,
-		)
-		return nil, err
+		gslog.Errorf("receive response %s:%s timeout", su.ConnType, su.Addr)
+		return nil, errors.New("timeout")
 	}
 }
 

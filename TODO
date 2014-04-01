@@ -1,4 +1,3 @@
-* gslog
 * make sure core has all real logic
 * make sure core has all real configuration
 * move builtin into its own package?
@@ -11,3 +10,5 @@
   goroutine
 * make pubsub more efficient
 * address all TODO notes in the code
+* Revisit the json []byte stuff
+* separate imports and re-run gofmt

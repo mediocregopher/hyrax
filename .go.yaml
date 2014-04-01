@@ -6,10 +6,10 @@ deps:
       ref: d4347b079a16213c138623227b6be4559b69da23
       path: github.com/fzzy/radix
 
-    - loc: https://github.com/mediocregopher/ghost.git
+    - loc: https://github.com/grooveshark/golib.git
       type: git
-      ref: v0.3.1
-      path: github.com/mediocregopher/ghost
+      ref: v0.1.0
+      path: github.com/grooveshark/golib
 
     - loc: https://github.com/mediocregopher/flagconfig.git
       type: git

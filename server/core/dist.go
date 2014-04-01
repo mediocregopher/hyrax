@@ -1,6 +1,8 @@
 package core
 
 import (
+	"github.com/grooveshark/golib/gslog"
+
 	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
 	"github.com/mediocregopher/hyrax/server/dist"
@@ -25,14 +27,21 @@ func init() {
 }
 
 func clusterSpin() {
+	var err error
+	var cc *types.ClientCommand
 	for {
-		// TODO log errors
+		err = nil
+		cc = nil
 		select {
-		case cc := <-PullFromGlobalManager.PushCh:
-			_ = keychanges.PubGlobal(cc)
-		case cc := <-PullFromLocalManager.PushCh:
-			_ = keychanges.PubGlobal(cc)
+		case cc = <-PullFromGlobalManager.PushCh:
+			err = keychanges.PubGlobal(cc)
+		case cc = <-PullFromLocalManager.PushCh:
+			err = keychanges.PubGlobal(cc)
 		case _ = <-PushToManager.PushCh:
+		}
+
+		if err != nil {
+			gslog.Errorf("PubGlobal(%v) got %s", cc, err)
 		}
 	}
 }

@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/mediocregopher/flagconfig"
-	"log"
+	"github.com/grooveshark/golib/gslog"
 
 	"github.com/mediocregopher/hyrax/types"
 )
@@ -27,7 +27,7 @@ var MyEndpoint types.ListenEndpoint
 
 func init() {
 	if err := Load(); err != nil {
-		log.Fatal(err)
+		gslog.Fatal(err.Error())
 	}
 }
 

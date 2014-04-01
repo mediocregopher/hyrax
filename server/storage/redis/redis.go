@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 	"github.com/fzzy/radix/redis"
-	"log"
+	"github.com/grooveshark/golib/gslog"
 	"time"
 
 	"github.com/mediocregopher/hyrax/server/storage"
@@ -77,7 +77,7 @@ func (r *RedisConn) spin() {
 			select {
 			case cmdb.RetCh <- &ret:
 			case <-time.After(10 * time.Second):
-				log.Printf("Timedout in redisconn replying to cmd %v", cmdb.Cmd)
+				gslog.Errorf("RedisConn timedout replying to cmd %v", cmdb.Cmd)
 			}
 		}
 	}

@@ -2,8 +2,8 @@ package net
 
 import (
 	"bufio"
+	"github.com/grooveshark/golib/gslog"
 	"github.com/mediocregopher/manatcp"
-	"log"
 	"time"
 
 	"github.com/mediocregopher/hyrax/server/core"
@@ -70,7 +70,7 @@ func (tc *tcpClient) Read(buf *bufio.Reader) (interface{}, bool) {
 func (tc *tcpClient) Write(buf *bufio.Writer, clientRet interface{}) bool {
 	b, err := tc.trans.FromClientReturn(clientRet.(*types.ClientReturn))
 	if err != nil {
-		log.Printf("tcpClient got %s from FromClientReturn(%v)", err, clientRet)
+		gslog.Warnf("tcpClient FromClientReturn(%v): %s", clientRet, err)
 		return false
 	}
 	if _, err := buf.Write(b); err != nil {
