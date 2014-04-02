@@ -106,6 +106,7 @@ func (m *Manager) spin() {
 }
 
 func (m *Manager) ensureClient(listenEndpoint string) error {
+	gslog.Infof("Ensuring connection to hyrax node %s", listenEndpoint)
 	le, err := types.ListenEndpointFromString(listenEndpoint)
 	if err != nil {
 		return err
@@ -148,9 +149,21 @@ func (m *Manager) closeAll() error {
 
 func (m *Manager) clientSpin(mcl *managerClient) {
 	ticker := time.NewTicker(m.period)
+	doCmd := true
 
 spinloop:
 	for {
+
+		if doCmd {
+			// TODO secret
+			cmd := client.CreateAction(m.cmd, "", "", "", m.args...)
+			if _, err := mcl.cl.Cmd(cmd); err != nil {
+				mcl.cl.Close()
+				break spinloop
+			}
+			doCmd = false
+		}
+
 		select {
 		case a, ok := <-mcl.pushCh:
 			if !ok {
@@ -158,60 +171,11 @@ spinloop:
 			}
 			m.PushCh <- a
 		case <-ticker.C:
-			// TODO secret
-			cmd := client.CreateAction(m.cmd, "", "", "", m.args...)
-			if _, err := mcl.cl.Cmd(cmd); err != nil {
-				mcl.cl.Close()
-				break spinloop
-			}
+			doCmd = true
 		}
 	}
 
 	ticker.Stop()
-}
-
-func (mcl *managerClient) spin(m *Manager) {
-	ticker := time.NewTicker(m.period)
-	doCmd := true
-	resurrect := false
-
-spinloop:
-	for {
-		if doCmd {
-			// TODO secret
-			cmd := client.CreateAction(m.cmd, "", "", "")
-			if _, err := mcl.cl.Cmd(cmd); err != nil {
-				gslog.Errorf("managerClient Cmd(%v): %s", cmd, err)
-				resurrect = true
-			}
-			doCmd = false
-		}
-
-		if !resurrect {
-			select {
-			case <-mcl.closeCh:
-				break spinloop
-			case a, ok := <-mcl.pushCh:
-				if !ok {
-					resurrect = true
-					break
-				}
-				m.PushCh <- a
-			case <-ticker.C:
-				doCmd = true
-			}
-		}
-
-		if resurrect {
-			mcl.cl.Close()
-			if !mcl.resurrect() {
-				break spinloop
-			}
-		}
-	}
-
-	ticker.Stop()
-	mcl.cl.Close()
 }
 
 func (mcl *managerClient) resurrect() bool {

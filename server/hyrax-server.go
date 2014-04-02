@@ -20,14 +20,14 @@ func main() {
 		auth.AddGlobalSecret(secret)
 	}
 
-	gslog.Info("Connecting to datastore at: ", config.StorageInfo)
+	gslog.Infof("Connecting to datastore at: %s", config.StorageInfo)
 	if err := core.SetupStorage(); err != nil {
 		gslog.Fatal(err.Error())
 	}
 
 	listens := config.ListenEndpoints
 	for i := range listens {
-		gslog.Info("Listening for clients at", listens[i])
+		gslog.Infof("Listening for clients at: %s", listens[i])
 		go listenHandler(&listens[i])
 	}
 

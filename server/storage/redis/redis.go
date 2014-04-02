@@ -84,30 +84,39 @@ func (r *RedisConn) spin() {
 }
 
 func (r *RedisConn) cmd(cmd storage.Command) (interface{}, error) {
+	gslog.Debugf("Redis cmd: %v, %v", cmd.Cmd(), cmd.Args())
 	reply := r.conn.Cmd(cmd.Cmd(), cmd.Args()...)
-	return decodeReply(reply)
+	dreply, err := decodeReply(reply)
+	gslog.Debugf("Redis reply: %v, %v", dreply, err)
+	return dreply, err
 }
 
 // Decodes a reply into a generic interface object, or an error
 func decodeReply(r *redis.Reply) (interface{}, error) {
 	switch r.Type {
 	case redis.StatusReply:
-		return r.Bytes()
+		gslog.Debugf("Redis status reply")
+		return r.Str()
 
 	case redis.ErrorReply:
+		gslog.Debugf("Redis error reply")
 		return nil, r.Err
 
 	case redis.IntegerReply:
+		gslog.Debugf("Redis int reply")
 		return r.Int()
 
 	case redis.NilReply:
+		gslog.Debugf("Redis nil reply")
 		return nil, nil
 
 	case redis.BulkReply:
-		return r.Bytes()
+		gslog.Debugf("Redis bulk reply")
+		return r.Str()
 
 	case redis.MultiReply:
-		return r.ListBytes()
+		gslog.Debugf("Redis multibulk reply")
+		return r.List()
 	}
 
 	return nil, nil

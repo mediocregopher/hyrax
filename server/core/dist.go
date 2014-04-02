@@ -52,7 +52,6 @@ func clusterSpin() {
 func Clusterize() error {
 	// TODO make a bit more resilient to errors, if we encounter one we want to
 	// send it back but not disconinue execution
-	//me := config.MyEndpoint.String()
 
 	err := resetManager(
 		PullFromGlobalManager,

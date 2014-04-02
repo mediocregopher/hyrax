@@ -25,6 +25,7 @@ func (tl *tcpListener) Connected(
 		lconn:     lc,
 		id:        cid,
 		trans:     tl.trans,
+		closeCh:   make(chan struct{}),
 	}
 
 	go c.pushProxy()

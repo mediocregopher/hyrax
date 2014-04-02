@@ -72,18 +72,22 @@ func (tc *TcpClient) Write(buf *bufio.Writer, ai interface{}) (error, bool) {
 		return err, true
 	}
 
+	if _, err := buf.Write([]byte("\n")); err != nil {
+		return err, true
+	}
+
 	return nil, false
 }
 
 func (tc *TcpClient) Cmd(cmd *types.Action) (interface{}, error) {
-	cri, err, closed := tc.conn.Cmd(cmd)
+	ari, err, closed := tc.conn.Cmd(cmd)
 	if closed {
 		return nil, io.EOF
 	} else if err != nil {
 		return nil, err
 	}
 
-	ar, ok := cri.(*types.ActionReturn)
+	ar, ok := ari.(*types.ActionReturn)
 	if !ok {
 		return nil, errors.New("Did not receive CommandReturn back")
 	}
