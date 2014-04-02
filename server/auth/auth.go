@@ -12,6 +12,12 @@ import (
 // It returns a boolean of the result, or an error if something went wrong
 // checking
 func Auth(cmd *types.Action) (bool, error) {
+	// If no global serets are set, then everything is allowed
+	globalSecs := GetGlobalSecrets()
+	if len(globalSecs) == 0 {
+		return true, nil
+	}
+
 	for _, secret := range GetGlobalSecrets() {
 		if ok := checkSecret(secret, cmd); ok {
 			return true, nil
