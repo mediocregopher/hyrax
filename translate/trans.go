@@ -11,21 +11,21 @@ import (
 // types that hyrax will use for things
 type Translator interface {
 
-	// ToClientCommand takes in some bytes and decodes them into a
-	// ClientCommand, or returns an error
-	ToClientCommand([]byte) (*types.ClientCommand, error)
+	// ToAction takes in some bytes and decodes them into a
+	// Action, or returns an error
+	ToAction([]byte) (*types.Action, error)
 
-	// FromClientCommand takes in a client command and encodes it into a byte
+	// FromAction takes in a client command and encodes it into a byte
 	// slice, or returns an error if it can't
-	FromClientCommand(*types.ClientCommand) ([]byte, error)
+	FromAction(*types.Action) ([]byte, error)
 
-	// ToClientReturn takes in some bytes and decodes them into a ClientReturn,
+	// ToActionReturn takes in some bytes and decodes them into a ActionReturn,
 	// or returns an error
-	ToClientReturn([]byte) (*types.ClientReturn, error)
+	ToActionReturn([]byte) (*types.ActionReturn, error)
 
-	// FromClientReturn takes in a client return and encodes it into a byte
+	// FromActionReturn takes in a client return and encodes it into a byte
 	// slice, or returns an error if it can't
-	FromClientReturn(*types.ClientReturn) ([]byte, error)
+	FromActionReturn(*types.ActionReturn) ([]byte, error)
 }
 
 // StringToTranslator takes in a string which is supposed to identify which

@@ -28,12 +28,12 @@ func UnsubscribeGlobal(cl stypes.Client) error {
 
 // Publishes a key change globally, both to those subscribed to global key
 // changes and those subscribed (mon'd) to the actual key being changed
-func PubGlobal(cc *types.ClientCommand) error {
-	if err := global.Publish(cc, single); err != nil {
+func PubGlobal(a *types.Action) error {
+	if err := global.Publish(a, single); err != nil {
 		return err
 	}
 
-	return mon.Publish(cc, cc.StorageKey)
+	return mon.Publish(a, a.StorageKey)
 }
 
 // Subscribes a client to local key change events, which are events that
@@ -49,8 +49,8 @@ func UnsubscribeLocal(cl stypes.Client) error {
 }
 
 // Publishes a key change to those subscribed to local key change events
-func PubLocal(cc *types.ClientCommand) error {
-	return local.Publish(cc, single)
+func PubLocal(a *types.Action) error {
+	return local.Publish(a, single)
 }
 
 // Subscribes a client to receive keychange events about a particular key

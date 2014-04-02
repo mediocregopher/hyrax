@@ -4,7 +4,6 @@
 * fix auth
 * testing
 * update docs
-* rename ClientCommand
 * make configuration reloadable (signal handling, diff on connections, etc),
 * make storage do reconnection, and use a central channel instead of central
   goroutine

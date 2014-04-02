@@ -36,19 +36,19 @@ func SetupStorage() error {
 // RunCommand takes in a client and a client command, figures out what type of
 // command it is (builtin or direct) and routes the arguments to the appropriate
 // function.
-func RunCommand(c stypes.Client, cmd *types.ClientCommand) *types.ClientReturn {
+func RunCommand(c stypes.Client, cmd *types.Action) *types.ActionReturn {
 	r, err := dispatchCommand(c, cmd)
 	if err != nil {
 		return types.ErrorReturn(err)
 	}
 
-	return &types.ClientReturn{Return: r}
+	return &types.ActionReturn{Return: r}
 }
 
-func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func dispatchCommand(c stypes.Client, cmd *types.Action) (interface{}, error) {
 
 	var modifies, isAdmin func(string) bool
-	var dispatch func(stypes.Client, *types.ClientCommand) (interface{}, error)
+	var dispatch func(stypes.Client, *types.Action) (interface{}, error)
 	if CommandIsBuiltIn(cmd.Command) {
 		modifies = BuiltInCommandModifies
 		isAdmin = BuiltInIsAdmin
@@ -87,7 +87,7 @@ func dispatchCommand(c stypes.Client, cmd *types.ClientCommand) (interface{}, er
 // directly on the storage unit
 func dispatchStorageCmd(
 	c stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
+	cmd *types.Action) (interface{}, error) {
 
 	args := make([]interface{}, 1, len(cmd.Args)+1)
 	args[0] = cmd.StorageKey

@@ -19,7 +19,7 @@ var ekgLock sync.RWMutex
 
 // EAdd adds the client to an ekg's set of things it's watching, and adds the
 // ekg's information to the client's set of ekgs its hooked up to
-func EAdd(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func EAdd(c stypes.Client, cmd *types.Action) (interface{}, error) {
 	key := cmd.StorageKey
 	cidi := c.ClientId().Uint64()
 	name := cmd.Id
@@ -41,7 +41,7 @@ func EAdd(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 
 // ERem removes the client from an ekg's set of things it's watching, and
 // removes the ekg's information from the client's set of ekgs its hooked up to
-func ERem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func ERem(c stypes.Client, cmd *types.Action) (interface{}, error) {
 	key := cmd.StorageKey
 	cidi := c.ClientId().Uint64()
 	ekgLock.Lock()
@@ -70,7 +70,7 @@ func ERem(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 }
 
 // EMembers returns the list of ids being monitored by an ekg
-func EMembers(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func EMembers(c stypes.Client, cmd *types.Action) (interface{}, error) {
 	key := cmd.StorageKey
 	ekgLock.RLock()
 	defer ekgLock.RUnlock()
@@ -88,7 +88,7 @@ func EMembers(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 }
 
 // ECard returns the number of client/id combinations being monitored
-func ECard(c stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func ECard(c stypes.Client, cmd *types.Action) (interface{}, error) {
 	key := cmd.StorageKey
 	ekgLock.RLock()
 	defer ekgLock.RUnlock()

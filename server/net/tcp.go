@@ -21,7 +21,7 @@ func (tl *tcpListener) Connected(
 
 	cid := stypes.NewClientId()
 	c := tcpClient{
-		cmdPushCh: make(chan *types.ClientCommand),
+		cmdPushCh: make(chan *types.Action),
 		lconn:     lc,
 		id:        cid,
 		trans:     tl.trans,
@@ -37,7 +37,7 @@ func TcpListen(addr string, trans translate.Translator) error {
 }
 
 type tcpClient struct {
-	cmdPushCh chan *types.ClientCommand
+	cmdPushCh chan *types.Action
 	lconn     *manatcp.ListenerConn
 	id        stypes.ClientId
 	trans     translate.Translator
@@ -54,7 +54,7 @@ func (tc *tcpClient) ClientId() stypes.ClientId {
 	return tc.id
 }
 
-func (tc *tcpClient) CommandPushCh() chan<- *types.ClientCommand {
+func (tc *tcpClient) PushCh() chan<- *types.Action {
 	return tc.cmdPushCh
 }
 
@@ -67,10 +67,10 @@ func (tc *tcpClient) Read(buf *bufio.Reader) (interface{}, bool) {
 	return b, err != nil
 }
 
-func (tc *tcpClient) Write(buf *bufio.Writer, clientRet interface{}) bool {
-	b, err := tc.trans.FromClientReturn(clientRet.(*types.ClientReturn))
+func (tc *tcpClient) Write(buf *bufio.Writer, ar interface{}) bool {
+	b, err := tc.trans.FromActionReturn(ar.(*types.ActionReturn))
 	if err != nil {
-		gslog.Warnf("tcpClient FromClientReturn(%v): %s", clientRet, err)
+		gslog.Warnf("tcpClient FromActionReturn(%v): %s", ar, err)
 		return false
 	}
 	if _, err := buf.Write(b); err != nil {
@@ -83,11 +83,11 @@ func (tc *tcpClient) Write(buf *bufio.Writer, clientRet interface{}) bool {
 }
 
 func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
-	cc, err := tc.trans.ToClientCommand(cmdRaw.([]byte))
+	cmd, err := tc.trans.ToAction(cmdRaw.([]byte))
 	if err != nil {
 		return types.ErrorReturn(err), true, false
 	}
-	return core.RunCommand(tc, cc), true, false
+	return core.RunCommand(tc, cmd), true, false
 }
 
 func (tc *tcpClient) Closing() {

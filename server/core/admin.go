@@ -13,7 +13,7 @@ import (
 var wrongNumArgs = errors.New("wrong number of arguments")
 var wrongArgType = errors.New("wrong argument type")
 
-func argsToEndpoint(cmd *types.ClientCommand) (string, error) {
+func argsToEndpoint(cmd *types.Action) (string, error) {
 	if len(cmd.Args) != 1 {
 		return "", wrongNumArgs
 	} else if addr, ok := cmd.Args[0].(string); ok {
@@ -26,7 +26,7 @@ func argsToEndpoint(cmd *types.ClientCommand) (string, error) {
 // If another node calls ALISTENTOME it is insisting that we ask it for its
 // local keychange events
 func AListenToMe(
-	_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+	_ stypes.Client, cmd *types.Action) (interface{}, error) {
 
 	listenEndpoint, err := argsToEndpoint(cmd)
 	if err != nil {
@@ -38,7 +38,7 @@ func AListenToMe(
 
 // If another node calls AIGNOREME it is insisting that we stop caring about its
 // local keychange events
-func AIgnoreMe(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+func AIgnoreMe(_ stypes.Client, cmd *types.Action) (interface{}, error) {
 	listenEndpoint, err := argsToEndpoint(cmd)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func AIgnoreMe(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
 	return OK, PullFromLocalManager.CloseClient(listenEndpoint)
 }
 
-func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {
+func argsToByteSlice(cmd *types.Action) ([]byte, error) {
 	if len(cmd.Args) != 1 {
 		return nil, wrongNumArgs
 	} else if s, ok := cmd.Args[0].(string); ok {
@@ -60,7 +60,7 @@ func argsToByteSlice(cmd *types.ClientCommand) ([]byte, error) {
 // secret list
 func AGlobalSecretAdd(
 	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
+	cmd *types.Action) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func AGlobalSecretAdd(
 // secret list
 func AGlobalSecretRem(
 	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
+	cmd *types.Action) (interface{}, error) {
 	secret, err := argsToByteSlice(cmd)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func AGlobalSecretRem(
 // presumably every other node)
 func AGlobalSecrets(
 	_ stypes.Client,
-	cmd *types.ClientCommand) (interface{}, error) {
+	cmd *types.Action) (interface{}, error) {
 	secretsB := auth.GetGlobalSecrets()
 	secrets := make([]string, len(secretsB))
 	for i := range secretsB {
@@ -100,7 +100,7 @@ func AGlobalSecrets(
 // ASecretAdd adds a particular secret to an individual key
 //func ASecretAdd(
 //	_ stypes.Client,
-//	cmd *types.ClientCommand) (interface{}, error) {
+//	cmd *types.Action) (interface{}, error) {
 //	secret, err := argsToByteSlice(cmd)
 //	if err != nil {
 //		return nil, err
@@ -112,7 +112,7 @@ func AGlobalSecrets(
 // ASecretRem removes a particular secret from an individual key
 //func ASecretRem(
 //	_ stypes.Client,
-//	cmd *types.ClientCommand) (interface{}, error) {
+//	cmd *types.Action) (interface{}, error) {
 //	secret, err := argsToByteSlice(cmd)
 //	if err != nil {
 //		return nil, err
@@ -122,7 +122,7 @@ func AGlobalSecrets(
 //}
 
 // ASecrets returns all the particular secrets for an individual key
-//func ASecrets(_ stypes.Client, cmd *types.ClientCommand) (interface{}, error) {
+//func ASecrets(_ stypes.Client, cmd *types.Action) (interface{}, error) {
 //	keyB, err := argsToByteSlice(cmd)
 //	if err != nil {
 //		return nil, err

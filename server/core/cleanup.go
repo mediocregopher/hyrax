@@ -17,7 +17,7 @@ func ClientClosed(c stypes.Client) error {
 	}
 
 	for i := range ekgs {
-		cmd := &types.ClientCommand{
+		cmd := &types.Action{
 			Command:    closedCmd,
 			StorageKey: ekgs[i],
 			Id:         ids[i],

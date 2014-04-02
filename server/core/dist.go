@@ -28,20 +28,20 @@ func init() {
 
 func clusterSpin() {
 	var err error
-	var cc *types.ClientCommand
+	var a *types.Action
 	for {
 		err = nil
-		cc = nil
+		a = nil
 		select {
-		case cc = <-PullFromGlobalManager.PushCh:
-			err = keychanges.PubGlobal(cc)
-		case cc = <-PullFromLocalManager.PushCh:
-			err = keychanges.PubGlobal(cc)
+		case a = <-PullFromGlobalManager.PushCh:
+			err = keychanges.PubGlobal(a)
+		case a = <-PullFromLocalManager.PushCh:
+			err = keychanges.PubGlobal(a)
 		case _ = <-PushToManager.PushCh:
 		}
 
 		if err != nil {
-			gslog.Errorf("PubGlobal(%v) got %s", cc, err)
+			gslog.Errorf("PubGlobal(%v) got %s", a, err)
 		}
 	}
 }

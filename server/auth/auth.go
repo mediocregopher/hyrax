@@ -11,7 +11,7 @@ import (
 // Auth checks whether the given command is authorized given its secret as-is.
 // It returns a boolean of the result, or an error if something went wrong
 // checking
-func Auth(cmd *types.ClientCommand) (bool, error) {
+func Auth(cmd *types.Action) (bool, error) {
 	for _, secret := range GetGlobalSecrets() {
 		if ok := checkSecret(secret, cmd); ok {
 			return true, nil
@@ -32,7 +32,7 @@ func Auth(cmd *types.ClientCommand) (bool, error) {
 	return false, nil
 }
 
-func checkSecret(secret []byte, cmd *types.ClientCommand) bool {
+func checkSecret(secret []byte, cmd *types.Action) bool {
 	mac := hmac.New(sha1.New, secret)
 	mac.Write([]byte(cmd.Command))
 	mac.Write([]byte(cmd.StorageKey))

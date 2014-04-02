@@ -15,7 +15,7 @@ import (
 type PubSub struct {
 	subClients map[string]map[stypes.Client]bool
 	clientSubs map[stypes.Client]map[string]bool
-	subChs     map[string]chan *types.ClientCommand
+	subChs     map[string]chan *types.Action
 	subLock    sync.RWMutex
 }
 
@@ -24,7 +24,7 @@ func New() *PubSub {
 	return &PubSub{
 		subClients: map[string]map[stypes.Client]bool{},
 		clientSubs: map[stypes.Client]map[string]bool{},
-		subChs:     map[string]chan *types.ClientCommand{},
+		subChs:     map[string]chan *types.Action{},
 	}
 }
 
@@ -43,7 +43,7 @@ func (ps *PubSub) subSpin(sub string) {
 		ps.subLock.RLock()
 		for client := range clients {
 			select {
-			case client.CommandPushCh() <- cmd:
+			case client.PushCh() <- cmd:
 			case <-time.After(10 * time.Second):
 				gslog.Warnf("Timeout pubbing to %p for sub %s", client, sub)
 			}
@@ -64,7 +64,7 @@ func (ps *PubSub) Subscribe(cl stypes.Client, subs ...string) error {
 			sc[cl] = true
 		} else {
 			ps.subClients[sub] = map[stypes.Client]bool{cl: true}
-			subCh := make(chan *types.ClientCommand)
+			subCh := make(chan *types.Action)
 			ps.subChs[sub] = subCh
 			go ps.subSpin(sub)
 		}
@@ -142,7 +142,7 @@ func (ps *PubSub) UnsubscribeAll(cs stypes.Client) error {
 
 // Publishes the given command to all clients subscribed to the given
 // subscriptions
-func (ps *PubSub) Publish(cmd *types.ClientCommand, subs ...string) error {
+func (ps *PubSub) Publish(a *types.Action, subs ...string) error {
 	ps.subLock.RLock()
 	defer ps.subLock.RUnlock()
 
@@ -151,7 +151,7 @@ func (ps *PubSub) Publish(cmd *types.ClientCommand, subs ...string) error {
 		if !ok {
 			continue
 		}
-		subCh <- cmd
+		subCh <- a
 	}
 
 	return nil

@@ -1,9 +1,9 @@
 package types
 
-// ClientCommand is the structure that commands from the client are parsed into.
+// Action is the structure that commands from the client are parsed into.
 // This is going to be the same regardless of the client interface or data
 // format.
-type ClientCommand struct {
+type Action struct {
 
 	// Command gets passed through to the backend data-store.
 	Command string `json:"cmd"`
@@ -27,10 +27,10 @@ type ClientCommand struct {
 	Secret string `json:"secret,omitempty"`
 }
 
-// ClientReturn is the structure that returns to the client are parsed into.
+// ActionReturn is the structure that returns to the client are parsed into.
 // This is going to be the same regardless of the client interface or data
 // format.
-type ClientReturn struct {
+type ActionReturn struct {
 
 	// Error will be filled out if there was an error somewhere in the command
 	Error string `json:"error,omitempty"`
@@ -40,7 +40,7 @@ type ClientReturn struct {
 	Return interface{} `json:"return,omitempty"`
 }
 
-// ErrorReturn takes in an error and returns a ClientReturn for it
-func ErrorReturn(err error) *ClientReturn {
-	return &ClientReturn{Error: err.Error()}
+// ErrorReturn takes in an error and returns a ActionReturn for it
+func ErrorReturn(err error) *ActionReturn {
+	return &ActionReturn{Error: err.Error()}
 }

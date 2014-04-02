@@ -16,7 +16,7 @@ type TcpClient struct {
 }
 
 func NewTcpClient(t translate.Translator, addr string,
-	pushCh chan *types.ClientCommand) (*TcpClient, error) {
+	pushCh chan *types.Action) (*TcpClient, error) {
 
 	tc := TcpClient{trans: t}
 	conn, err := manatcp.Dial(&tc, addr)
@@ -26,9 +26,9 @@ func NewTcpClient(t translate.Translator, addr string,
 
 	tc.conn = conn
 	go func() {
-		for cci := range conn.PushCh {
+		for ai := range conn.PushCh {
 			if pushCh != nil {
-				pushCh <- cci.(*types.ClientCommand)
+				pushCh <- ai.(*types.Action)
 			}
 		}
 	}()
@@ -41,29 +41,29 @@ func (tc *TcpClient) Read(buf *bufio.Reader) (interface{}, error, bool) {
 		return nil, err, true
 	}
 
-	// Try to decode ClientCommand. We know it was a ClientCommand if Command is
+	// Try to decode Action. We know it was a Action if Command is
 	// actually set
-	cc, err := tc.trans.ToClientCommand(b)
+	a, err := tc.trans.ToAction(b)
 	if err != nil {
 		return nil, err, false
-	} else if cc.Command != "" {
-		return cc, nil, false
+	} else if a.Command != "" {
+		return a, nil, false
 	}
 
-	cr, err := tc.trans.ToClientReturn(b)
+	ar, err := tc.trans.ToActionReturn(b)
 	if err != nil {
 		return nil, err, false
 	}
-	return cr, nil, false
+	return ar, nil, false
 }
 
-func (tc *TcpClient) IsPush(lc interface{}) bool {
-	_, ok := lc.(*types.ClientCommand)
+func (tc *TcpClient) IsPush(ai interface{}) bool {
+	_, ok := ai.(*types.Action)
 	return ok
 }
 
-func (tc *TcpClient) Write(buf *bufio.Writer, item interface{}) (error, bool) {
-	b, err := tc.trans.FromClientCommand(item.(*types.ClientCommand))
+func (tc *TcpClient) Write(buf *bufio.Writer, ai interface{}) (error, bool) {
+	b, err := tc.trans.FromAction(ai.(*types.Action))
 	if err != nil {
 		return err, false
 	}
@@ -75,7 +75,7 @@ func (tc *TcpClient) Write(buf *bufio.Writer, item interface{}) (error, bool) {
 	return nil, false
 }
 
-func (tc *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
+func (tc *TcpClient) Cmd(cmd *types.Action) (interface{}, error) {
 	cri, err, closed := tc.conn.Cmd(cmd)
 	if closed {
 		return nil, io.EOF
@@ -83,16 +83,16 @@ func (tc *TcpClient) Cmd(cmd *types.ClientCommand) (interface{}, error) {
 		return nil, err
 	}
 
-	cr, ok := cri.(*types.ClientReturn)
+	ar, ok := cri.(*types.ActionReturn)
 	if !ok {
 		return nil, errors.New("Did not receive CommandReturn back")
 	}
 
-	if cr.Error != "" {
-		return nil, errors.New(cr.Error)
+	if ar.Error != "" {
+		return nil, errors.New(ar.Error)
 	}
 
-	return cr.Return, nil
+	return ar.Return, nil
 }
 
 func (tc *TcpClient) Close() {

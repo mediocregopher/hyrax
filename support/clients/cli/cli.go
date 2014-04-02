@@ -34,9 +34,9 @@ func main() {
 	conntype := fc.GetStr("conn-type")
 	addr := fc.GetStr("addr")
 	hold := fc.GetFlag("hold")
-	var pushCh chan *types.ClientCommand
+	var pushCh chan *types.Action
 	if hold {
-		pushCh = make(chan *types.ClientCommand)
+		pushCh = make(chan *types.Action)
 	}
 
 	le := types.NewListenEndpoint(conntype, format, addr)
@@ -57,9 +57,9 @@ func main() {
 		args[i] = argsStrs[i]
 	}
 
-	ccmd := client.CreateClientCommand(cmd, keyB, id, secretKey, args...)
+	a := client.CreateAction(cmd, keyB, id, secretKey, args...)
 
-	ret, err := c.Cmd(ccmd)
+	ret, err := c.Cmd(a)
 	if err != nil {
 		printError(err)
 		return

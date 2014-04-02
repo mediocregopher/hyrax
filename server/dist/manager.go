@@ -26,7 +26,7 @@ type Manager struct {
 
 	// All push messages on any clients being managed will be pused down this
 	// channel
-	PushCh chan *types.ClientCommand
+	PushCh chan *types.Action
 	cmd    string
 	args   []interface{}
 	period time.Duration
@@ -40,14 +40,14 @@ type Manager struct {
 type managerClient struct {
 	le      *types.ListenEndpoint
 	cl      client.Client
-	pushCh  chan *types.ClientCommand
+	pushCh  chan *types.Action
 	closeCh chan struct{}
 }
 
 func New(cmd string, args ...interface{}) *Manager {
 	m := Manager{
 		clients:    map[string]*managerClient{},
-		PushCh:     make(chan *types.ClientCommand),
+		PushCh:     make(chan *types.Action),
 		cmd:        cmd,
 		args:       args,
 		period:     5 * time.Second,
@@ -115,7 +115,7 @@ func (m *Manager) ensureClient(listenEndpoint string) error {
 		return nil
 	}
 
-	pushCh := make(chan *types.ClientCommand)
+	pushCh := make(chan *types.Action)
 	cl, err := client.NewClient(le, pushCh)
 	if err != nil {
 		return err
@@ -152,14 +152,14 @@ func (m *Manager) clientSpin(mcl *managerClient) {
 spinloop:
 	for {
 		select {
-		case cc, ok := <-mcl.pushCh:
+		case a, ok := <-mcl.pushCh:
 			if !ok {
 				break spinloop
 			}
-			m.PushCh <- cc
+			m.PushCh <- a
 		case <-ticker.C:
 			// TODO secret
-			cmd := client.CreateClientCommand(m.cmd, "", "", "", m.args...)
+			cmd := client.CreateAction(m.cmd, "", "", "", m.args...)
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
 				mcl.cl.Close()
 				break spinloop
@@ -179,7 +179,7 @@ spinloop:
 	for {
 		if doCmd {
 			// TODO secret
-			cmd := client.CreateClientCommand(m.cmd, "", "", "")
+			cmd := client.CreateAction(m.cmd, "", "", "")
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
 				gslog.Errorf("managerClient Cmd(%v): %s", cmd, err)
 				resurrect = true
@@ -191,12 +191,12 @@ spinloop:
 			select {
 			case <-mcl.closeCh:
 				break spinloop
-			case cc, ok := <-mcl.pushCh:
+			case a, ok := <-mcl.pushCh:
 				if !ok {
 					resurrect = true
 					break
 				}
-				m.PushCh <- cc
+				m.PushCh <- a
 			case <-ticker.C:
 				doCmd = true
 			}

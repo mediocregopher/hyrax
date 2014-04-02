@@ -11,7 +11,7 @@ var OK = "OK"
 
 type BuiltInFunc func(
 	stypes.Client,
-	*types.ClientCommand) (interface{}, error)
+	*types.Action) (interface{}, error)
 
 type builtInCommandInfo struct {
 	Func     BuiltInFunc
