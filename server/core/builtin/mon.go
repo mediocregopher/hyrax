@@ -1,4 +1,4 @@
-package core
+package builtin
 
 import (
 	"github.com/mediocregopher/hyrax/server/core/keychanges"

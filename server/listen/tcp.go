@@ -1,4 +1,4 @@
-package net
+package listen
 
 import (
 	"bufio"
@@ -7,11 +7,33 @@ import (
 	"github.com/mediocregopher/manatcp"
 	"time"
 
-	"github.com/mediocregopher/hyrax/server/core"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/translate"
 	"github.com/mediocregopher/hyrax/types"
 )
+
+// ActionWrap bundles an action with a channel which can be read from to receive
+// the return from that action
+type ActionWrap struct {
+	Action         *types.Action
+	Client         stypes.Client
+	ActionReturnCh chan *types.ActionReturn
+}
+
+// Whenever a client performs an action it will be wrapped and put on this
+// channel, waiting for a reply on the ActionReturnCh in the ActionWrap
+var ActionWrapCh = make(chan *ActionWrap)
+
+// ClientClosedWrap bundles a client closing event with a channel which will be
+// closed when cleanup is completed
+type ClientClosedWrap struct {
+	Client stypes.Client
+	Ch     chan struct{}
+}
+
+// Whenever a client is closed it will be put on this channel so that some other
+// process can clean it up
+var ClientClosedCh = make(chan *ClientClosedWrap)
 
 type tcpListener struct {
 	trans translate.Translator
@@ -34,6 +56,7 @@ func (tl *tcpListener) Connected(
 }
 
 func TcpListen(addr string, trans translate.Translator) error {
+	gslog.Infof("Listening for clients at %s", addr)
 	_, err := manatcp.Listen(&tcpListener{trans}, addr)
 	return err
 }
@@ -93,18 +116,52 @@ func (tc *tcpClient) Write(buf *bufio.Writer, i interface{}) bool {
 }
 
 func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
-	cmd, err := tc.trans.ToAction(cmdRaw.([]byte))
+	a, err := tc.trans.ToAction(cmdRaw.([]byte))
 	if err != nil {
 		return types.ErrorReturn(err), true, false
 	}
-	return core.RunCommand(tc, cmd), true, false
+	return DispatchAction(tc, a), true, false
 }
 
 func (tc *tcpClient) Closing() {
-	core.ClientClosed(tc)
+	DispatchClosed(tc)
 	// We sleep some seconds just in case anything is still pushing to the
 	// command channel
 	time.Sleep(5 * time.Second)
 	close(tc.cmdPushCh)
 	close(tc.closeCh)
+}
+
+func DispatchAction(c stypes.Client, a *types.Action) *types.ActionReturn {
+	aw := ActionWrap{a, c, make(chan *types.ActionReturn)}
+	select {
+	case ActionWrapCh <- &aw:
+	case <-time.After(5 * time.Second):
+		gslog.Error("Timedout sending Action to ActionWrapCh")
+		return types.ErrorReturn(errors.New("timeout"))
+	}
+
+	select {
+	case ar := <-aw.ActionReturnCh:
+		return ar
+	case <-time.After(5 * time.Second):
+		gslog.Error("Timedout receiving ActionReturn from ActionReturnCh")
+		return types.ErrorReturn(errors.New("timeout"))
+	}
+}
+
+func DispatchClosed(c stypes.Client) {
+	cc := ClientClosedWrap{c, make(chan struct{})}
+	select {
+	case ClientClosedCh <- &cc:
+	case <-time.After(5 * time.Second):
+		gslog.Error("Timedout sending to ClientClosedCh")
+		return
+	}
+
+	select {
+	case <-cc.Ch:
+	case <-time.After(5 * time.Second):
+		gslog.Error("Timedout waiting for ClientClosedWrap.Ch")
+	}
 }

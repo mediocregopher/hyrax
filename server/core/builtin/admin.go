@@ -1,9 +1,10 @@
-package core
+package builtin
 
 import (
 	"errors"
 
 	"github.com/mediocregopher/hyrax/server/auth"
+	"github.com/mediocregopher/hyrax/server/core/dist"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
@@ -33,7 +34,7 @@ func AListenToMe(
 		return nil, err
 	}
 
-	return OK, PullFromLocalManager.EnsureClient(listenEndpoint)
+	return OK, dist.PullFromLocalManager.EnsureClient(listenEndpoint)
 }
 
 // If another node calls AIGNOREME it is insisting that we stop caring about its
@@ -43,7 +44,7 @@ func AIgnoreMe(_ stypes.Client, cmd *types.Action) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return OK, PullFromLocalManager.CloseClient(listenEndpoint)
+	return OK, dist.PullFromLocalManager.CloseClient(listenEndpoint)
 }
 
 func argsToByteSlice(cmd *types.Action) ([]byte, error) {

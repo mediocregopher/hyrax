@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"github.com/grooveshark/golib/gslog"
 )
 
 var globalSecrets = [][]byte{}
@@ -42,6 +43,7 @@ func keeper() {
 
 // AddGlobalSecret appends a secret to the list of global ones currently in use.
 func AddGlobalSecret(s []byte) {
+	gslog.Infof("Loading secret:", string(s))
 	addSecretCh <- s
 }
 

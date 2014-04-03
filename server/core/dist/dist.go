@@ -1,4 +1,4 @@
-package core
+package dist
 
 import (
 	"github.com/grooveshark/golib/gslog"

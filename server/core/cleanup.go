@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/mediocregopher/hyrax/server/core/keychanges"
+	"github.com/mediocregopher/hyrax/server/core/builtin"
 	stypes "github.com/mediocregopher/hyrax/server/types"
 	"github.com/mediocregopher/hyrax/types"
 )
@@ -11,7 +12,7 @@ var closedCmd = "eclose"
 // ClientClosed takes care of all cleanup that's necessary when a client has
 // closed
 func ClientClosed(c stypes.Client) error {
-	ekgs, ids, err := EkgsForClient(c)
+	ekgs, ids, err := builtin.EkgsForClient(c)
 	if err != nil {
 		return err
 	}
@@ -27,7 +28,7 @@ func ClientClosed(c stypes.Client) error {
 		}
 	}
 
-	if err := CleanClientEkgsShort(ekgs, c); err != nil {
+	if err := builtin.CleanClientEkgsShort(ekgs, c); err != nil {
 		return err
 	}
 
