@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/fzzy/radix/redis"
 	"github.com/grooveshark/golib/gslog"
+	"io"
 	"time"
 
 	"github.com/mediocregopher/hyrax/server/storage"
@@ -15,7 +16,7 @@ type RedisCommand struct {
 }
 
 // Returns a new RedisCommand with the given arguments
-func NewRedisCommand(cmd string, args []interface{}) storage.Command {
+func NewRedisCommand(cmd string, args ...interface{}) storage.Command {
 	return &RedisCommand{
 		cmd:  cmd,
 		args: args,
@@ -34,9 +35,11 @@ func (c *RedisCommand) Args() []interface{} {
 
 // A connection to redis, implements Storage interface
 type RedisConn struct {
-	conn    *redis.Client
-	cmdCh   chan *storage.CommandBundle
-	closeCh chan chan error
+	conntype string
+	addr     string
+	conn     *redis.Client
+	cmdCh    chan *storage.CommandBundle
+	closeCh  chan chan error
 }
 
 // Returns an unconnected redis connection structure as per the Storage
@@ -51,9 +54,12 @@ func (r *RedisConn) Connect(cmdCh chan *storage.CommandBundle,
                             conntype, addr string, _ ...interface{}) error {
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
+		gslog.Error("connecting to redis at %s: %s", addr, err)
 		return err
 	}
 
+	r.conntype = conntype
+	r.addr = addr
 	r.conn = conn
 	r.cmdCh = cmdCh
 	r.closeCh = make(chan chan error)
@@ -62,13 +68,13 @@ func (r *RedisConn) Connect(cmdCh chan *storage.CommandBundle,
 }
 
 func (r *RedisConn) spin() {
+spinloop:
 	for {
 		select {
 
 		case retCh := <-r.closeCh:
 			retCh <- r.conn.Close()
-			close(r.closeCh)
-			return
+			break spinloop
 
 		case cmdb := <-r.cmdCh:
 			rawret, err := r.cmd(cmdb.Cmd)
@@ -78,6 +84,36 @@ func (r *RedisConn) spin() {
 			case <-time.After(10 * time.Second):
 				gslog.Errorf("RedisConn timedout replying to cmd %v", cmdb.Cmd)
 			}
+			if err == io.EOF && !r.resurrect() {
+				break spinloop
+			}
+		}
+	}
+
+	close(r.closeCh)
+}
+
+func (r *RedisConn) resurrect() bool {
+	connCh := make(chan *redis.Client)
+	func() {
+		for {
+			conn, err := redis.Dial(r.conntype, r.addr)
+			if err != nil {
+				gslog.Error("connecting to redis at %s: %s", r.addr, err)
+				continue
+			}
+			connCh <- conn
+		}
+	}()
+
+	for {
+		select {
+		case retCh := <-r.closeCh:
+			retCh <- r.conn.Close()
+			return false
+		case conn := <-connCh:
+			r.conn = conn
+			return true
 		}
 	}
 }
@@ -122,8 +158,8 @@ func decodeReply(r *redis.Reply) (interface{}, error) {
 }
 
 // Implements NewCommand for Storage
-func (_ *RedisConn) NewCommand(cmd string, args []interface{}) storage.Command {
-	return NewRedisCommand(cmd, args)
+func (_ *RedisConn) NewCommand(cmd string, args ...interface{}) storage.Command {
+	return NewRedisCommand(cmd, args...)
 }
 
 // Implements CommandAllowed for Storage

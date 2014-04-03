@@ -49,7 +49,7 @@ type Storage interface {
 	// Given the command and arguments for an action on the datastore, returns a
 	// Command instance. This method should not actually affect anything about
 	// the Storage connection.
-	NewCommand(string, []interface{}) Command
+	NewCommand(string, ...interface{}) Command
 
 	// Returns whether or not a command is allowed to be called under any
 	// circumstances. This method should not actually affect anything about the
@@ -118,6 +118,7 @@ func (su *StorageUnit) spin() {
 		select {
 		case retCh := <-su.closeCh:
 			retCh <- su.internalClose()
+			su.tempGround()
 			close(su.closeCh)
 			close(su.cmdCh)
 			return
@@ -132,14 +133,17 @@ func (su *StorageUnit) internalClose() error {
 			retErr = err
 		}
 	}
+	return retErr
+}
 
+func (su *StorageUnit) tempGround() {
 	timeout := time.After(10 * time.Second)
 	for {
 		select {
 		case <-su.cmdCh:
 			gslog.Warn("Dropping command in storage unit because it's closed")
 		case <-timeout:
-			return retErr
+			return
 		}
 	}
 }
@@ -175,8 +179,8 @@ func (su *StorageUnit) Cmd(cmd Command) (interface{}, error) {
 }
 
 // Returns a new Command instance based on the given command and arguments
-func (su *StorageUnit) NewCommand(cmd string, args []interface{}) Command {
-	return su.conns[0].NewCommand(cmd, args)
+func (su *StorageUnit) NewCommand(cmd string, args ...interface{}) Command {
+	return su.conns[0].NewCommand(cmd, args...)
 }
 
 // Returns whether or not a command is allowed to be run at all on the datastore

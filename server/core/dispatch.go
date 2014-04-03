@@ -30,6 +30,7 @@ func SetupStorage() error {
 		return err
 	}
 	storageUnit = su
+
 	return nil
 }
 
@@ -92,6 +93,6 @@ func dispatchStorageCmd(
 	args := make([]interface{}, 1, len(cmd.Args)+1)
 	args[0] = cmd.StorageKey
 	args = append(args, cmd.Args...)
-	dcmd := storageUnit.NewCommand(cmd.Command, args)
+	dcmd := storageUnit.NewCommand(cmd.Command, args...)
 	return storageUnit.Cmd(dcmd)
 }
