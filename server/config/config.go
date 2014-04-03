@@ -25,6 +25,8 @@ var PullFromEndpoints []types.ListenEndpoint
 // The endpoint to advertise to other nodes that they should connect to
 var MyEndpoint types.ListenEndpoint
 
+const DEFAULT_ENDPOINT = "tcp::json:::2379"
+
 func init() {
 	if err := Load(); err != nil {
 		gslog.Fatal(err.Error())
@@ -45,11 +47,12 @@ func Load() error {
 	fc.StrParams(
 		"listen-endpoint",
 		"The type, address, and format to listen for client connections on, separated by a \"::\". At the moment the only type is tcp, the only format is json. Can be specified multiple times",
-		"tcp::json:::2379",
+		DEFAULT_ENDPOINT,
 	)
 	fc.StrParams(
 		"push-to-endpoint",
 		"The endpoint address (see listen-endpoint for format) this node will send local keychange events to. Can be specified multiple times",
+		DEFAULT_ENDPOINT,
 	)
 	fc.StrParams(
 		"pull-from-endpoint",

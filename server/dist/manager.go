@@ -106,7 +106,7 @@ func (m *Manager) spin() {
 }
 
 func (m *Manager) ensureClient(listenEndpoint string) error {
-	gslog.Infof("Ensuring connection to hyrax node %s", listenEndpoint)
+	gslog.Debugf("Ensuring %s connection to node %s", m.cmd, listenEndpoint)
 	le, err := types.ListenEndpointFromString(listenEndpoint)
 	if err != nil {
 		return err

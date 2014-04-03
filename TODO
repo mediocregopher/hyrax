@@ -2,10 +2,10 @@
 * make sure core has all real configuration
 * move builtin into its own package?
 * fix auth
-* testing
 * update docs
 * make configuration reloadable (signal handling, diff on connections, etc),
 * make pubsub more efficient
 * address all TODO notes in the code
 * logic for LOOKATME needs work (right now other node will never stop looking)
 * Fix default log level
+* Check for resource leaks with lots of connects/disconnects

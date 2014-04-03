@@ -34,8 +34,10 @@ func clusterSpin() {
 		a = nil
 		select {
 		case a = <-PullFromGlobalManager.PushCh:
+			gslog.Debugf("Got %v from global", a)
 			err = keychanges.PubGlobal(a)
 		case a = <-PullFromLocalManager.PushCh:
+			gslog.Debugf("Got %v from local", a)
 			err = keychanges.PubGlobal(a)
 		case _ = <-PushToManager.PushCh:
 		}
