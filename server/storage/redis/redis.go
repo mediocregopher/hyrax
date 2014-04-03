@@ -1,20 +1,12 @@
 package redis
 
 import (
-	"fmt"
 	"github.com/fzzy/radix/redis"
 	"github.com/grooveshark/golib/gslog"
 	"time"
 
 	"github.com/mediocregopher/hyrax/server/storage"
 )
-
-// A connection to redis, implements Storage interface
-type RedisConn struct {
-	conn    *redis.Client
-	cmdCh   chan *storage.CommandBundle
-	closeCh chan chan error
-}
 
 // A command into the redis connection, implements the Command interface
 type RedisCommand struct {
@@ -38,25 +30,33 @@ func (c *RedisCommand) Args() []interface{} {
 	return c.args
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// A connection to redis, implements Storage interface
+type RedisConn struct {
+	conn    *redis.Client
+	cmdCh   chan *storage.CommandBundle
+	closeCh chan chan error
+}
+
 // Returns an unconnected redis connection structure as per the Storage
 // interface
 func New() storage.Storage {
-	return &RedisConn{
-		conn:    nil,
-		cmdCh:   make(chan *storage.CommandBundle),
-		closeCh: make(chan chan error),
-	}
+	return &RedisConn{}
 }
 
 // Implements Connect for Storage. Connects to redis over tcp and spawns a
 // handler go-routine
-func (r *RedisConn) Connect(conntype, addr string, _ ...interface{}) error {
+func (r *RedisConn) Connect(cmdCh chan *storage.CommandBundle,
+                            conntype, addr string, _ ...interface{}) error {
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
 		return err
 	}
 
 	r.conn = conn
+	r.cmdCh = cmdCh
+	r.closeCh = make(chan chan error)
 	go r.spin()
 	return nil
 }
@@ -67,7 +67,6 @@ func (r *RedisConn) spin() {
 
 		case retCh := <-r.closeCh:
 			retCh <- r.conn.Close()
-			close(r.cmdCh)
 			close(r.closeCh)
 			return
 
@@ -120,19 +119,6 @@ func decodeReply(r *redis.Reply) (interface{}, error) {
 	}
 
 	return nil, nil
-}
-
-// Implements Cmd for Storage
-func (r *RedisConn) Cmd(cmdb *storage.CommandBundle) {
-	select {
-	case r.cmdCh <- cmdb:
-	case <-time.After(10 * time.Second):
-		err := fmt.Errorf("Redis connection timedout receiving command")
-		select {
-		case cmdb.RetCh <- &storage.CommandRet{nil, err}:
-		case <-time.After(1 * time.Second):
-		}
-	}
 }
 
 // Implements NewCommand for Storage

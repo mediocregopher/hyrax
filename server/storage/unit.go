@@ -41,14 +41,10 @@ type Storage interface {
 
 	// Connect is called on a zero'd Storage and causes it to create its
 	// initial connection to the datastore and set up any internal go-routines
-	// that are needed.
-	Connect(conntype, addr string, extra ...interface{}) error
-
-	// Cmd takes in a command bundle and processes the command contained within,
-	// returning the result on the ret channel. If the implementation of this
-	// method involves any blocking operations then they should have a timeout
-	// which, when hit, stops the command and sends an error on the ret channel
-	Cmd(*CommandBundle)
+	// that are needed. It also passes in the channel the connection should read
+	// CommandBundles off of, process, and respond to using the bundle's RetCh
+	Connect(cmdCh chan *CommandBundle, conntype, addr string,
+	        extra ...interface{}) error
 
 	// Given the command and arguments for an action on the datastore, returns a
 	// Command instance. This method should not actually affect anything about
@@ -105,7 +101,7 @@ func NewStorageUnit(
 	}
 
 	for _, suc := range sucs {
-		if err := suc.Connect(conntype, addr, extra...); err == nil {
+		if err := suc.Connect(su.cmdCh, conntype, addr, extra...); err == nil {
 			su.conns = append(su.conns, suc)
 		} else {
 			su.internalClose()
@@ -119,26 +115,12 @@ func NewStorageUnit(
 
 func (su *StorageUnit) spin() {
 	for {
-		for i := range su.conns {
-			select {
-
-			case retCh := <-su.closeCh:
-				retCh <- su.internalClose()
-				close(su.closeCh)
-				close(su.cmdCh)
-				return
-
-			case command := <-su.cmdCh:
-				// TODO FIX THIS
-				// This is not great. It could lead to a race-condition if the
-				// call to Cmd (which is sending on a channel to the connection
-				// go-routine presumably) comes in AFTER a call to close on that
-				// same connection, which could happen in the next iteration of
-				// this loop. I'm not sure of any good solutions to this other
-				// then to make this happen synchronously, which would be really
-				// bad for performance if one connection suddenly locks up.
-				go su.conns[i].Cmd(command)
-			}
+		select {
+		case retCh := <-su.closeCh:
+			retCh <- su.internalClose()
+			close(su.closeCh)
+			close(su.cmdCh)
+			return
 		}
 	}
 }
@@ -150,7 +132,16 @@ func (su *StorageUnit) internalClose() error {
 			retErr = err
 		}
 	}
-	return retErr
+
+	timeout := time.After(10 * time.Second)
+	for {
+		select {
+		case <-su.cmdCh:
+			gslog.Warn("Dropping command in storage unit because it's closed")
+		case <-timeout:
+			return retErr
+		}
+	}
 }
 
 // Close goes through all Storages that are currently active and calls

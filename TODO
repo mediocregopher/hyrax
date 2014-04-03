@@ -5,8 +5,6 @@
 * testing
 * update docs
 * make configuration reloadable (signal handling, diff on connections, etc),
-* make storage do reconnection, and use a central channel instead of central
-  goroutine
 * make pubsub more efficient
 * address all TODO notes in the code
 * logic for LOOKATME needs work (right now other node will never stop looking)
