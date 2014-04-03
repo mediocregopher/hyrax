@@ -2,6 +2,7 @@ package net
 
 import (
 	"bufio"
+	"errors"
 	"github.com/grooveshark/golib/gslog"
 	"github.com/mediocregopher/manatcp"
 	"time"
@@ -68,10 +69,18 @@ func (tc *tcpClient) Read(buf *bufio.Reader) (interface{}, bool) {
 	return b, err != nil
 }
 
-func (tc *tcpClient) Write(buf *bufio.Writer, ar interface{}) bool {
-	b, err := tc.trans.FromActionReturn(ar.(*types.ActionReturn))
+func (tc *tcpClient) Write(buf *bufio.Writer, i interface{}) bool {
+	var b []byte
+	var err error
+	if ar, ok := i.(*types.ActionReturn); ok {
+		b, err = tc.trans.FromActionReturn(ar)
+	} else if a, ok := i.(*types.Action); ok {
+		b, err = tc.trans.FromAction(a)
+	} else {
+		err = errors.New("invalid type to write")
+	}
 	if err != nil {
-		gslog.Warnf("tcpClient FromActionReturn(%v): %s", ar, err)
+		gslog.Warnf("tcpClient Write(%v): %s", i, err)
 		return false
 	}
 	if _, err := buf.Write(b); err != nil {

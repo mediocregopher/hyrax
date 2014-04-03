@@ -77,7 +77,7 @@ func dispatchCommand(c stypes.Client, cmd *types.Action) (interface{}, error) {
 	cmd.Secret = ""
 
 	r, err := dispatch(c, cmd)
-	if err != nil && mods && !adm {
+	if err == nil && mods && !adm {
 		keychanges.PubLocal(cmd)
 	}
 
