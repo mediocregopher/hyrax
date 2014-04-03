@@ -13,6 +13,13 @@ import (
 )
 
 func main() {
+	if err := gslog.SetLogFile(config.LogFile); err != nil {
+		gslog.Fatalf("could not set log file: %s", err)
+	}
+	if err := gslog.SetMinimumLevel(config.LogLevel); err != nil {
+		gslog.Fatalf("could not set log level: %s", err)
+	}
+
 	secrets := config.InitSecrets
 	gslog.Info("Loading up the secrets")
 	for _, secret := range secrets {

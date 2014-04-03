@@ -25,6 +25,10 @@ var PullFromEndpoints []types.ListenEndpoint
 // The endpoint to advertise to other nodes that they should connect to
 var MyEndpoint types.ListenEndpoint
 
+// The minumum level (debug, info, warn, error, fatal) of logs to send and the
+// file to send them to (or "stdout"/"stderr")
+var LogLevel, LogFile string
+
 const DEFAULT_ENDPOINT = "tcp::json:::2379"
 
 func init() {
@@ -63,6 +67,16 @@ func Load() error {
 		"The endpoint address (see listen-endpoint for format) this node will advertise to other nodes that they should connect to",
 		"tcp::json::localhost:2379",
 	)
+	fc.StrParam(
+		"log-level",
+		"The minimum level of logs to send (debug, info, warn, error, fatal)",
+		"info",
+	)
+	fc.StrParam(
+		"log-file",
+		"The file to send all logs to (or \"stdout\"/\"stderr\")",
+		"stdout",
+	)
 	if err := fc.Parse(); err != nil {
 		return err
 	}
@@ -93,6 +107,9 @@ func Load() error {
 		return err
 	}
 	MyEndpoint = *myEndpoint
+
+	LogLevel = fc.GetStr("log-level")
+	LogFile = fc.GetStr("log-file")
 
 	return nil
 }
