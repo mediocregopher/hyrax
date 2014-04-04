@@ -54,7 +54,7 @@ func (r *RedisConn) Connect(cmdCh chan *storage.CommandBundle,
                             conntype, addr string, _ ...interface{}) error {
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
-		gslog.Error("connecting to redis at %s: %s", addr, err)
+		gslog.Errorf("connecting to redis at %s: %s", addr, err)
 		return err
 	}
 
@@ -99,7 +99,7 @@ func (r *RedisConn) resurrect() bool {
 		for {
 			conn, err := redis.Dial(r.conntype, r.addr)
 			if err != nil {
-				gslog.Error("connecting to redis at %s: %s", r.addr, err)
+				gslog.Errorf("connecting to redis at %s: %s", r.addr, err)
 				continue
 			}
 			connCh <- conn

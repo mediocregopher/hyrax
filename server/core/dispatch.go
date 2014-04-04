@@ -66,7 +66,7 @@ func handleActionWrap(aw *listen.ActionWrap) {
 func handleClientClosed(cc *listen.ClientClosedWrap) {
 	for i := 0; i < 3; i++ {
 		if err := ClientClosed(cc.Client); err != nil {
-			gslog.Error("calling ClientCleanup: %s", err)
+			gslog.Errorf("calling ClientCleanup: %s", err)
 			continue
 		}
 		close(cc.Ch)
