@@ -51,7 +51,7 @@ func New() storage.Storage {
 // Implements Connect for Storage. Connects to redis over tcp and spawns a
 // handler go-routine
 func (r *RedisConn) Connect(cmdCh chan *storage.CommandBundle,
-                            conntype, addr string, _ ...interface{}) error {
+	conntype, addr string, _ ...interface{}) error {
 	conn, err := redis.Dial(conntype, addr)
 	if err != nil {
 		gslog.Errorf("connecting to redis at %s: %s", addr, err)

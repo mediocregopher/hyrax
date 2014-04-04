@@ -44,7 +44,7 @@ type Storage interface {
 	// that are needed. It also passes in the channel the connection should read
 	// CommandBundles off of, process, and respond to using the bundle's RetCh
 	Connect(cmdCh chan *CommandBundle, conntype, addr string,
-	        extra ...interface{}) error
+		extra ...interface{}) error
 
 	// Given the command and arguments for an action on the datastore, returns a
 	// Command instance. This method should not actually affect anything about

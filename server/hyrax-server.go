@@ -14,4 +14,3 @@ func main() {
 
 	select {}
 }
-
