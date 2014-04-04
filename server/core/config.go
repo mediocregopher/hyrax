@@ -14,10 +14,11 @@ import (
 
 // Does all configuration for the hyrax node
 func Configure() error {
-	if err := gslog.SetLogFile(config.LogFile); err != nil {
+	if err := gslog.SetMinimumLevel(config.LogLevel); err != nil {
 		return err
 	}
-	if err := gslog.SetMinimumLevel(config.LogLevel); err != nil {
+	gslog.Infof("Setting logging point to %s", config.LogFile)
+	if err := gslog.SetLogFile(config.LogFile); err != nil {
 		return err
 	}
 
