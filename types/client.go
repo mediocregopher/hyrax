@@ -40,7 +40,12 @@ type ActionReturn struct {
 	Return interface{} `json:"return,omitempty"`
 }
 
-// ErrorReturn takes in an error and returns a ActionReturn for it
-func ErrorReturn(err error) *ActionReturn {
-	return &ActionReturn{Error: err.Error()}
+// Returns an ActionReturn based on the given item (could be an error, or
+// anything else)
+func NewActionReturn(i interface{}) *ActionReturn {
+	if err, ok := i.(error); ok {
+		return &ActionReturn{Error: err.Error()}
+	} else {
+		return &ActionReturn{Return: i}
+	}
 }

@@ -80,10 +80,9 @@ func handleClientClosed(cc *listen.ClientClosedWrap) {
 func RunAction(c stypes.Client, cmd *types.Action) *types.ActionReturn {
 	r, err := dispatchCommand(c, cmd)
 	if err != nil {
-		return types.ErrorReturn(err)
+		return types.NewActionReturn(err)
 	}
-
-	return &types.ActionReturn{Return: r}
+	return types.NewActionReturn(r)
 }
 
 func dispatchCommand(c stypes.Client, cmd *types.Action) (interface{}, error) {

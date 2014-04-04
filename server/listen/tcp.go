@@ -118,7 +118,7 @@ func (tc *tcpClient) Write(buf *bufio.Writer, i interface{}) bool {
 func (tc *tcpClient) HandleCmd(cmdRaw interface{}) (interface{}, bool, bool) {
 	a, err := tc.trans.ToAction(cmdRaw.([]byte))
 	if err != nil {
-		return types.ErrorReturn(err), true, false
+		return types.NewActionReturn(err), true, false
 	}
 	return DispatchAction(tc, a), true, false
 }
@@ -138,7 +138,7 @@ func DispatchAction(c stypes.Client, a *types.Action) *types.ActionReturn {
 	case ActionWrapCh <- &aw:
 	case <-time.After(5 * time.Second):
 		gslog.Error("Timedout sending Action to ActionWrapCh")
-		return types.ErrorReturn(errors.New("timeout"))
+		return types.NewActionReturn(errors.New("timeout"))
 	}
 
 	select {
@@ -146,7 +146,7 @@ func DispatchAction(c stypes.Client, a *types.Action) *types.ActionReturn {
 		return ar
 	case <-time.After(5 * time.Second):
 		gslog.Error("Timedout receiving ActionReturn from ActionReturnCh")
-		return types.ErrorReturn(errors.New("timeout"))
+		return types.NewActionReturn(errors.New("timeout"))
 	}
 }
 
