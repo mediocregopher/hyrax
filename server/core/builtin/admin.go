@@ -14,13 +14,13 @@ import (
 var wrongNumArgs = errors.New("wrong number of arguments")
 var wrongArgType = errors.New("wrong argument type")
 
-func argsToEndpoint(cmd *types.Action) (string, error) {
+func argsToEndpoint(cmd *types.Action) (*types.ListenEndpoint, error) {
 	if len(cmd.Args) != 1 {
-		return "", wrongNumArgs
+		return nil, wrongNumArgs
 	} else if addr, ok := cmd.Args[0].(string); ok {
-		return addr, nil
+		return types.ListenEndpointFromString(addr)
 	} else {
-		return "", wrongArgType
+		return nil, wrongArgType
 	}
 }
 

@@ -33,7 +33,7 @@ func Configure() error {
 
 	listens := config.ListenEndpoints
 	for i := range listens {
-		if err := listenHandler(&listens[i]); err != nil {
+		if err := listenHandler(listens[i]); err != nil {
 			return err
 		}
 	}
@@ -46,6 +46,8 @@ func Configure() error {
 }
 
 func listenHandler(l *types.ListenEndpoint) error {
+	// TODO we need to store these somewhere so we can close them when we're
+	// done
 	trans, err := translate.StringToTranslator(l.Format)
 	if err != nil {
 		gslog.Fatal(err.Error())

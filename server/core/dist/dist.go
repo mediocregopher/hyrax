@@ -49,12 +49,10 @@ func clusterSpin() {
 }
 
 // Reads the cluster information from the config and attempts to set it up. If
-// this isn't the first time this function has been called it will close all
-// existing cluster connections and make new ones
+// this isn't the first time this function has been called it will do a diff and
+// open/close whatever connections are needed, and leave the remaining ones
+// untouched.
 func Clusterize() error {
-	// TODO make a bit more resilient to errors, if we encounter one we want to
-	// send it back but not disconinue execution
-
 	err := resetManager(
 		PullFromGlobalManager,
 		config.PullFromEndpoints,
@@ -79,17 +77,42 @@ func Clusterize() error {
 
 func resetManager(
 	m *dist.Manager,
-	endpoints []types.ListenEndpoint,
+	les []*types.ListenEndpoint,
 	cmd string, args ...interface{}) error {
 
-	if err := m.CloseAll(); err != nil {
-		return err
-	}
 	m.SetCommand(cmd, args...)
-	for _, le := range endpoints {
-		if err := m.EnsureClient(le.String()); err != nil {
+	oldLes := m.GetAll()
+
+	lesM := map[string]bool{}
+	oldLesM := map[string]bool{}
+	for i := range les {
+		lesM[les[i].String()] = true
+	}
+	for i := range oldLes {
+		oldLesM[oldLes[i].String()] = true
+	}
+
+	// Add loop
+	for _, le := range les {
+		if _, ok := oldLesM[le.String()]; ok {
+			continue
+		}
+		gslog.Infof("Adding %s connection to %s", cmd, le)
+		if err := m.EnsureClient(le); err != nil {
 			return err
 		}
 	}
+
+	// Remove loop
+	for _, oldLe := range oldLes {
+		if _, ok := lesM[oldLe.String()]; ok {
+			continue
+		}
+		gslog.Infof("Removing %s connection to %s", cmd, oldLe)
+		if err := m.CloseClient(oldLe); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

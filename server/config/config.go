@@ -14,16 +14,16 @@ var StorageInfo string
 var InitSecrets [][]byte
 
 // The list of endpoints this node should server
-var ListenEndpoints []types.ListenEndpoint
+var ListenEndpoints []*types.ListenEndpoint
 
 // The list of endpoints this node will send local key change events to
-var PushToEndpoints []types.ListenEndpoint
+var PushToEndpoints []*types.ListenEndpoint
 
 // The list of endpoints this node will pull global key change events from
-var PullFromEndpoints []types.ListenEndpoint
+var PullFromEndpoints []*types.ListenEndpoint
 
 // The endpoint to advertise to other nodes that they should connect to
-var MyEndpoint types.ListenEndpoint
+var MyEndpoint *types.ListenEndpoint
 
 // The minumum level (debug, info, warn, error, fatal) of logs to send and the
 // file to send them to (or "stdout"/"stderr")
@@ -102,11 +102,10 @@ func Load() error {
 	}
 
 	myEndpointRaw := fc.GetStr("my-endpoint")
-	myEndpoint, err := types.ListenEndpointFromString(myEndpointRaw)
+	MyEndpoint, err = types.ListenEndpointFromString(myEndpointRaw)
 	if err != nil {
 		return err
 	}
-	MyEndpoint = *myEndpoint
 
 	LogLevel = fc.GetStr("log-level")
 	LogFile = fc.GetStr("log-file")
@@ -115,16 +114,16 @@ func Load() error {
 }
 
 func endpts(
-	fc *flagconfig.FlagConfig, param string) ([]types.ListenEndpoint, error) {
+	fc *flagconfig.FlagConfig, param string) ([]*types.ListenEndpoint, error) {
 
 	lesRaw := fc.GetStrs(param)
-	les := make([]types.ListenEndpoint, len(lesRaw))
+	les := make([]*types.ListenEndpoint, len(lesRaw))
 	for i := range lesRaw {
 		le, err := types.ListenEndpointFromString(lesRaw[i])
 		if err != nil {
 			return nil, err
 		}
-		les[i] = *le
+		les[i] = le
 	}
 	return les, nil
 }

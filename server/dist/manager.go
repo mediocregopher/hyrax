@@ -9,7 +9,7 @@ import (
 )
 
 type call struct {
-	listenEndpoint string
+	listenEndpoint *types.ListenEndpoint
 	retCh          chan error
 }
 
@@ -35,6 +35,7 @@ type Manager struct {
 	setCmdCh   chan *setCmdCall
 	closeCh    chan *call
 	closeAllCh chan *call
+	getAllCh   chan chan []*types.ListenEndpoint
 }
 
 type managerClient struct {
@@ -55,6 +56,7 @@ func New(cmd string, args ...interface{}) *Manager {
 		setCmdCh:   make(chan *setCmdCall),
 		closeCh:    make(chan *call),
 		closeAllCh: make(chan *call),
+		getAllCh:   make(chan chan []*types.ListenEndpoint),
 	}
 	go m.spin()
 	return &m
@@ -63,8 +65,8 @@ func New(cmd string, args ...interface{}) *Manager {
 // Takes in the listen address, which is the same as that given in
 // server/config. Ensures there is a client connected to that address which is
 // periodically calling the manager's command
-func (m *Manager) EnsureClient(listenEndpoint string) error {
-	c := call{listenEndpoint, make(chan error)}
+func (m *Manager) EnsureClient(le *types.ListenEndpoint) error {
+	c := call{le, make(chan error)}
 	m.ensureCh <- &c
 	return <-c.retCh
 }
@@ -76,17 +78,24 @@ func (m *Manager) SetCommand(cmd string, args ...interface{}) {
 }
 
 // Closes the connection to the given listenEndpoint (see EnsureClient)
-func (m *Manager) CloseClient(listenEndpoint string) error {
-	c := call{listenEndpoint, make(chan error)}
+func (m *Manager) CloseClient(le *types.ListenEndpoint) error {
+	c := call{le, make(chan error)}
 	m.closeCh <- &c
 	return <-c.retCh
 }
 
 // Closes all connections
 func (m *Manager) CloseAll() error {
-	c := call{"", make(chan error)}
+	c := call{nil, make(chan error)}
 	m.closeAllCh <- &c
 	return <-c.retCh
+}
+
+// Returns all currently active endpoints
+func (m *Manager) GetAll() []*types.ListenEndpoint {
+	retCh := make(chan []*types.ListenEndpoint)
+	m.getAllCh <- retCh
+	return <-retCh
 }
 
 func (m *Manager) spin() {
@@ -101,18 +110,17 @@ func (m *Manager) spin() {
 			c.retCh <- m.closeClient(c.listenEndpoint)
 		case c := <-m.closeAllCh:
 			c.retCh <- m.closeAll()
+		case retCh := <-m.getAllCh:
+			retCh <- m.getAllClients()
 		}
 	}
 }
 
-func (m *Manager) ensureClient(listenEndpoint string) error {
-	gslog.Debugf("Ensuring %s connection to node %s", m.cmd, listenEndpoint)
-	le, err := types.ListenEndpointFromString(listenEndpoint)
-	if err != nil {
-		return err
-	}
+func (m *Manager) ensureClient(le *types.ListenEndpoint) error {
+	leStr := le.String()
+	gslog.Debugf("Ensuring %s connection to node %s", m.cmd, leStr)
 
-	if _, ok := m.clients[listenEndpoint]; ok {
+	if _, ok := m.clients[leStr]; ok {
 		return nil
 	}
 
@@ -128,23 +136,40 @@ func (m *Manager) ensureClient(listenEndpoint string) error {
 		pushCh:  pushCh,
 		closeCh: make(chan struct{}),
 	}
-	m.clients[listenEndpoint] = &mcl
+	m.clients[leStr] = &mcl
 	go m.clientSpin(&mcl)
 	return nil
 }
 
-func (m *Manager) closeClient(listenEndpoint string) error {
-	if mcl, ok := m.clients[listenEndpoint]; ok {
+func (m *Manager) closeClient(le *types.ListenEndpoint) error {
+	leStr := le.String()
+	gslog.Debugf("Closing %s connection to node %s", m.cmd, leStr)
+	if mcl, ok := m.clients[leStr]; ok {
 		close(mcl.closeCh)
+		delete(m.clients, leStr)
 	}
 	return nil
 }
 
 func (m *Manager) closeAll() error {
-	for _, mcl := range m.clients {
+	for leStr, mcl := range m.clients {
 		close(mcl.closeCh)
+		delete(m.clients, leStr)
 	}
 	return nil
+}
+
+func (m *Manager) getAllClients() []*types.ListenEndpoint {
+	ret := make([]*types.ListenEndpoint, 0, len(m.clients))
+	for leStr := range m.clients {
+		le, err := types.ListenEndpointFromString(leStr)
+		if err != nil {
+			gslog.Errorf("dist.Manager ListenEndpointFromString: %s", err)
+			continue
+		}
+		ret = append(ret, le)
+	}
+	return ret
 }
 
 func (m *Manager) clientSpin(mcl *managerClient) {
