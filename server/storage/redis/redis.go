@@ -95,14 +95,16 @@ spinloop:
 
 func (r *RedisConn) resurrect() bool {
 	connCh := make(chan *redis.Client)
-	func() {
+	go func() {
 		for {
+			time.Sleep(2 * time.Second)
 			conn, err := redis.Dial(r.conntype, r.addr)
 			if err != nil {
 				gslog.Errorf("connecting to redis at %s: %s", r.addr, err)
 				continue
 			}
 			connCh <- conn
+			return
 		}
 	}()
 
