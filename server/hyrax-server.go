@@ -14,7 +14,7 @@ func main() {
 	signal.Notify(c, syscall.SIGUSR1)
 	for _ = range c {
 		if err := core.Reload(); err != nil {
-			gslog.Error("reload: %s", err)
+			gslog.Errorf("reload: %s", err)
 		}
 	}
 }

@@ -50,7 +50,7 @@ func argsToByteSliceSlice(cmd *types.Action) ([][]byte, error) {
 		return nil, wrongNumArgs
 	}
 	bss := make([][]byte, len(cmd.Args))
-	for i := range cmd.Args {	
+	for i := range cmd.Args {
 		if s, ok := cmd.Args[i].(string); ok {
 			bss[i] = []byte(s)
 		} else {
