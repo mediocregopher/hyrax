@@ -47,8 +47,6 @@ func Configure() error {
 }
 
 func listenHandler(l *types.ListenEndpoint) error {
-	// TODO we need to store these somewhere so we can close them when we're
-	// done
 	trans, err := translate.StringToTranslator(l.Format)
 	if err != nil {
 		gslog.Fatal(err.Error())
