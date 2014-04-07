@@ -1,6 +1,5 @@
 * fix auth
 * update docs
-* make configuration reloadable (signal handling, diff on connections, etc),
 * make pubsub more efficient
 * address all TODO notes in the code
 * logic for LOOKATME needs work (right now other node will never stop looking)

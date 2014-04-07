@@ -12,8 +12,14 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
+func init() {
+	if err := InitialConfigure(); err != nil {
+		gslog.Fatal(err.Error())
+	}
+}
+
 // Does all configuration for the hyrax node
-func Configure() error {
+func InitialConfigure() error {
 	if err := gslog.SetMinimumLevel(config.LogLevel); err != nil {
 		return err
 	}
@@ -46,10 +52,18 @@ func Configure() error {
 	return nil
 }
 
+// Performs whatever actions are supported on reload
+func Reload() error {
+	if err := config.Load(); err != nil {
+		return err
+	}
+	return dist.Clusterize()
+}
+
 func listenHandler(l *types.ListenEndpoint) error {
 	trans, err := translate.StringToTranslator(l.Format)
 	if err != nil {
-		gslog.Fatal(err.Error())
+		return err
 	}
 
 	switch strings.ToLower(l.Type) {
