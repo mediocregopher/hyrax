@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/grooveshark/golib/gslog"
 	"strconv"
 )
 
@@ -9,9 +10,11 @@ var idCh = make(chan ClientId)
 func init() {
 	go func() {
 		for i := uint64(0); ; i++ {
-			// TODO do something with the error here (even though it'll never
-			// happen)
-			cid, _ := ClientIdFromUint64(i)
+			cid, err := ClientIdFromUint64(i)
+			if err != nil {
+				gslog.Errorf("id maker: %s", err)
+				continue
+			}
 			idCh <- cid
 		}
 	}()
