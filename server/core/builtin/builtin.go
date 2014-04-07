@@ -24,47 +24,19 @@ var builtInMap = map[string]*builtInCommandInfo{
 	"mlocal":   {Func: MLocal, Admin: true},
 	"madd":     {Func: MAdd},
 	"mrem":     {Func: MRem},
+
 	"eadd":     {Func: EAdd, Modifies: true},
 	"erem":     {Func: ERem, Modifies: true},
 	"emembers": {Func: EMembers},
 	"ecard":    {Func: ECard},
 
-	"alistentome": {Func: AListenToMe, Admin: true},
-	"aignoreme":   {Func: AIgnoreMe, Admin: true},
-
-	"aglobalsecretadd": {
-		Func:     AGlobalSecretAdd,
-		Modifies: true,
-		Admin:    true,
-	},
-
-	"aglobalsecretrem": {
-		Func:     AGlobalSecretRem,
-		Modifies: true,
-		Admin:    true,
-	},
-
-	"aglobalsecrets": {
-		Func:  AGlobalSecrets,
-		Admin: true,
-	},
-
-	//"asecretadd": {
-	//	Func:     ASecretAdd,
-	//	Modifies: true,
-	//	Admin:    true,
-	//},
-
-	//"asecretrem": {
-	//	Func:     ASecretRem,
-	//	Modifies: true,
-	//	Admin:    true,
-	//},
-
-	//"asecrets": {
-	//	Func:  ASecrets,
-	//	Admin: true,
-	//},
+	"alistentome":    {Func: AListenToMe, Admin: true},
+	"aignoreme":      {Func: AIgnoreMe, Admin: true},
+	"aglobalsecrets": {Func:  AGlobalSecrets, Admin: true},
+	"asecretsset":    {Func: ASecretsSet, Admin: true},
+	"asecretsadd":    {Func: ASecretsAdd, Admin: true},
+	"asecretsrem":    {Func: ASecretsRem, Admin: true},
+	"asecrets":       {Func: ASecrets, Admin: true},
 }
 
 func getBuiltInCommandInfo(cmd string) (*builtInCommandInfo, bool) {

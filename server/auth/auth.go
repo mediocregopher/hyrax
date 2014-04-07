@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 
+	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/types"
 )
 
@@ -12,39 +13,38 @@ import (
 // It returns a boolean of the result, or an error if something went wrong
 // checking
 func Auth(cmd *types.Action) (bool, error) {
-	// If no global serets are set, then everything is allowed
-	globalSecs := GetGlobalSecrets()
-	if len(globalSecs) == 0 {
+	if !config.UseGlobalAuth && !config.UseKeyAuth {
 		return true, nil
 	}
 
-	for _, secret := range GetGlobalSecrets() {
-		if ok := checkSecret(secret, cmd); ok {
-			return true, nil
+	cmdB := []byte(cmd.Command)
+	keyB := []byte(cmd.StorageKey)
+	idB := []byte(cmd.Id)
+
+	if config.UseGlobalAuth {
+		for _, secret := range GetGlobalSecrets() {
+			if ok := checkSecret(secret, cmdB, keyB, idB, cmd.Secret); ok {
+				return true, nil
+			}
 		}
 	}
 
-	//keySecrets, err := GetSecrets(cmd.StorageKey)
-	//if err != nil {
-	//	return false, err
-	//}
-
-	//for _, secret := range keySecrets {
-	//	if ok := checkSecret(secret, cmd); ok {
-	//		return true, nil
-	//	}
-	//}
+	if config.UseKeyAuth {
+		for _, secret := range GetKeySecrets(cmd.StorageKey) {
+			if ok := checkSecret(secret, cmdB, keyB, idB, cmd.Secret); ok {
+				return true, nil
+			}
+		}
+	}
 
 	return false, nil
 }
 
-func checkSecret(secret []byte, cmd *types.Action) bool {
+func checkSecret(secret, cmd, key, id []byte, cmdSecret string) bool {
 	mac := hmac.New(sha1.New, secret)
-	mac.Write([]byte(cmd.Command))
-	mac.Write([]byte(cmd.StorageKey))
-	mac.Write([]byte(cmd.Id))
-	sum := mac.Sum(nil)
-	sumhex := make([]byte, hex.EncodedLen(len(sum)))
-	hex.Encode(sumhex, sum)
-	return hmac.Equal(sumhex, []byte(cmd.Secret))
+	mac.Write(cmd)
+	mac.Write(key)
+	mac.Write(id)
+	sum := hex.EncodeToString(mac.Sum(nil))
+	return sum == cmdSecret
 }

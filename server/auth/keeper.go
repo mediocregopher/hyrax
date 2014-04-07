@@ -1,56 +1,72 @@
 package auth
 
-import (
-	"bytes"
-	"github.com/grooveshark/golib/gslog"
-)
-
 var globalSecrets = [][]byte{}
-
 var getSecretsCh = make(chan chan [][]byte)
-var addSecretCh = make(chan []byte)
-var remSecretCh = make(chan []byte)
+var setSecretsCh = make(chan [][]byte)
+
+type keySecretsCast struct {
+	key     string
+	secrets [][]byte
+}
+
+type keySecretsCall struct {
+	key   string
+	retCh chan [][]byte
+}
+
+var keySecrets = map[string]map[string]bool{}
+var getKeySecretsCh = make(chan *keySecretsCall)
+var setKeySecretsCh = make(chan *keySecretsCast)
+var addKeySecretsCh = make(chan *keySecretsCast)
+var remKeySecretsCh = make(chan *keySecretsCast)
 
 func init() {
 	go keeper()
 }
 
-// keeper is a little loop which keeps track of the global secrets on each hyrax
-// node so that they are readily available for all operations. Secrets for
-// individual keys are kept on the node for that key
 func keeper() {
 	for {
 		select {
 		case retCh := <-getSecretsCh:
 			retCh <- globalSecrets
-		case secret := <-addSecretCh:
-			globalSecrets = append(globalSecrets, secret)
-		case secret := <-remSecretCh:
-			newgs := make([][]byte, 0, len(globalSecrets))
-			for i := range globalSecrets {
-				if !bytes.Equal(globalSecrets[i], secret) {
-					newgs = append(newgs, globalSecrets[i])
+		case secrets := <-setSecretsCh:
+			globalSecrets = secrets
+		case call := <-getKeySecretsCh:
+			if secrets, ok := keySecrets[call.key]; ok {
+				ret := make([][]byte, 0, len(secrets))
+				for secretStr := range secrets {
+					ret = append(ret, []byte(secretStr))
+				}
+				call.retCh <- ret
+			} else {
+				call.retCh <- [][]byte{}
+			}
+		case cast := <-setKeySecretsCh:
+			secrets := map[string]bool{}
+			for _, secret := range cast.secrets {
+				secrets[string(secret)] = true
+			}
+			keySecrets[cast.key] = secrets
+		case cast := <-addKeySecretsCh:
+			secrets, ok := keySecrets[cast.key]
+			if !ok {
+				secrets = map[string]bool{}
+				keySecrets[cast.key] = secrets
+			}
+			for _, secret := range cast.secrets {
+				secrets[string(secret)] = true
+			}
+		case cast := <-remKeySecretsCh:
+			if secrets, ok := keySecrets[cast.key]; ok {
+				for _, secret := range cast.secrets {
+					delete(secrets, string(secret))
+				}
+				if len(secrets) == 0 {
+					delete(keySecrets, cast.key)
 				}
 			}
-			globalSecrets = newgs
 		}
 	}
-}
-
-// TODO make sure global secrets make it to all other nodes
-// TODO make a way to "set" global secrets, so one node can sync them to other
-//      nodes
-
-// AddGlobalSecret appends a secret to the list of global ones currently in use.
-func AddGlobalSecret(s []byte) {
-	gslog.Infof("Loading secret:", string(s))
-	addSecretCh <- s
-}
-
-// RemGlobalSecret removes all instances of the given secret from the list of
-// global secrets
-func RemGlobalSecret(s []byte) {
-	remSecretCh <- s
 }
 
 // GetGlobalSecrets returns the list of currently active global secrets
@@ -60,32 +76,29 @@ func GetGlobalSecrets() [][]byte {
 	return <-retCh
 }
 
-//var secretns = []byte("sec")
-//
-//// AddSecret adds a secret to the set of valid secrets for a given key
-//func AddSecret(key, s []byte) error {
-//	secKey := storage.KeyMaker.Namespace(secretns, key)
-//	addCmd := storage.CommandFactory.GenericSetAdd(secKey, s)
-//	_, err := storage.RoutedCmd(key, addCmd)
-//	return err
-//}
-//
-//// RemSecret removes a secret from the set of valid secrets for a given key, if
-//// it existed in it at all
-//func RemSecret(key, s []byte) error {
-//	secKey := storage.KeyMaker.Namespace(secretns, key)
-//	remCmd := storage.CommandFactory.GenericSetRem(secKey, s)
-//	_, err := storage.RoutedCmd(key, remCmd)
-//	return err
-//}
-//
-//// GetSecrets returns the set of valid secrets for a given key
-//func GetSecrets(key []byte) ([][]byte, error) {
-//	secKey := storage.KeyMaker.Namespace(secretns, key)
-//	getCmd := storage.CommandFactory.GenericSetMembers(secKey)
-//	r, err := storage.RoutedCmd(key, getCmd)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return r.([][]byte), nil
-//}
+// Overwrites the current list of global secrets
+func SetGlobalSecrets(secrets [][]byte) {
+	setSecretsCh <- secrets
+}
+
+// Gets the list of currently active secrets for a specific key
+func GetKeySecrets(key string) [][]byte {
+	call := keySecretsCall{key, make(chan [][]byte)}
+	getKeySecretsCh <- &call
+	return <-call.retCh
+}
+
+// Overwrites the active list of secrets for a specific key
+func SetKeySecrets(key string, secrets [][]byte) {
+	setKeySecretsCh <- &keySecretsCast{key, secrets}
+}
+
+// Adds secrets to the list of active secrets for a specific key
+func AddKeySecrets(key string, secrets [][]byte) {
+	addKeySecretsCh <- &keySecretsCast{key, secrets}
+}
+
+// Removes secrets from the list of active secrets for a specific key
+func RemKeySecrets(key string, secrets [][]byte) {
+	remKeySecretsCh <- &keySecretsCast{key, secrets}
+}

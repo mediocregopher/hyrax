@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mediocregopher/hyrax/client"
+	"github.com/mediocregopher/hyrax/server/config"
 	"github.com/mediocregopher/hyrax/types"
 )
 
@@ -180,13 +181,20 @@ spinloop:
 	for {
 
 		if doCmd {
-			// TODO secret
-			cmd := client.CreateAction(m.cmd, "", "", "", m.args...)
+			secret := config.InteractionSecret
+			cmd := client.CreateAction(m.cmd, "", "", secret, m.args...)
 			if _, err := mcl.cl.Cmd(cmd); err != nil {
+				gslog.Errorf("dist cmd %s: %s", m.cmd, err)
 				mcl.cl.Close()
-				break spinloop
+				if !mcl.resurrect() {
+					mcl.cl.Close()
+					break spinloop
+				} else {
+					continue
+				}
+			} else {
+				doCmd = false
 			}
-			doCmd = false
 		}
 
 		select {
@@ -208,13 +216,15 @@ func (mcl *managerClient) resurrect() bool {
 
 	go func() {
 		for {
+			time.Sleep(2 * time.Second)
+			gslog.Debug("Goint to resurrect new client on %s", mcl.le)
 			cl, err := client.NewClient(mcl.le, mcl.pushCh)
 			if err != nil {
 				gslog.Errorf("Error reconnecting to %s: %s", mcl.le, err)
-				time.Sleep(2 * time.Second)
 				continue
 			}
 			clCh <- cl
+			return
 		}
 	}()
 

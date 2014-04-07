@@ -10,8 +10,11 @@ import (
 // Information for connecting to the storage instance
 var StorageInfo string
 
-// Initial secrets to load in if this is the first-node
-var InitSecrets [][]byte
+// Flags for whether or not to use global/key-specific authentication
+var UseGlobalAuth, UseKeyAuth bool
+
+// Secrets to use for action authentication
+var Secrets [][]byte
 
 // The list of endpoints this node should server
 var ListenEndpoints []*types.ListenEndpoint
@@ -21,6 +24,9 @@ var PushToEndpoints []*types.ListenEndpoint
 
 // The list of endpoints this node will pull global key change events from
 var PullFromEndpoints []*types.ListenEndpoint
+
+// Secret key to use when generating commands which interact with other nodes
+var InteractionSecret string
 
 // The endpoint to advertise to other nodes that they should connect to
 var MyEndpoint *types.ListenEndpoint
@@ -39,10 +45,6 @@ func init() {
 
 func Load() error {
 	fc := flagconfig.New("hyrax")
-	fc.StrParams(
-		"init-secret",
-		"A global secret key as a string. Can be specified multiple times if this is a first-node",
-	)
 	fc.StrParam(
 		"storage-info",
 		"Info needed for connecting to the datastore(s). For redis this is just the address redis is listening on",
@@ -63,6 +65,11 @@ func Load() error {
 		"The endpoint address (see listen-endpoint for format) this node will pull global keychange events from. Can be specified multiple times",
 	)
 	fc.StrParam(
+		"interaction-secret",
+		"The secret key to use when interacting with other nodes. Must be found in the global keys list on all nodes this node might talk to",
+		"",
+	)
+	fc.StrParam(
 		"my-endpoint",
 		"The endpoint address (see listen-endpoint for format) this node will advertise to other nodes that they should connect to",
 		"tcp::json::localhost:2379",
@@ -77,17 +84,31 @@ func Load() error {
 		"The file to send all logs to (or \"stdout\"/\"stderr\")",
 		"stdout",
 	)
+	fc.FlagParam(
+		"use-global-auth",
+		"Whether to use a set of secrets to authenticate incoming actions",
+		false,
+	)
+	fc.StrParams(
+		"secret",
+		"A global secret key as a string. Can be specified multiple times",
+	)
+	fc.FlagParam(
+		"use-key-auth",
+		"Whether to use a set of secrets specific to each key to authenticate incoming actions (can be set alongside \"use-global-auth\"",
+		false,
+	)
 	if err := fc.Parse(); err != nil {
 		return err
 	}
 
-	isRaw := fc.GetStrs("init-secret")
+	isRaw := fc.GetStrs("secret")
 	is := make([][]byte, len(isRaw))
 	for i := range isRaw {
 		is[i] = []byte(isRaw[i])
 	}
 
-	InitSecrets = is
+	Secrets = is
 	StorageInfo = fc.GetStr("storage-info")
 
 	var err error
@@ -101,11 +122,16 @@ func Load() error {
 		return err
 	}
 
+	InteractionSecret = fc.GetStr("interaction-secret")
+
 	myEndpointRaw := fc.GetStr("my-endpoint")
 	MyEndpoint, err = types.ListenEndpointFromString(myEndpointRaw)
 	if err != nil {
 		return err
 	}
+
+	UseGlobalAuth = fc.GetFlag("use-global-auth")
+	UseKeyAuth = fc.GetFlag("use-key-auth")
 
 	LogLevel = fc.GetStr("log-level")
 	LogFile = fc.GetStr("log-file")

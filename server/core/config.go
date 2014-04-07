@@ -28,11 +28,9 @@ func InitialConfigure() error {
 		return err
 	}
 
-	secrets := config.InitSecrets
 	gslog.Info("Loading up the secrets")
-	for _, secret := range secrets {
-		auth.AddGlobalSecret(secret)
-	}
+	secrets := config.Secrets
+	auth.SetGlobalSecrets(secrets)
 
 	if err := SetupStorage(); err != nil {
 		return err
@@ -57,6 +55,7 @@ func Reload() error {
 	if err := config.Load(); err != nil {
 		return err
 	}
+	auth.SetGlobalSecrets(config.Secrets)
 	return dist.Clusterize()
 }
 

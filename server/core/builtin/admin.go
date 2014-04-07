@@ -9,8 +9,6 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
-// TODO make success condition not be nil
-
 var wrongNumArgs = errors.New("wrong number of arguments")
 var wrongArgType = errors.New("wrong argument type")
 
@@ -47,49 +45,25 @@ func AIgnoreMe(_ stypes.Client, cmd *types.Action) (interface{}, error) {
 	return OK, dist.PullFromLocalManager.CloseClient(listenEndpoint)
 }
 
-func argsToByteSlice(cmd *types.Action) ([]byte, error) {
-	if len(cmd.Args) != 1 {
+func argsToByteSliceSlice(cmd *types.Action) ([][]byte, error) {
+	if len(cmd.Args) < 1 {
 		return nil, wrongNumArgs
-	} else if s, ok := cmd.Args[0].(string); ok {
-		return []byte(s), nil
-	} else {
-		return nil, wrongArgType
 	}
+	bss := make([][]byte, len(cmd.Args))
+	for i := range cmd.Args {	
+		if s, ok := cmd.Args[i].(string); ok {
+			bss[i] = []byte(s)
+		} else {
+			return nil, wrongArgType
+		}
+	}
+	return bss, nil
 }
 
-// AGlobalSecretAdd adds a global secret to every node in the mesh's global
-// secret list
-func AGlobalSecretAdd(
-	_ stypes.Client,
-	cmd *types.Action) (interface{}, error) {
-	secret, err := argsToByteSlice(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	auth.AddGlobalSecret(secret)
-	return OK, nil
-}
-
-// AGlobalSecretRem removes a global secret from every node in the mesh's global
-// secret list
-func AGlobalSecretRem(
-	_ stypes.Client,
-	cmd *types.Action) (interface{}, error) {
-	secret, err := argsToByteSlice(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	auth.RemGlobalSecret(secret)
-	return OK, nil
-}
-
-// AGlobalSecrets returns the list of currently active secrets on this node (and
-// presumably every other node)
-func AGlobalSecrets(
-	_ stypes.Client,
-	cmd *types.Action) (interface{}, error) {
+// AGlobalSecrets returns the list of currently active global secrets on this
+// node. The list of global secrets is set in the configuration file, and can be
+// changed by issuing a reload
+func AGlobalSecrets(_ stypes.Client, cmd *types.Action) (interface{}, error) {
 	secretsB := auth.GetGlobalSecrets()
 	secrets := make([]string, len(secretsB))
 	for i := range secretsB {
@@ -98,46 +72,45 @@ func AGlobalSecrets(
 	return secrets, nil
 }
 
-// ASecretAdd adds a particular secret to an individual key
-//func ASecretAdd(
-//	_ stypes.Client,
-//	cmd *types.Action) (interface{}, error) {
-//	secret, err := argsToByteSlice(cmd)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return OK, auth.AddSecret(cmd.StorageKey, secret)
-//}
+// ASecretsSet overwrites the set of secrets for a specific key
+func ASecretsSet(_ stypes.Client, cmd *types.Action) (interface{}, error) {
+	secrets, err := argsToByteSliceSlice(cmd)
+	if err != nil {
+		return nil, err
+	}
 
-// ASecretRem removes a particular secret from an individual key
-//func ASecretRem(
-//	_ stypes.Client,
-//	cmd *types.Action) (interface{}, error) {
-//	secret, err := argsToByteSlice(cmd)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return OK, auth.RemSecret(cmd.StorageKey, secret)
-//}
+	auth.SetKeySecrets(cmd.StorageKey, secrets)
+	return OK, nil
+}
 
-// ASecrets returns all the particular secrets for an individual key
-//func ASecrets(_ stypes.Client, cmd *types.Action) (interface{}, error) {
-//	keyB, err := argsToByteSlice(cmd)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	secretsB, err := auth.GetSecrets(keyB)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	secrets := make([]string, len(secretsB))
-//	for i := range secretsB {
-//		secrets[i] = string(secretsB[i])
-//	}
-//
-//	return secrets, nil
-//}
+// ASecretsAdd adds secrets to an individual key
+func ASecretsAdd(_ stypes.Client, cmd *types.Action) (interface{}, error) {
+	secrets, err := argsToByteSliceSlice(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	auth.AddKeySecrets(cmd.StorageKey, secrets)
+	return OK, nil
+}
+
+// ASecretsRem removes secrets from an individual key
+func ASecretsRem(_ stypes.Client, cmd *types.Action) (interface{}, error) {
+	secrets, err := argsToByteSliceSlice(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	auth.RemKeySecrets(cmd.StorageKey, secrets)
+	return OK, nil
+}
+
+// ASecrets returns all secrets currently active for an individual key
+func ASecrets(_ stypes.Client, cmd *types.Action) (interface{}, error) {
+	secretsB := auth.GetKeySecrets(cmd.StorageKey)
+	secrets := make([]string, len(secretsB))
+	for i := range secretsB {
+		secrets[i] = string(secretsB[i])
+	}
+	return secrets, nil
+}
