@@ -61,13 +61,13 @@ func (ps *PubSub) subSpin(sub string) {
 
 func chunker(clientCh <-chan stypes.Client, cmd *types.Action, sub string) {
 outer:
-	for i := 0;; {
+	for i := 0; ; {
 		chunkCh := make(chan stypes.Client, PUB_CHUNK_SIZE)
 		go chunkPubber(chunkCh, cmd, sub)
 		for client := range clientCh {
 			chunkCh <- client
 			i++
-			if i % PUB_CHUNK_SIZE == 0 {
+			if i%PUB_CHUNK_SIZE == 0 {
 				close(chunkCh)
 				continue outer
 			}

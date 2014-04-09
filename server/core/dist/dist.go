@@ -15,7 +15,7 @@ var PullFromGlobalManager = dist.New("MGLOBAL")
 
 // Manager for connections to other nodes we are pulling local events from
 // (these come from other nodes calling ALISTENTOME)
-var PullFromLocalManager = dist.NewTimeout(10 * time.Second, "MLOCAL")
+var PullFromLocalManager = dist.NewTimeout(10*time.Second, "MLOCAL")
 
 // Manager for connection to other nodes we are calling ALISTENTOME on,
 // effectively commanding them to pull local events from us
