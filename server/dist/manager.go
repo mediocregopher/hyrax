@@ -27,10 +27,11 @@ type Manager struct {
 
 	// All push messages on any clients being managed will be pused down this
 	// channel
-	PushCh chan *types.Action
-	cmd    string
-	args   []interface{}
-	period time.Duration
+	PushCh  chan *types.Action
+	cmd     string
+	args    []interface{}
+	period  time.Duration
+	timeout time.Duration
 
 	ensureCh   chan *call
 	setCmdCh   chan *setCmdCall
@@ -44,10 +45,11 @@ type managerClient struct {
 	cl      client.Client
 	pushCh  chan *types.Action
 	closeCh chan struct{}
+	touchCh chan struct{}
 }
 
-func New(cmd string, args ...interface{}) *Manager {
-	m := Manager{
+func newMan(cmd string, args ...interface{}) *Manager {
+	return &Manager{
 		clients:    map[string]*managerClient{},
 		PushCh:     make(chan *types.Action),
 		cmd:        cmd,
@@ -59,8 +61,21 @@ func New(cmd string, args ...interface{}) *Manager {
 		closeAllCh: make(chan *call),
 		getAllCh:   make(chan chan []*types.ListenEndpoint),
 	}
+}
+
+func New(cmd string, args ...interface{}) *Manager {
+	m := newMan(cmd, args...)
 	go m.spin()
-	return &m
+	return m
+}
+
+// Like New, but the manager will timeout client connections if they aren't
+// ensured every t units of time
+func NewTimeout(t time.Duration, cmd string, args ...interface{}) *Manager {
+	m := newMan(cmd, args...)
+	m.timeout = t
+	go m.spin()
+	return m
 }
 
 // Takes in the listen address, which is the same as that given in
@@ -121,7 +136,8 @@ func (m *Manager) ensureClient(le *types.ListenEndpoint) error {
 	leStr := le.String()
 	gslog.Debugf("Ensuring %s connection to node %s", m.cmd, leStr)
 
-	if _, ok := m.clients[leStr]; ok {
+	if mcl, ok := m.clients[leStr]; ok {
+		mcl.touchCh <- struct{}{}
 		return nil
 	}
 
@@ -130,12 +146,14 @@ func (m *Manager) ensureClient(le *types.ListenEndpoint) error {
 	if err != nil {
 		return err
 	}
+	gslog.Debugf("Created %s connection to %s", m.cmd, leStr)
 
 	mcl := managerClient{
 		le:      le,
 		cl:      cl,
 		pushCh:  pushCh,
 		closeCh: make(chan struct{}),
+		touchCh: make(chan struct{}),
 	}
 	m.clients[leStr] = &mcl
 	go m.clientSpin(&mcl)
@@ -174,6 +192,13 @@ func (m *Manager) getAllClients() []*types.ListenEndpoint {
 }
 
 func (m *Manager) clientSpin(mcl *managerClient) {
+	var timeout *time.Timer
+	var timeoutCh <-chan time.Time
+	if m.timeout > 0 {
+		timeout = time.NewTimer(m.timeout)
+		timeoutCh = timeout.C
+	}
+
 	ticker := time.NewTicker(m.period)
 	doCmd := true
 
@@ -187,7 +212,6 @@ spinloop:
 				gslog.Errorf("dist cmd %s: %s", m.cmd, err)
 				mcl.cl.Close()
 				if !mcl.resurrect() {
-					mcl.cl.Close()
 					break spinloop
 				} else {
 					continue
@@ -203,12 +227,26 @@ spinloop:
 				break spinloop
 			}
 			m.PushCh <- a
+		case <-timeoutCh:
+			gslog.Warnf("Closing %s connection to %s", m.cmd, mcl.le)
+			if err := m.CloseClient(mcl.le); err != nil {
+				gslog.Errorf("Closing %s conn to %s: %s", m.cmd, mcl.le, err)
+			}
+			break spinloop
+		case <-mcl.touchCh:
+			timeout.Reset(m.timeout)
+		case <-mcl.closeCh:
+			break spinloop
 		case <-ticker.C:
 			doCmd = true
 		}
 	}
 
+	mcl.cl.Close()
 	ticker.Stop()
+	if m.period > 0 {
+		timeout.Stop()
+	}
 }
 
 func (mcl *managerClient) resurrect() bool {
@@ -217,7 +255,7 @@ func (mcl *managerClient) resurrect() bool {
 	go func() {
 		for {
 			time.Sleep(2 * time.Second)
-			gslog.Debug("Goint to resurrect new client on %s", mcl.le)
+			gslog.Debug("Going to resurrect new client on %s", mcl.le)
 			cl, err := client.NewClient(mcl.le, mcl.pushCh)
 			if err != nil {
 				gslog.Errorf("Error reconnecting to %s: %s", mcl.le, err)

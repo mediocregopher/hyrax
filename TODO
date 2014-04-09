@@ -1,5 +1,4 @@
 * update docs
 * make pubsub more efficient
-* logic for LOOKATME needs work (right now other node will never stop looking)
 * Check for resource leaks with lots of connects/disconnects
 * Round-robin
