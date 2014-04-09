@@ -9,6 +9,8 @@ import (
 	"github.com/mediocregopher/hyrax/types"
 )
 
+const PUB_CHUNK_SIZE = 500
+
 // A system wherein clients can subscribe to channels and others can publish to
 // those channels. Each PubSub instance is a totally separate system, they do
 // not overlap in anyway.
@@ -41,14 +43,51 @@ func (ps *PubSub) subSpin(sub string) {
 
 	for cmd := range subCh {
 		ps.subLock.RLock()
-		for client := range clients {
-			select {
-			case client.PushCh() <- cmd:
-			case <-time.After(10 * time.Second):
-				gslog.Warnf("Timeout pubbing to %p for sub %s", client, sub)
+		if len(clients) < PUB_CHUNK_SIZE {
+			for client := range clients {
+				pubToClient(client, cmd, sub)
 			}
+		} else {
+			clientCh := make(chan stypes.Client)
+			go chunker(clientCh, cmd, sub)
+			for client := range clients {
+				clientCh <- client
+			}
+			close(clientCh)
 		}
 		ps.subLock.RUnlock()
+	}
+}
+
+func chunker(clientCh <-chan stypes.Client, cmd *types.Action, sub string) {
+outer:
+	for i := 0;; {
+		chunkCh := make(chan stypes.Client, PUB_CHUNK_SIZE)
+		go chunkPubber(chunkCh, cmd, sub)
+		for client := range clientCh {
+			chunkCh <- client
+			i++
+			if i % PUB_CHUNK_SIZE == 0 {
+				close(chunkCh)
+				continue outer
+			}
+		}
+		close(chunkCh)
+		return
+	}
+}
+
+func chunkPubber(chunkCh <-chan stypes.Client, cmd *types.Action, sub string) {
+	for c := range chunkCh {
+		pubToClient(c, cmd, sub)
+	}
+}
+
+func pubToClient(c stypes.Client, cmd *types.Action, sub string) {
+	select {
+	case c.PushCh() <- cmd:
+	case <-time.After(10 * time.Second):
+		gslog.Warnf("Timeout pubbing to %p for sub %s", c, sub)
 	}
 }
 

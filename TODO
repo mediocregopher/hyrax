@@ -1,4 +1,3 @@
 * update docs
-* make pubsub more efficient
 * Check for resource leaks with lots of connects/disconnects
 * Round-robin
