@@ -1,3 +1,2 @@
 * update docs
-* Check for resource leaks with lots of connects/disconnects
 * Round-robin
