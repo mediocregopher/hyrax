@@ -55,6 +55,14 @@ func Reload() error {
 	if err := config.Load(); err != nil {
 		return err
 	}
+	gslog.Infof("Setting minumum log level to %s", config.LogLevel)
+	if err := gslog.SetMinimumLevel(config.LogLevel); err != nil {
+		return err
+	}
+	gslog.Infof("Setting logging point to %s", config.LogFile)
+	if err := gslog.SetLogFile(config.LogFile); err != nil {
+		return err
+	}
 	auth.SetGlobalSecrets(config.Secrets)
 	return dist.Clusterize()
 }

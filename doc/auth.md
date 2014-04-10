@@ -1,42 +1,49 @@
 # Auth
 
-Any hyrax command which modifies the value of its key must be authenticated.
+Authentication is done on a command-by-command basis. Any hyrax command which
+modifies the value of its key must be authenticated.  Additionally, some
+commands are marked as [admin][admin] commands and must be authenticated in any
+case.
 
-Hyrax has a set of global secret keys in its memory, as well as the possiblity
-of secret keys for individual keys in the cluster. An authenticated command is
-one where the `secret` field in the command is filled with the hmac-sha1 of the
-`cmd`, `key`, and `id` fields of the command concatentated together, with a
-valid secret (either a global one or a key-specific one) as the secret for the
-hmac.
+Hyrax's authentication is based around secret keys which are shared with the
+hyrax node itself and the actual backend of the application which handles the
+application logic. When clients need to perform actions they communicate with
+the backend to obtain secret hashes for those actions. These secret hashes
+are then used to authenticate with hyrax.
 
-This secret allows a backend service to authenticate what untrusted clients are
-allowed to do. The backend service would enumerate what keys it expects a client
-to interact with, what commands it expects the client to use, and what id the
-client is able to use for those keys, and generates the appropriate secrets
-which it then gives the client.
+The secret keys are specified on a per-node basis. Hyrax nodes do not
+communicate with each other about keys.
 
-Alternatively, if you don't care about authentication you can simply give the
-clients one of the secret keys and let them generate their own secrets.
+*Note that this document only applies if either `use-global-auth` or
+`use-key-auth` (or both) is set to true in the [configuration][config]*
 
-# Example
+## Method
 
-A client wants to perform the following command:
-
-```json
-{"cmd":"set","key":"foo","args":["bar"],"id":"gopher"}
-```
-
-And one of the global secret keys is `toy story 2 was okay`. The backend would
-generate the secret as follows:
+A secret is an arbitrary string of characters. For every command a set of
+potential secrets is determined (from the global pool and the per-key pool) and
+the hyrax checks that the command authenticates with one of those secrets.
+Authentication is done by running the following algorithm, and checking if the
+algorithm matches the `Secret` field on the command:
 
 ```
-# hmac-sha1(secret,data)
-hmac-sha1("toy story 2 was okay", "setfoogopher")
+HexEncode(HmacSHA1(secret + command + key + id))
 ```
 
-and would get back `0ea1e43b0c907b9aea16657bd3e18855a7cf4365`. It would then
-give this to the client, and the client could call the command by doing:
+Where `secret` is one of the secrets from the set. The set is ordered in the
+same way as the following sections.
 
-```json
-{"cmd":"set","key":"foo","args":["bar"],"id":"gopher","secret":"0ea1e43b0c907b9aea16657bd3e18855a7cf4365"}
-```
+## Global secrets
+
+Global secrets are defined in the [configuration][config] of every node. These
+are always checked, regardless of the key being acted upon. They are useful for
+backend, trusted processes to use.
+
+## Per-key secrets
+
+It is also possible to set secrets on individual keys, using the ASECRETADD and
+associated [admin][admin] commands. The per-key secrets for a key will only be
+checked when that key is being acted upon. These are useful when you want to
+create revokable permissions for individual clients.
+
+[config]: /doc/installconfig.md
+[admin]: /doc/admin.md

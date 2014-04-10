@@ -23,31 +23,35 @@ things clearer.
 **Getting started**
 
 * [Overview](/doc/overview.md)
-* Installation/Configuration
+* [Installation/Configuration](/doc/installconfig.md)
 
 **Using hyrax**
 
-* Basics
-* Protocols/Syntaxes
-* Authentication
+* [Basics](/doc/basics.md)
+* [Protocols/Syntaxes](/doc/protosyntax.md)
+* [Authentication](/doc/auth.md)
+* [Clients](/doc/clients.md)
 
 **Commands**
 
-* Mon - monitor changes to keys
-* Ekg - monitor other clients
-* Admin - Commands for administering a single hyrax node
+* [Mon](/doc/mon.md) - monitor changes to keys
+* [Ekg](/doc/ekg.md) - monitor other clients
+* [Admin](/doc/admin.md) - Commands for administering a single hyrax node
 
-See the redis page for other available commands
+See the [redis][redis] page for other available commands
 
 **Backends** (currently only one)
 
-* Redis
+* [Redis][redis]
 
 **Deployment**
 
+* Topology examples
 * Scaling
 
 ## Contact
 
 My name is Brian Picciano. You can get ahold of me at the email in my github
 profile (github.com/mediocregopher).
+
+[redis]: /doc/redis.md
